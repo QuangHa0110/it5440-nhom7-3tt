@@ -1,0 +1,44 @@
+# Tài liệu có bản quyền / nội bộ lớp: chỉ giữ trên máy, không đưa lên repo public
+docs/papers/*.pdf
+docs/course/*.pdf
+*.xlsx
+
+# Kết quả quét thô của công ty Z: có thể chứa mã nguồn, đường dẫn nội bộ, secret
+results/raw/
+results/company/
+*.sarif
+*.cdx.json
+*.spdx.json
+gitleaks-report*.json
+
+# Bí mật và cấu hình cục bộ
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# LaTeX
+paper/**/*.aux
+paper/**/*.log
+paper/**/*.out
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.synctex.gz
+paper/**/*.fdb_latexmk
+paper/**/*.fls
+
+# Hệ điều hành / IDE
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+~$*

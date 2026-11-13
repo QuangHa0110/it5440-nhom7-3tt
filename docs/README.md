@@ -5,6 +5,7 @@
 | [proposal-llm-loc-canh-bao-pr.md](project/proposal-llm-loc-canh-bao-pr.md) | Proposal đề tài, nguồn sự thật về phạm vi |
 | [huong-dan-tieu-luan.md](project/huong-dan-tieu-luan.md) | Yêu cầu, cách chấm, lịch báo cáo của môn học |
 | [tom-tat-bai-bao.md](project/tom-tat-bai-bao.md) | Tóm tắt 4 bài báo được giao |
+| [architecture.md](architecture.md) | Thiết kế hệ thống, kèm sơ đồ PlantUML trong [diagrams/](diagrams/) |
 | [git-workflow.md](git-workflow.md) | Quy trình nhánh, PR, release, tag khóa cấu hình |
 | [project/](project/) | Tài liệu dự án và môn học (kèm `papers/`, `course/`, PDF không vào git) |
 | [adr/](adr/) | Quyết định kiến trúc, chỉ thêm không sửa |

@@ -2,6 +2,7 @@
 SHELL := /bin/bash
 UV ?= uv
 PART ?= patch
+PLANTUML ?= plantuml
 
 .PHONY: help
 help:  ## Liệt kê lệnh
@@ -33,6 +34,10 @@ test:  ## Chạy pytest (bỏ qua nếu chưa có test)
 
 .PHONY: check
 check: lint typecheck test  ## Cổng trước khi mở PR (giống CI)
+
+.PHONY: diagrams
+diagrams:  ## Render sơ đồ PlantUML ra SVG. PLANTUML="java -jar plantuml.jar" nếu chưa cài
+	cd docs/diagrams && $(PLANTUML) -tsvg -o out *.puml
 
 .PHONY: bump
 bump:  ## Nâng phiên bản + commit + tag. PART=patch|minor|major. Chạy trên main sạch

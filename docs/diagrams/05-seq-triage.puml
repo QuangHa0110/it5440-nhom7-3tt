@@ -1,0 +1,66 @@
+@startuml 05-seq-triage
+!include include/style.iuml
+!include include/zones.iuml
+title Sơ đồ 5. Nhận định một cảnh báo trong TriageEngine
+autonumber "<b>0"
+
+participant "Pipeline" as pipe $C_OURS
+box "llm" $C_ZONE_Z
+  participant "TriageEngine" as engine $C_OURS
+  participant "VerdictCache" as cache $C_OURS
+  participant "BudgetGuard" as budget $C_OURS
+  participant "Redactor" as redact $C_REUSED
+  participant "PromptBuilder" as prompt $C_OURS
+  participant "OpenAICompatClient" as client $C_OURS
+  participant "VerdictValidator" as validator $C_OURS
+end box
+participant "Mô hình" as model $C_EXTERNAL
+database "Store" as store $C_OURS
+
+pipe -> engine : triage(finding, context, variant)
+engine -> cache : tra khóa = băm(dấu vân tay, ngữ cảnh,\nphiên bản prompt, mô hình, tham số)
+alt đã có trong cache
+  cache --> engine : Verdict đã lưu
+  engine --> pipe : Verdict (cached)
+else chưa có
+  engine -> budget : còn ngân sách ngày và ngân sách PR?
+  alt hết ngân sách
+    budget --> engine : từ chối
+    engine --> pipe : Verdict(unknown, lý do = budget)
+  else còn
+    engine -> redact : che secret trong mã
+    redact --> engine : mã đã che, số chỗ đã che
+    engine -> prompt : dựng prompt (mã nằm trong khối dữ liệu,\nchỉ dẫn nằm ngoài)
+    prompt --> engine : messages + JSON schema
+    engine -> client : gọi (temperature 0, seed cố định)
+    client -> model : POST /v1/chat/completions
+    model --> client : văn bản
+    client --> engine : phản hồi, token, thời gian
+    engine -> validator : kiểm tra
+    alt JSON sai schema
+      validator --> engine : lỗi schema
+      engine -> client : gọi lại MỘT lần
+      client -> model : POST
+      model --> client : văn bản
+      client --> engine : phản hồi
+      engine -> validator : kiểm tra lại
+    end
+    alt hợp lệ và mọi bằng chứng nằm trong mã đã cung cấp
+      validator --> engine : hợp lệ
+      engine -> cache : lưu
+      engine --> pipe : Verdict(label, giải thích, bằng chứng)
+    else vẫn sai, hoặc bằng chứng trỏ ra ngoài ngữ cảnh
+      validator --> engine : không hợp lệ
+      engine --> pipe : Verdict(invalid) → giữ cảnh báo gốc
+    end
+    engine -> store : lưu prompt, phản hồi thô, token, chi phí
+  end
+end
+
+note over engine, validator
+  likely_false chỉ làm cảnh báo bị THU GỌN.
+  unknown và invalid luôn được giữ nguyên.
+  Mô hình không có công cụ, không chạy lệnh,
+  không đọc được gì ngoài prompt.
+end note
+@enduml

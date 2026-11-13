@@ -1,0 +1,40 @@
+@startuml 01-context
+!include include/style.iuml
+!include include/zones.iuml
+title Sơ đồ 1. Bối cảnh hệ thống và vùng tin cậy
+left to right direction
+
+actor "Lập trình viên\ncủa Z" as dev
+actor "Trưởng nhóm kỹ thuật,\nkỹ sư xác minh của Z" as lead
+actor "Người gán nhãn\n(thành viên được Z cho phép)" as labeler
+actor "Nhóm nghiên cứu" as team
+
+rectangle "Hạ tầng công ty Z" as zoneZ $C_ZONE_Z {
+  rectangle "**PR Triage Bot**\nquét PR, lọc cảnh báo bằng LLM,\nđăng một comment, đo kết quả" as sys $C_OURS
+  rectangle "Máy chủ mã nguồn (SCM)\nrepo, pull request, comment" as scm $C_EXTERNAL
+  rectangle "Hệ thống CI\n(dự kiến Jenkins)" as ci $C_EXTERNAL
+  rectangle "Máy chủ mô hình tại chỗ\n(Ollama hoặc vLLM)" as local $C_REUSED
+}
+
+rectangle "Bên ngoài, cần Z đồng ý" as zoneCloud $C_ZONE_CLOUD {
+  rectangle "LLM cloud\n(tùy chọn)" as cloud $C_EXTERNAL
+}
+
+rectangle "Công khai" as zonePub $C_ZONE_PUBLIC {
+  rectangle "Repo public của nhóm\nmã công cụ, số liệu tổng hợp" as pubrepo $C_OURS
+}
+
+dev --> scm : mở và cập nhật PR,\nđọc comment, phản hồi
+scm --> ci : sự kiện PR
+ci --> sys : chạy job triage,\npublish, feedback
+sys --> scm : đọc diff và lịch sử,\nđăng một comment
+sys --> local : đoạn mã đã che secret
+sys ..> cloud : đoạn mã đã che secret\n(chỉ khi Z đồng ý)
+labeler --> sys : gán nhãn mù
+lead --> sys : xác minh khoảng 50 cảnh báo,\nduyệt số liệu xuất ra
+sys ..> pubrepo : số liệu tổng hợp ẩn danh\n(sau khi Z duyệt)
+team --> pubrepo : mã công cụ, cấu hình,\nbài báo
+pubrepo ..> ci : image công cụ\n(theo tag phát hành)
+
+$legend_zones()
+@enduml

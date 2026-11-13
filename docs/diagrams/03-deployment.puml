@@ -1,0 +1,50 @@
+@startuml 03-deployment
+!include include/style.iuml
+!include include/zones.iuml
+title Sơ đồ 3. Triển khai tại công ty Z
+
+frame "Hạ tầng công ty Z" as zoneZ $C_ZONE_Z {
+
+  node "Máy chủ mã nguồn (SCM)\nrepo, PR, tài khoản bot\nchỉ có quyền comment" as scm $C_EXTERNAL
+
+  node "CI controller\n(dự kiến Jenkins)\npipeline triage, lịch định kỳ" as ciCtl $C_EXTERNAL
+
+  node "CI agent (Docker), mỗi job một container dùng một lần" as agent {
+    node "Job triage\ncredential CHỈ ĐỌC repo\n----\npr-triage run\nSemgrep CE\nSpotBugs + FindSecBugs (Java)\ntree-sitter" as cTriage $C_OURS
+    node "Job publish\ncredential CHỈ COMMENT\n----\npr-triage publish\nkhông checkout mã\nkhông gọi LLM" as cPublish $C_OURS
+    node "Job định kỳ\ncredential chỉ đọc\n----\npr-triage feedback\npr-triage replay" as cBatch $C_OURS
+  }
+
+  node "Máy chủ mô hình (GPU)\n----\nOllama hoặc vLLM\nAPI kiểu OpenAI" as gpu $C_REUSED
+
+  node "Máy dữ liệu nghiên cứu\nchỉ thành viên Z duyệt đăng nhập được" as dataNode $C_OURS {
+    database "SQLite (WAL)\ncảnh báo, nhận định,\nnhãn, phản hồi" as db
+    folder "Blob: SARIF, ngữ cảnh,\nprompt, phản hồi thô" as blobs
+    component "pr-triage eval\ngán nhãn, số đo, xuất" as eval
+  }
+
+  node "Cổng ra mạng của Z\n(proxy, tùy chọn)" as egress $C_EXTERNAL
+}
+
+cloud "LLM cloud\n(chỉ khi Z đồng ý)" as cloudLlm $C_ZONE_CLOUD
+
+frame "Công khai" as zonePub $C_ZONE_PUBLIC {
+  node "GitHub: repo nhóm\nmã, cấu hình, bài báo,\nimage theo tag vX.Y.Z" as gh
+}
+
+scm --> ciCtl : webhook sự kiện PR
+ciCtl --> cTriage : khởi chạy
+ciCtl --> cBatch : theo lịch
+cTriage --> cPublish : artifact\ntriage-result.json
+cTriage --> scm : git fetch\n(chỉ đọc)
+cPublish --> scm : API comment
+cBatch --> scm : API đọc phản ứng,\ncommit, trạng thái PR
+cTriage --> gpu : HTTPS nội bộ
+cTriage ..> egress : đoạn mã đã che secret
+egress ..> cloudLlm : HTTPS
+agent --> dataNode : đọc và ghi lượt chạy,\nnhận định, comment, phản hồi
+gh ..> agent : kéo image theo phiên bản
+dataNode ..> gh : bảng tổng hợp ẩn danh,\nsau khi người của Z duyệt
+
+$legend_zones()
+@enduml

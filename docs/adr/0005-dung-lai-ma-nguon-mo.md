@@ -1,6 +1,6 @@
 # ADR 0005 — Dùng lại mã nguồn mở ở tầng công cụ, kế thừa ý tưởng ở tầng phương pháp, không fork bot có sẵn
 
-- **Status:** proposed (2026-11-13)
+- **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq
 - **Liên quan:** [architecture.md](../architecture.md) mục 4
 

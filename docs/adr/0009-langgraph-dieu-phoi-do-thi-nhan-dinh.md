@@ -1,6 +1,6 @@
 # ADR 0009 — LangGraph điều phối đồ thị nhận định cho từng cảnh báo, không dùng làm agent tự do
 
-- **Status:** proposed (2026-11-13)
+- **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq
 - **Liên quan:** [ADR 0003](0003-llm-goi-mot-lan-khong-dung-agent.md), [architecture.md](../architecture.md) mục 8.2, sơ đồ 5
 

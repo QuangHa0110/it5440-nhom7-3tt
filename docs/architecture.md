@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | Bản đề xuất, chưa được nhóm duyệt (2026-11-13) |
+| Trạng thái | Đã được người dùng duyệt (2026-11-13). Đã hiện thực P01 đến P07, xem [kế hoạch](plans/done/) và [devlog](devlog/) |
 | Phạm vi | Hệ thống chạy tại công ty Z và luồng đánh giá ngoại tuyến. Căn cứ: [proposal](project/proposal-llm-loc-canh-bao-pr.md) |
 | Sơ đồ | Nguồn PlantUML ở [diagrams/](diagrams/), bản render ở `diagrams/out/`. Render lại bằng `make diagrams` |
 
@@ -96,7 +96,7 @@ Nguồn: [02-component.puml](diagrams/02-component.puml).
 | `store` | SQLite và kho blob | Cùng người làm `pipeline` |
 | `evaluation` | Dựng tập cảnh báo, gán nhãn mù, số đo, xuất số liệu, khóa cấu hình | hotamago và người tổ chức gán nhãn |
 
-Khung repo hiện có sáu gói. Thiết kế này cần thêm ba gói `core`, `pipeline` và `store`.
+Cả chín gói đã có trong `src/pr_triage/`.
 
 **Quy tắc phụ thuộc.** Mọi gói phụ thuộc `core`. `context`, `llm` và `evaluation` không phụ thuộc `bot`. Chỉ `pipeline` và `cli` được nối các gói với nhau.
 

@@ -1,6 +1,6 @@
 # ADR 0002 — Cấu trúc repo theo package Python, tách mã, cấu hình, dữ liệu, báo cáo, tài liệu
 
-- **Status:** proposed (2026-11-13)
+- **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq
 - **Liên quan:** [ADR 0001](0001-mo-hinh-nhanh-va-release.md), proposal mục 6, 11, 13
 

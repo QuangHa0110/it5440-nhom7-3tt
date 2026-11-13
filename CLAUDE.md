@@ -45,7 +45,8 @@ Ranh giới mã: mọi gói phụ thuộc `core`, `core` không phụ thuộc g�
 
 ## Lệnh thường dùng
 
-`make help` liệt kê tất cả. Chính: `make setup`, `make lint`, `make typecheck`, `make test`, `make check` (cổng trước khi mở PR), `make bump`.
+`make help` liệt kê tất cả. Chính: `make setup`, `make lint`, `make typecheck`, `make test`, `make check` (cổng trước khi mở PR), `make e2e` (cần khóa LLM trong `.env`), `make bump`.
+Khóa LLM chỉ ở biến môi trường hoặc `.env`, không bao giờ vào repo, log, devlog hay commit.
 
 ## Tài liệu như mã (docs-as-code)
 

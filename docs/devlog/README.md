@@ -22,3 +22,4 @@ Nơi ghi **phát hiện**, không ghi việc đã xong: xung đột, vật cản
 - [2026-11-13 Ba tên mô hình trên cổng LLM cho kết quả giống nhau](2026-11-13-cong-llm-ba-ten-mo-hinh-cho-ket-qua-giong-nhau.md) 🟡
 - [2026-11-13 Cách C trên OWASP BenchmarkJava: số đo lần đầu](2026-11-13-cach-c-tren-benchmarkjava-lan-dau.md) 🟢
 - [2026-11-13 Kiểm tra luồng đánh giá trên OWASP BenchmarkJava](2026-11-13-kiem-tra-luong-danh-gia-tren-benchmarkjava.md) 🟢
+- [2026-11-13 Tóm tắt phiên triển khai P01 đến P07](2026-11-13-phien-trien-khai-xuyen-dem.md) 🟢

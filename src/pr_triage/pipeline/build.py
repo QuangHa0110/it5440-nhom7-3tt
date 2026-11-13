@@ -31,6 +31,7 @@ class BuildOptions:
     engine: str = "graph"
     workers: int = 4
     semgrep_timeout_s: int = 300
+    snippet_radius: int = 10
 
 
 def manifest_hash(opts: BuildOptions, cfg: LlmConfig) -> str:
@@ -39,7 +40,7 @@ def manifest_hash(opts: BuildOptions, cfg: LlmConfig) -> str:
         p = Path(path)
         h.update(p.read_bytes() if p.exists() else path.encode())
     h.update(
-        f"{cfg.model}|{cfg.temperature}|{cfg.seed}|{opts.display}|{opts.engine}|{PROMPT_VERSION}".encode()
+        f"{cfg.model}|{cfg.temperature}|{cfg.seed}|{opts.display}|{opts.engine}|{PROMPT_VERSION}|r{opts.snippet_radius}".encode()
     )
     return h.hexdigest()[:16]
 
@@ -51,7 +52,7 @@ def build_pipeline(opts: BuildOptions, llm: LlmPort | None = None) -> tuple[PrPi
         client = OpenAICompatClient(cfg)
         llm = TriageEngine(client) if opts.engine == "graph" else PlainTriageEngine(client)
     contexts: dict[Variant, ContextPort] = {
-        Variant.B: SnippetProvider(),
+        Variant.B: SnippetProvider(radius=opts.snippet_radius),
         Variant.C: DataflowProvider(load_catalog(Path(opts.catalog))),
     }
     pipeline = PrPipeline(

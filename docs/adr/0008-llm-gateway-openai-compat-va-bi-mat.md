@@ -1,6 +1,6 @@
 # ADR 0008 — Truy cập LLM qua API kiểu OpenAI, cấu hình bằng biến môi trường, khóa không bao giờ vào repo
 
-- **Status:** proposed (2026-11-13)
+- **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq
 - **Liên quan:** [architecture.md](../architecture.md) mục 8.2; proposal 6.6, 10, 15
 

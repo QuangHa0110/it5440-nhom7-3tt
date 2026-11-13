@@ -43,6 +43,9 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--display", choices=["A", "B", "C"], default="B")
     p.add_argument("--engine", choices=["graph", "plain"], default="graph")
     p.add_argument("--workers", type=int, default=4)
+    p.add_argument(
+        "--snippet-radius", type=int, default=10, help="số dòng quanh vị trí báo của cách B"
+    )
     p.add_argument("--out", type=Path, default=Path("out"))
 
 
@@ -118,6 +121,7 @@ def _opts(args: argparse.Namespace, mode: RunMode) -> BuildOptions:
         "display": Variant(args.display),
         "engine": args.engine,
         "workers": args.workers,
+        "snippet_radius": args.snippet_radius,
     }
     if args.rules:
         kw["rules"] = args.rules

@@ -1,6 +1,6 @@
 # ADR 0010 — Thu phản hồi theo từng cảnh báo bằng lệnh trả lời `fp` và `tp`
 
-- **Status:** proposed (2026-11-13)
+- **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq (đã đồng ý ý tưởng ngày 2026-11-13)
 - **Liên quan:** [architecture.md](../architecture.md) mục 10.1; proposal 6.5, 7.6
 

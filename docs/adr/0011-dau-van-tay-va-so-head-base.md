@@ -1,6 +1,6 @@
 # ADR 0011 — Dấu vân tay cảnh báo không dùng số dòng, cảnh báo mới là head trừ base
 
-- **Status:** proposed (2026-11-13)
+- **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq
 - **Liên quan:** [architecture.md](../architecture.md) mục 7.1; proposal 3.1, 7.2
 

@@ -1,6 +1,6 @@
 # ADR 0003 — LLM nhận định bằng một lần gọi trên ngữ cảnh do chương trình trích, không dùng vòng lặp agent
 
-- **Status:** proposed (2026-11-13)
+- **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq
 - **Liên quan:** [architecture.md](../architecture.md) mục 2, 8; [ADR 0009](0009-langgraph-dieu-phoi-do-thi-nhan-dinh.md); proposal 6.3, 6.6, 11
 

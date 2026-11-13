@@ -1,6 +1,6 @@
 # ADR 0007 — Tách thành ba job CI với ba mức quyền
 
-- **Status:** proposed (2026-11-13)
+- **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq
 - **Liên quan:** [architecture.md](../architecture.md) mục 6; proposal 6.6
 

@@ -18,6 +18,18 @@ Hướng TT: áp dụng các kỹ thuật phân tích chương trình hướng b
 | [docs/adr/](docs/adr/), [docs/plans/](docs/plans/), [docs/devlog/](docs/devlog/) | Quyết định, kế hoạch, nhật ký kỹ thuật |
 | [CLAUDE.md](CLAUDE.md) | Ngữ cảnh cho Claude Code |
 
+## Chạy thử
+
+```bash
+make setup                      # môi trường uv và pre-commit
+cp .env.example .env            # điền PR_TRIAGE_LLM_API_KEY và PR_TRIAGE_LLM_MODEL, không commit
+make check                      # lint, mypy, test
+make e2e                        # đầu cuối trên repo Java thử với cổng LLM thật
+uv run pr-triage --help         # run, replay, publish, feedback, eval
+```
+
+Với dữ liệu của công ty Z, chỉ dùng mô hình tại chỗ hoặc khi Z đồng ý bằng văn bản (`PR_TRIAGE_LLM_ALLOW_EXTERNAL`). Xem [docs/architecture.md](docs/architecture.md) và [docs/adr/](docs/adr/).
+
 ## Cấu trúc thư mục
 
 ```

@@ -1,6 +1,6 @@
 # ADR 0004 — Kiến trúc cổng và bộ chuyển đổi, với ba gói nền `core`, `store`, `pipeline`
 
-- **Status:** proposed (2026-11-13)
+- **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq
 - **Liên quan:** [ADR 0002](0002-cau-truc-repo-theo-package.md), [architecture.md](../architecture.md) mục 5
 

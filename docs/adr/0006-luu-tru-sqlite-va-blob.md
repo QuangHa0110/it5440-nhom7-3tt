@@ -1,6 +1,6 @@
 # ADR 0006 — Lưu trữ bằng SQLite (WAL) và kho blob trên hệ tệp, đặt trong vùng của Z
 
-- **Status:** proposed (2026-11-13)
+- **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq
 - **Liên quan:** [architecture.md](../architecture.md) mục 6, 9; proposal 10
 

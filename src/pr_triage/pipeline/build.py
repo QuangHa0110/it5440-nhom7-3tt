@@ -9,14 +9,14 @@ from pathlib import Path
 
 from pr_triage.context import DataflowProvider, SnippetProvider, load_catalog
 from pr_triage.core.models import RunMode, Variant
-from pr_triage.core.ports import ContextPort, LlmPort
+from pr_triage.core.ports import ContextPort, LlmPort, ScannerPort
 from pr_triage.llm.client import OpenAICompatClient
 from pr_triage.llm.config import LlmConfig
 from pr_triage.llm.engine import PlainTriageEngine, TriageEngine
 from pr_triage.llm.prompt import PROMPT_VERSION
 from pr_triage.pipeline.policy import DisplayPolicy
 from pr_triage.pipeline.runner import PrPipeline
-from pr_triage.scan import SemgrepAdapter
+from pr_triage.scan import SecretScanner, SemgrepAdapter
 from pr_triage.store import SqlStore
 
 
@@ -32,6 +32,7 @@ class BuildOptions:
     workers: int = 4
     semgrep_timeout_s: int = 300
     snippet_radius: int = 10
+    secrets: bool = True
 
 
 def manifest_hash(opts: BuildOptions, cfg: LlmConfig) -> str:
@@ -40,7 +41,7 @@ def manifest_hash(opts: BuildOptions, cfg: LlmConfig) -> str:
         p = Path(path)
         h.update(p.read_bytes() if p.exists() else path.encode())
     h.update(
-        f"{cfg.model}|{cfg.temperature}|{cfg.seed}|{opts.display}|{opts.engine}|{PROMPT_VERSION}|r{opts.snippet_radius}".encode()
+        f"{cfg.model}|{cfg.temperature}|{cfg.seed}|{opts.display}|{opts.engine}|{PROMPT_VERSION}|r{opts.snippet_radius}|s{opts.secrets}".encode()
     )
     return h.hexdigest()[:16]
 
@@ -55,8 +56,11 @@ def build_pipeline(opts: BuildOptions, llm: LlmPort | None = None) -> tuple[PrPi
         Variant.B: SnippetProvider(radius=opts.snippet_radius),
         Variant.C: DataflowProvider(load_catalog(Path(opts.catalog))),
     }
+    scanners: list[ScannerPort] = [SemgrepAdapter(opts.rules, timeout_s=opts.semgrep_timeout_s)]
+    if opts.secrets:
+        scanners.append(SecretScanner())
     pipeline = PrPipeline(
-        [SemgrepAdapter(opts.rules, timeout_s=opts.semgrep_timeout_s)],
+        scanners,
         contexts,
         llm,
         store,

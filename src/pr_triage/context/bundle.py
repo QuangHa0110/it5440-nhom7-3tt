@@ -5,8 +5,10 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Sequence
+from dataclasses import replace
 
 from pr_triage.core.models import ContextBundle, ContextSlice, Variant
+from pr_triage.core.secrets import mask
 
 
 def make_bundle(
@@ -19,6 +21,7 @@ def make_bundle(
     missing: Sequence[str] = (),
     extract_ms: int = 0,
 ) -> ContextBundle:
+    slices = [replace(s, text=mask(s.text)[0]) for s in slices]
     payload = json.dumps(
         [
             variant.value,

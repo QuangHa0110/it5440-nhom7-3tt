@@ -8,6 +8,7 @@ from pathlib import Path
 
 from pr_triage.core.fingerprint import FP_VERSION, finding_id, fingerprint, normalize_snippet
 from pr_triage.core.models import Finding, RawFinding
+from pr_triage.core.secrets import mask
 
 SymbolResolver = Callable[[str, int], str | None]
 _SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2, "critical": 3}
@@ -29,7 +30,7 @@ def to_findings(
     out: list[Finding] = []
     for raw in sorted(raws, key=lambda r: (r.file, r.line_start, r.rule_id)):
         symbol = resolve(raw.file, raw.line_start)
-        snippet = raw.snippet if symbol else _window(checkout, raw)
+        snippet = mask(raw.snippet if symbol else _window(checkout, raw))[0]
         key = (raw.rule_id.lower(), raw.file, symbol or "", normalize_snippet(snippet))
         ordinal = seen[key]
         seen[key] += 1
@@ -48,7 +49,7 @@ def to_findings(
                 line_end=raw.line_end,
                 cwe=raw.cwe,
                 symbol=symbol,
-                snippet=raw.snippet,
+                snippet=mask(raw.snippet)[0],
                 flow=raw.flow,
                 no_symbol=symbol is None,
             )

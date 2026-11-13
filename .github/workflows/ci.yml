@@ -23,10 +23,14 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync
+      - name: Chặn dữ liệu nhạy cảm
+        run: python3 scripts/guard_public_repo.py $(git ls-files)
       - name: Lint
         run: |
           uv run ruff check .
           uv run ruff format --check .
+      - name: Typecheck
+        run: uv run mypy
       - name: Test
         run: uv run pytest || [ $? -eq 5 ]
 

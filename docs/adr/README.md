@@ -8,3 +8,4 @@ Mỗi file là một quyết định đáng tranh luận. Tên file: `NNNN-tieu-
 | ADR | Quyết định | Trạng thái |
 |---|---|---|
 | [0001](0001-mo-hinh-nhanh-va-release.md) | Mô hình nhánh `main`/`dev`/nhánh cá nhân, release bằng tag và bump-my-version | accepted |
+| [0002](0002-cau-truc-repo-theo-package.md) | Cấu trúc repo theo package Python, tách mã, cấu hình, dữ liệu, báo cáo, tài liệu | proposed |

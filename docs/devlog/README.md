@@ -13,7 +13,7 @@ Nơi ghi **phát hiện**, không ghi việc đã xong: xung đột, vật cản
 
 - Mỗi mục một file: `YYYY-MM-DD-<slug>.md`. Mở đầu gồm: **Phát hiện**, **Vì sao quan trọng**, **Đề xuất điều chỉnh**.
 - Mức độ: 🔴 có thể đổi một kết luận hoặc RQ, 🟡 phải thay thế khi triển khai nhưng kết luận giữ nguyên, 🟢 ghi chú, ⊘ hoãn.
-- Số liệu không nằm ở đây. Chúng nằm trong `results/` và được tạo bởi script trong `analysis/`.
+- Số liệu không nằm ở đây. Chúng nằm trong `reports/results/` và được tạo bởi script trong `src/pr_triage/evaluation/`.
 - Repo public: không ghi tên Z, mã nguồn hay đường dẫn nội bộ.
 
 ## Mục lục (mới nhất ở trên)

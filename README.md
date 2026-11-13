@@ -10,10 +10,10 @@ Hướng TT: áp dụng các kỹ thuật phân tích chương trình hướng b
 
 | File | Nội dung |
 |---|---|
-| [docs/huong-dan-tieu-luan.md](docs/huong-dan-tieu-luan.md) | Tóm tắt yêu cầu, cách chấm điểm, lịch báo cáo và quy cách trình bày |
-| [docs/tom-tat-bai-bao.md](docs/tom-tat-bai-bao.md) | Tóm tắt 4 bài báo giảng viên giao và cách dùng trong đề tài |
-| [docs/papers/README.md](docs/papers/README.md) | Link tải 4 bài báo (PDF không lưu trên repo) |
-| [docs/proposal-llm-loc-canh-bao-pr.md](docs/proposal-llm-loc-canh-bao-pr.md) | Proposal đề tài: LLM lọc cảnh báo bảo mật trên PR |
+| [docs/project/huong-dan-tieu-luan.md](docs/project/huong-dan-tieu-luan.md) | Tóm tắt yêu cầu, cách chấm điểm, lịch báo cáo và quy cách trình bày |
+| [docs/project/tom-tat-bai-bao.md](docs/project/tom-tat-bai-bao.md) | Tóm tắt 4 bài báo giảng viên giao và cách dùng trong đề tài |
+| [docs/project/papers/README.md](docs/project/papers/README.md) | Link tải 4 bài báo (PDF không lưu trên repo) |
+| [docs/project/proposal-llm-loc-canh-bao-pr.md](docs/project/proposal-llm-loc-canh-bao-pr.md) | Proposal đề tài: LLM lọc cảnh báo bảo mật trên PR |
 | [docs/git-workflow.md](docs/git-workflow.md) | Quy trình nhánh, PR, release |
 | [docs/adr/](docs/adr/), [docs/plans/](docs/plans/), [docs/devlog/](docs/devlog/) | Quyết định, kế hoạch, nhật ký kỹ thuật |
 | [CLAUDE.md](CLAUDE.md) | Ngữ cảnh cho Claude Code |
@@ -21,20 +21,19 @@ Hướng TT: áp dụng các kỹ thuật phân tích chương trình hướng b
 ## Cấu trúc thư mục
 
 ```
-docs/        Tài liệu, kế hoạch, tóm tắt bài báo
-pipeline/    Script và cấu hình chạy các công cụ quét, file CI
-rules/       Luật Semgrep/CodeQL tùy biến (kể cả luật do LLM sinh)
-analysis/    Script hợp nhất, khử trùng lặp, gán nhãn, thống kê
-results/     Số liệu tổng hợp ĐÃ ẨN DANH (kết quả thô nằm ngoài git)
-paper/       Bài báo (LaTeX) và báo cáo đầy đủ
-slides/      Slide các lần báo cáo
+src/pr_triage/   mã: scan, normalize, context, llm, bot, evaluation, cli
+tests/           kiểm thử, dữ liệu giả ở tests/fixtures/
+configs/         luật Semgrep, prompt, schema, manifest khóa cho eval
+data/            dữ liệu chạy, không commit
+reports/         số liệu ẩn danh, bài báo (LaTeX), slide
+docs/            proposal và tài liệu môn học, ADR, kế hoạch, nhật ký kỹ thuật
 ```
 
 ## Quy tắc của repo
 
 Repo đang ở chế độ **public**:
 
-- **Không commit** tên công ty Z, tên dự án nội bộ, đoạn mã nguồn, đường dẫn nội bộ hay kết quả quét thô. Kết quả thô để trong `results/raw/` hoặc `results/company/`, hai thư mục này đã nằm trong `.gitignore`.
+- **Không commit** tên công ty Z, tên dự án nội bộ, đoạn mã nguồn, đường dẫn nội bộ hay kết quả quét thô. Kết quả thô để trong `data/raw/` hoặc `data/company/`, hai thư mục này đã nằm trong `.gitignore`.
 - **Không bao giờ commit secret.** Secret tìm thấy khi quét chỉ báo riêng cho công ty để thu hồi.
 - Không commit PDF bài báo, tài liệu của giảng viên hay danh sách học viên.
 - Nhánh: `main` (release candidate, tag `vX.Y.Z`), `dev` (phát triển chung), nhánh cá nhân `{tên dev}/{slug}/{nội dung}` mở PR vào `dev`. Chi tiết: [docs/git-workflow.md](docs/git-workflow.md).

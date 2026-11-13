@@ -1,11 +1,11 @@
 # P05. Pipeline và CLI: hệ thống chạy được đầu cuối
 
-- **Status:** queued
+- **Status:** done
 - **Người làm:** trinq (với Claude Code)
 - **Đóng:** mốc "hệ thống chạy được" ở tin nhắn giao việc
 - **Quyết định cho phép:** ADR 0004, 0007
 - **Nhánh:** `trinq/pipeline/end-to-end-run`
-- **Bắt đầu / Kết thúc:** — / —
+- **Bắt đầu / Kết thúc:** 2026-11-13 / 2026-11-13
 
 ---
 
@@ -56,3 +56,7 @@ make check && make e2e
 ## Kết quả
 
 *Điền khi đóng.*
+
+- **Kết quả:** `make e2e` chạy được đầu cuối trên cổng LLM thật: repo Java mẫu, thêm một lỗ hổng, Semgrep thật, ngữ cảnh B và C, nhận định của <mô-hình-thử-nghiệm>, 1 cảnh báo mới, nhãn A/B/C, giải thích tiếng Việt, 1257 token vào, 494 token ra, 14,8 giây. `pr-triage run` và `pr-triage replay` có test với Semgrep thật và LLM giả. Trên cây mã WebGoat (`--base none`): 1 cảnh báo (JWT KID, SQL injection nối chuỗi), B và C đều `likely_true`, 17 giây.
+- **Khác kế hoạch:** thêm `--base none` (coi mọi cảnh báo là mới, dùng để quét nhánh chính). Thêm `pipeline/build.py` lắp pipeline và `.env` nạp tự động. Trên 60 commit gần nhất của WebGoat không có cảnh báo mới (toàn commit nâng phụ thuộc), nên T8 làm trên toàn cây.
+- **Ghi ở:** không có devlog mới.

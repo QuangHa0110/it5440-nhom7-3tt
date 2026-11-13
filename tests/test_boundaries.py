@@ -14,6 +14,17 @@ ALLOWED_PREFIX = {
     "llm": {"core", "llm"},
     "evaluation": {"core", "evaluation", "store"},
     "bot": {"core", "bot", "store"},
+    "pipeline": {
+        "core",
+        "store",
+        "scan",
+        "normalize",
+        "context",
+        "llm",
+        "bot",
+        "evaluation",
+        "pipeline",
+    },
 }
 
 

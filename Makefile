@@ -32,6 +32,10 @@ typecheck:  ## Mypy strict
 test:  ## Chạy pytest (bỏ qua nếu chưa có test)
 	$(UV) run pytest || [ $$? -eq 5 ]
 
+.PHONY: e2e
+e2e:  ## Chạy đầu cuối trên repo Java thử với cổng LLM thật (cần PR_TRIAGE_LLM_API_KEY)
+	$(UV) run python scripts/e2e.py
+
 .PHONY: check
 check: lint typecheck test  ## Cổng trước khi mở PR (giống CI)
 

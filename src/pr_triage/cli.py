@@ -15,7 +15,8 @@ from pr_triage import __version__
 from pr_triage.bot import FeedbackCollector, Publisher, render, resolve_states
 from pr_triage.bot.github import GitHubScm
 from pr_triage.core.alias import Aliaser
-from pr_triage.core.models import PrRef, RunMode, TriageResult, Variant
+from pr_triage.core.models import HumanLabel, PrRef, RunMode, TriageResult, Variant
+from pr_triage.core.ports import StorePort
 from pr_triage.pipeline import result_io
 from pr_triage.pipeline.build import BuildOptions, build_pipeline
 from pr_triage.pipeline.gitrepo import first_parent_commits, parents
@@ -69,6 +70,38 @@ def parser() -> argparse.ArgumentParser:
     fb.add_argument("--pr", type=int, required=True)
     fb.add_argument("--comment-ref", required=True)
     fb.add_argument("--db", default="data/dev/store.sqlite")
+    ev = sub.add_parser("eval", help="luồng đánh giá ngoại tuyến (chạy trong vùng của Z)")
+    ev.add_argument("--db", default="data/dev/store.sqlite")
+    es = ev.add_subparsers(dest="eval_cmd")
+    p = es.add_parser("pool", help="dựng tập cảnh báo, tách dev và eval")
+    p.add_argument("--cutoff", required=True, help="thời điểm ISO: PR bắt đầu từ đây vào eval")
+    p.add_argument("--eval-only-repo", action="append", default=[])
+    p = es.add_parser("label-export", help="xuất phiếu gán nhãn mù")
+    p.add_argument("--split", choices=["dev", "eval"], required=True)
+    p.add_argument("--labelers", required=True, help="tên cách nhau bằng dấu phẩy, ít nhất hai")
+    p.add_argument("--out", type=Path, default=Path("data/dev/labels"))
+    p.add_argument("--seed", type=int, default=0)
+    p = es.add_parser("label-import", help="nhập phiếu đã điền")
+    p.add_argument("--labeler", required=True)
+    p.add_argument("--file", type=Path, required=True)
+    es.add_parser("kappa", help="Cohen's kappa giữa hai người gán nhãn")
+    es.add_parser("finalize", help="chốt các ca đồng ý, in hàng đợi phân xử")
+    p = es.add_parser("adjudicate", help="nhập nhãn phân xử cho một cảnh báo")
+    p.add_argument("--finding", required=True)
+    p.add_argument("--value", choices=[h.value for h in HumanLabel], required=True)
+    p.add_argument("--who", required=True)
+    p.add_argument("--z", action="store_true", help="đã được kỹ sư của Z xác minh")
+    p = es.add_parser("freeze", help="khóa cấu hình thành manifest")
+    p.add_argument("--manifest", type=Path, default=Path("configs/eval/manifest.json"))
+    p = es.add_parser("metrics", help="tính số đo")
+    p.add_argument("--split", choices=["dev", "eval"], required=True)
+    p.add_argument("--manifest", type=Path, default=Path("configs/eval/manifest.json"))
+    p.add_argument("--rounds", type=int, default=1000)
+    p.add_argument("--markdown", action="store_true")
+    p = es.add_parser("export", help="xuất số liệu tổng hợp ẩn danh")
+    p.add_argument("--split", choices=["dev", "eval"], required=True)
+    p.add_argument("--out", type=Path, default=Path("reports/results/summary.json"))
+    p.add_argument("--k", type=int, default=5)
     rep = sub.add_parser("replay", help="chạy lại trên các commit đã merge gần đây")
     _common(rep)
     rep.add_argument("--ref", default="HEAD")
@@ -103,6 +136,102 @@ def summarize(result: TriageResult) -> dict[str, object]:
         "errors": len(result.errors),
         "duration_s": result.run.duration_s,
     }
+
+
+def _manifest_roots() -> list[Path]:
+    return [Path("configs/semgrep"), Path("configs/context"), Path("configs/schemas"),
+            Path("configs/eval/thresholds.yml")]  # fmt: skip
+
+
+def _current_manifest() -> dict[str, object]:
+    from pr_triage.evaluation import compute_manifest
+    from pr_triage.llm.prompt import PROMPT_VERSION
+
+    extra = {"prompt_version": PROMPT_VERSION, "model": os.environ.get("PR_TRIAGE_LLM_MODEL", "")}
+    return compute_manifest([r for r in _manifest_roots() if r.exists()], extra)
+
+
+def _forbidden(store: StorePort) -> set[str]:
+    terms: set[str] = set()
+    for e in store.list_pool():
+        f = store.get_finding(e.finding_id)
+        terms.add(e.finding_id)
+        if f is not None:
+            terms.add(f.file)
+    default = Path.home() / ".config/pr-triage/blocklist.txt"
+    bl = Path(os.environ.get("PUBLIC_REPO_BLOCKLIST", default))
+    if bl.is_file():
+        terms.update(x.strip() for x in bl.read_text("utf-8").splitlines() if x.strip())
+    return terms
+
+
+def _eval(args: argparse.Namespace) -> int:
+    from pr_triage.evaluation import (
+        FreezeMismatch,
+        blind,
+        build_pool,
+        check_manifest,
+        compute_report,
+        to_markdown,
+        write_manifest,
+    )
+    from pr_triage.evaluation import adjudicate as adj
+    from pr_triage.evaluation.export import assert_clean, export_summary
+    from pr_triage.store import SqlStore
+
+    store = SqlStore(args.db)
+    try:
+        cmd = args.eval_cmd
+        if cmd == "pool":
+            entries = build_pool(store, args.cutoff, args.eval_only_repo)
+            print(json.dumps({"dev": sum(e.split == "dev" for e in entries),
+                              "eval": sum(e.split == "eval" for e in entries)}))  # fmt: skip
+        elif cmd == "label-export":
+            paths = blind.export_sheets(
+                store, args.split, args.labelers.split(","), args.out, args.seed
+            )
+            print(json.dumps({k: str(v) for k, v in paths.items()}, ensure_ascii=False))
+        elif cmd == "label-import":
+            print(json.dumps({"imported": blind.import_sheet(store, args.labeler, args.file)}))
+        elif cmd == "kappa":
+            k = adj.kappa(store)
+            print(json.dumps({"kappa": k.kappa, "n": k.n, "min": adj.KAPPA_MIN}))
+        elif cmd == "finalize":
+            n = adj.finalize_agreed(store)
+            print(json.dumps({"finalized": n, "queue": adj.queue(store)}))
+        elif cmd == "adjudicate":
+            adj.adjudicate(store, args.finding, HumanLabel(args.value), args.who, args.z)
+            print(json.dumps({"ok": True}))
+        elif cmd == "freeze":
+            write_manifest(_current_manifest(), args.manifest)
+            print(f"đã ghi {args.manifest}. Commit rồi gắn tag: git tag eval-freeze-<n>")
+        elif cmd == "metrics":
+            if args.split == "eval":
+                check_manifest(args.manifest, _current_manifest())
+            report = compute_report(store, args.split, args.rounds)
+            print(
+                to_markdown(report)
+                if args.markdown
+                else json.dumps(report, ensure_ascii=False, indent=2)
+            )
+        elif cmd == "export":
+            summary = export_summary(compute_report(store, args.split, 200), args.k)
+            assert_clean(summary, _forbidden(store))
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", "utf-8")
+            print(f"đã ghi {args.out}")
+        else:
+            print(
+                "dùng: pr-triage eval {pool|label-export|label-import|kappa|finalize|"
+                "adjudicate|freeze|metrics|export}"
+            )
+            return 0
+    except (FreezeMismatch, adj.KappaTooLow, blind.SheetError) as exc:
+        print(f"từ chối: {exc}", file=sys.stderr)
+        return 3
+    finally:
+        store.close()
+    return 0
 
 
 def _publish(args: argparse.Namespace) -> int:
@@ -154,6 +283,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         store.close()
         print(json.dumps(summarize(result), ensure_ascii=False))
         return 1 if result.run.status.value == "failed" else 0
+    if args.cmd == "eval":
+        return _eval(args)
     if args.cmd == "publish":
         return _publish(args)
     if args.cmd == "feedback":

@@ -7,11 +7,14 @@ from pathlib import Path
 from typing import Protocol
 
 from pr_triage.core.models import (
+    Adjudication,
     ContextBundle,
     DisplayedAlert,
     FeedbackEvent,
     Finding,
+    Label,
     Occurrence,
+    PoolEntry,
     PostedComment,
     PrRef,
     PrRun,
@@ -85,6 +88,20 @@ class StorePort(Protocol):
     def add_feedback(self, event: FeedbackEvent) -> None: ...
 
     def list_feedback(self, run_id: str) -> list[FeedbackEvent]: ...
+
+    def list_runs(self) -> list[PrRun]: ...
+
+    def save_pool_entry(self, entry: PoolEntry) -> None: ...
+
+    def list_pool(self, split: str | None = None) -> list[PoolEntry]: ...
+
+    def save_label(self, label: Label) -> None: ...
+
+    def list_labels(self, finding_id: str | None = None) -> list[Label]: ...
+
+    def save_adjudication(self, adj: Adjudication) -> None: ...
+
+    def list_adjudications(self) -> list[Adjudication]: ...
 
     def save_comment(self, comment: PostedComment) -> None: ...
 

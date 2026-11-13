@@ -214,6 +214,14 @@ class Label:
 
 
 @dataclass(frozen=True)
+class PoolEntry:
+    finding_id: str
+    split: str
+    run_id: str
+    repo_alias: str
+
+
+@dataclass(frozen=True)
 class Adjudication:
     finding_id: str
     final_value: HumanLabel

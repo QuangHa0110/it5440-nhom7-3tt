@@ -1,11 +1,11 @@
 # P07. Luồng đánh giá ngoại tuyến
 
-- **Status:** queued
+- **Status:** done
 - **Người làm:** trinq (với Claude Code) và hotamago
 - **Đóng:** phiếu gán nhãn mù, số đo, khóa cấu hình, xuất ẩn danh
 - **Quyết định cho phép:** ADR 0006, proposal 7
 - **Nhánh:** `trinq/evaluation/offline-eval`
-- **Bắt đầu / Kết thúc:** — / —
+- **Bắt đầu / Kết thúc:** 2026-11-13 / 2026-11-13
 
 ---
 
@@ -53,3 +53,7 @@ make check
 ## Kết quả
 
 *Điền khi đóng.*
+
+- **Kết quả:** `Metrics` (Wilson, McNemar chính xác, kappa, bootstrap theo PR, lượt đọc tiết kiệm khớp ví dụ 171 và 5,4 của proposal), `build_pool` (dev/eval theo thời gian và repo chỉ-eval), phiếu gán nhãn mù (mô-đun không đọc nhận định, có test kiểm), nhập nhãn có kiểm tra, kappa và cổng 0,6, hàng đợi phân xử, `compute_report`, `FreezeGuard` (manifest băm, từ chối chạy eval khi lệch), `Exporter` (che ô nhỏ hơn k, kiểm tra không lộ giá trị cấm). CLI `pr-triage eval pool|label-export|label-import|kappa|finalize|adjudicate|freeze|metrics|export`. Kiểm chứng trên BenchmarkJava: luồng chạy thông.
+- **Khác kế hoạch:** thêm migration 003 (bảng pool, labels, adjudications) và `StorePort.list_runs`. T7 làm bằng script ngoài repo nạp nhãn Benchmark làm nhãn cuối, kết quả ghi rõ không phải kết quả đề tài.
+- **Ghi ở:** devlog 2026-11-13 (kiểm tra luồng đánh giá trên BenchmarkJava).

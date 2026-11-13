@@ -9,11 +9,14 @@ from pathlib import Path
 from typing import Any
 
 from pr_triage.core.models import (
+    Adjudication,
     ContextBundle,
     DisplayedAlert,
     FeedbackEvent,
     Finding,
+    Label,
     Occurrence,
+    PoolEntry,
     PostedComment,
     PrRun,
     Verdict,
@@ -204,3 +207,45 @@ class SqlStore:
 
     def get_comment(self, run_id: str) -> PostedComment | None:
         return self._one(PostedComment, "SELECT data FROM comments WHERE run_id=?", (run_id,))
+
+    def list_runs(self) -> list[PrRun]:
+        return self._many(PrRun, "SELECT data FROM runs ORDER BY started_at, run_id", ())
+
+    def save_pool_entry(self, entry: PoolEntry) -> None:
+        self._exec(
+            "INSERT OR REPLACE INTO pool VALUES (?,?,?,?,?)",
+            (entry.finding_id, entry.split, entry.run_id, entry.repo_alias, to_json(entry)),
+        )
+
+    def list_pool(self, split: str | None = None) -> list[PoolEntry]:
+        if split is None:
+            return self._many(PoolEntry, "SELECT data FROM pool ORDER BY finding_id", ())
+        return self._many(
+            PoolEntry, "SELECT data FROM pool WHERE split=? ORDER BY finding_id", (split,)
+        )
+
+    def save_label(self, label: Label) -> None:
+        self._exec(
+            "INSERT OR REPLACE INTO labels VALUES (?,?,?,?)",
+            (label.finding_id, label.labeler_alias, label.value.value, to_json(label)),
+        )
+
+    def list_labels(self, finding_id: str | None = None) -> list[Label]:
+        if finding_id is None:
+            return self._many(
+                Label, "SELECT data FROM labels ORDER BY finding_id, labeler_alias", ()
+            )
+        return self._many(
+            Label,
+            "SELECT data FROM labels WHERE finding_id=? ORDER BY labeler_alias",
+            (finding_id,),
+        )
+
+    def save_adjudication(self, adj: Adjudication) -> None:
+        self._exec(
+            "INSERT OR REPLACE INTO adjudications VALUES (?,?,?)",
+            (adj.finding_id, adj.final_value.value, to_json(adj)),
+        )
+
+    def list_adjudications(self) -> list[Adjudication]:
+        return self._many(Adjudication, "SELECT data FROM adjudications ORDER BY finding_id", ())

@@ -5,13 +5,16 @@ description = "IT5440 Nhóm 7, đề tài 3TT: LLM lọc cảnh báo bảo mật
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.141.1",
     "httpx>=0.28.1",
     "langgraph>=1.2.21",
+    "pyjwt[crypto]>=2.15.1",
     "pyyaml>=6.0.3",
     "scipy>=1.18.1",
     "statsmodels>=0.15.0",
     "tree-sitter>=0.26.1",
     "tree-sitter-java>=0.23.5",
+    "uvicorn[standard]>=0.54.0",
 ]
 
 [project.scripts]

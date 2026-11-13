@@ -31,6 +31,18 @@ Mục tiêu: **hệ thống chạy được đầu cuối** (`make e2e`) trên m
 
 P02 và P03 có thể làm song song sau P01. P04 và P03 độc lập nhau.
 
+## Đợt GitHub App (P08 đến P12)
+
+Mục tiêu: **cài được lên repo GitHub và thử ngay**. Thứ tự: P08, P09, P10, rồi P11 (cần cả ba), rồi P12.
+
+| # | Kế hoạch | Phụ thuộc |
+|---|---|---|
+| P08 | [Quét secret](queued/2026-11-13-p08-quet-secret.md) | — |
+| P09 | [Cấu hình theo repo và chính sách](queued/2026-11-13-p09-cau-hinh-va-chinh-sach.md) | — |
+| P10 | [Vai trò, CC, check run, làm sạch](queued/2026-11-13-p10-vai-tro-cc-checks.md) | P09 T4 |
+| P11 | [GitHub App](queued/2026-11-13-p11-github-app.md) | P08 đến P10 |
+| P12 | [Đóng gói và demo](queued/2026-11-13-p12-trien-khai-va-demo.md) | P11 |
+
 ## Quy tắc chạy xuyên đêm
 
 Áp dụng khi người dùng giao cho Claude Code chạy các kế hoạch trên mà không có mặt.

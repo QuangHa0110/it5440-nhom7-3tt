@@ -18,3 +18,6 @@ Mỗi file là một quyết định đáng tranh luận. Tên file: `NNNN-tieu-
 | [0009](0009-langgraph-dieu-phoi-do-thi-nhan-dinh.md) | LangGraph điều phối đồ thị nhận định, không làm agent tự do | accepted |
 | [0010](0010-phan-hoi-theo-tung-canh-bao.md) | Phản hồi theo từng cảnh báo bằng lệnh fp và tp | accepted |
 | [0011](0011-dau-van-tay-va-so-head-base.md) | Dấu vân tay không dùng số dòng, cảnh báo mới là head trừ base | accepted |
+| [0012](0012-github-app-may-chu-va-hang-doi.md) | GitHub App: máy chủ webhook, token cài đặt, hàng đợi bền, cấu hình từ nhánh đích | accepted |
+| [0013](0013-quet-secret-tich-hop.md) | Quét secret tích hợp, giá trị bị che từ lúc phát hiện | accepted |
+| [0014](0014-phan-hoi-theo-vai-tro-va-cc.md) | Phản hồi theo vai trò, chính sách CC, làm sạch nội dung do mô hình sinh | accepted |

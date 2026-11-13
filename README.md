@@ -13,6 +13,8 @@ Hướng TT: áp dụng các kỹ thuật phân tích chương trình hướng b
 | [docs/huong-dan-tieu-luan.md](docs/huong-dan-tieu-luan.md) | Tóm tắt yêu cầu, cách chấm điểm, lịch báo cáo và quy cách trình bày |
 | [docs/tom-tat-bai-bao.md](docs/tom-tat-bai-bao.md) | Tóm tắt 4 bài báo giảng viên giao và cách dùng trong đề tài |
 | [docs/papers/README.md](docs/papers/README.md) | Link tải 4 bài báo (PDF không lưu trên repo) |
+| [docs/khao-sat/README.md](docs/khao-sat/README.md) | Khảo sát tài liệu 2023–2026: mảng nào đã đông, khoảng trống còn lại |
+| [docs/de-xuat-son.md](docs/de-xuat-son.md) | Đề xuất của Sơn: cổng bảo mật PR có LLM lọc tại công ty Z (chưa chốt) |
 
 ## Cấu trúc thư mục
 

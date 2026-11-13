@@ -32,7 +32,7 @@ Nguồn sự thật: [docs/project/proposal-llm-loc-canh-bao-pr.md](docs/project
 
 ```
 src/pr_triage/   package Python, mỗi thư mục con ứng với một phần việc
-  scan/ normalize/ context/ llm/ bot/ evaluation/   cli.py
+  core/ store/ pipeline/ scan/ normalize/ context/ llm/ bot/ evaluation/   cli.py
 tests/           phản chiếu src/, dữ liệu giả ở tests/fixtures/
 configs/         semgrep/ prompts/ schemas/ eval/ (cấu hình có phiên bản, khóa bằng tag)
 data/            dữ liệu chạy, KHÔNG commit (chỉ README)
@@ -41,7 +41,7 @@ docs/            project/ (proposal, tài liệu môn), adr/, plans/, devlog/
 scripts/         script tiện ích của repo (không phải mã sản phẩm)
 ```
 
-Ranh giới mã: `context` và `llm` không import `bot`; `evaluation` không import `bot`. Mỗi thư mục con trong `src/` có một người phụ trách (xem `.github/CODEOWNERS`).
+Ranh giới mã: mọi gói phụ thuộc `core`, `core` không phụ thuộc gói nào; `context`, `llm`, `evaluation` không import `bot`; chỉ `pipeline` và `cli` nối các gói với nhau. Mỗi thư mục con trong `src/` có một người phụ trách (xem `.github/CODEOWNERS`).
 
 ## Lệnh thường dùng
 

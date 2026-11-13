@@ -54,3 +54,4 @@ uv.lock.bak
 # Dữ liệu: chỉ README trong data/
 data/*
 !data/README.md
+!.env.example

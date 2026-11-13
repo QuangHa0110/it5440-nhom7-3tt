@@ -1,0 +1,53 @@
+[project]
+name = "it5440-nhom7-3tt"
+version = "0.1.0"
+description = "IT5440 Nhóm 7, đề tài 3TT: LLM lọc cảnh báo bảo mật trên pull request"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "bump-my-version>=0.26",
+    "pre-commit>=3.5",
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+# Chưa có package Python: các thư mục pipeline/, analysis/ là script. Đổi khi có mã dùng chung.
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["results", "paper", "slides"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+".claude/hooks/*" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+# Phiên bản chỉ đổi bằng `make bump PART=patch|minor|major` (xem docs/git-workflow.md, ADR 0001).
+[tool.bumpversion]
+current_version = "0.1.0"
+parse = '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'
+serialize = ["{major}.{minor}.{patch}"]
+commit = true
+tag = true
+sign_tags = false
+tag_name = "v{new_version}"
+tag_message = "Release {new_version}"
+message = "chore(release): nâng phiên bản {current_version} -> {new_version}"
+allow_dirty = false
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+regex = false

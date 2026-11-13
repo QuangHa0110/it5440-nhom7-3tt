@@ -42,3 +42,9 @@ desktop.ini
 .vscode/
 .idea/
 ~$*
+
+# Công cụ
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+uv.lock.bak

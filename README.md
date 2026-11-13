@@ -13,6 +13,10 @@ Hướng TT: áp dụng các kỹ thuật phân tích chương trình hướng b
 | [docs/huong-dan-tieu-luan.md](docs/huong-dan-tieu-luan.md) | Tóm tắt yêu cầu, cách chấm điểm, lịch báo cáo và quy cách trình bày |
 | [docs/tom-tat-bai-bao.md](docs/tom-tat-bai-bao.md) | Tóm tắt 4 bài báo giảng viên giao và cách dùng trong đề tài |
 | [docs/papers/README.md](docs/papers/README.md) | Link tải 4 bài báo (PDF không lưu trên repo) |
+| [docs/proposal-llm-loc-canh-bao-pr.md](docs/proposal-llm-loc-canh-bao-pr.md) | Proposal đề tài: LLM lọc cảnh báo bảo mật trên PR |
+| [docs/git-workflow.md](docs/git-workflow.md) | Quy trình nhánh, PR, release |
+| [docs/adr/](docs/adr/), [docs/plans/](docs/plans/), [docs/devlog/](docs/devlog/) | Quyết định, kế hoạch, nhật ký kỹ thuật |
+| [CLAUDE.md](CLAUDE.md) | Ngữ cảnh cho Claude Code |
 
 ## Cấu trúc thư mục
 
@@ -33,7 +37,8 @@ Repo đang ở chế độ **public**:
 - **Không commit** tên công ty Z, tên dự án nội bộ, đoạn mã nguồn, đường dẫn nội bộ hay kết quả quét thô. Kết quả thô để trong `results/raw/` hoặc `results/company/`, hai thư mục này đã nằm trong `.gitignore`.
 - **Không bao giờ commit secret.** Secret tìm thấy khi quét chỉ báo riêng cho công ty để thu hồi.
 - Không commit PDF bài báo, tài liệu của giảng viên hay danh sách học viên.
-- Mỗi người làm trên nhánh riêng (ví dụ `sast-rules`, `ci-pipeline`), rồi mở Pull Request vào `main`.
+- Nhánh: `main` (release candidate, tag `vX.Y.Z`), `dev` (phát triển chung), nhánh cá nhân `{tên dev}/{slug}/{nội dung}` mở PR vào `dev`. Chi tiết: [docs/git-workflow.md](docs/git-workflow.md).
+- Sau khi clone: `make setup` (môi trường uv và pre-commit). Trước khi mở PR: `make check`.
 
 ## Mốc thời gian
 

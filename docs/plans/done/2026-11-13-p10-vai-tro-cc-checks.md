@@ -1,10 +1,10 @@
 # P10. Vai trò phản hồi, CC, check run, làm sạch nội dung
 
-- **Status:** queued
+- **Status:** done
 - **Người làm:** trinq (với Claude Code)
 - **Quyết định cho phép:** ADR 0014, ADR 0012 D6
 - **Nhánh:** `trinq/bot/roles-cc-checks`
-- **Bắt đầu / Kết thúc:** — / —
+- **Bắt đầu / Kết thúc:** 2026-11-13 / 2026-11-13
 
 ---
 
@@ -39,3 +39,6 @@ make check
 ## Kết quả
 
 *Điền khi đóng.*
+
+- **Kết quả:** vai trò `author/reviewer/other` ở `Reply`, `Reaction`, `FeedbackEvent` và `resolve_states(trusted_roles)`; `sanitize.clean` vô hiệu @mention, #n, liên kết tự động, HTML, cắt độ dài, áp dụng cho mọi chuỗi do mô hình hoặc mã PR sinh ra; `compute_cc` (author, codeowners, list) chỉ khi có cảnh báo mở từ mức tối thiểu, kiểm tra handle, loại tài khoản bot, tối đa 10; `build_check` và `ScmPort.upsert_check` (check run luôn neutral, chú thích theo dòng, chia 50 một lượt); `GitHubApi` (get_pr, merge_base, get_file) và `GitHubScm` thử lại có lùi khi giới hạn tốc độ.
+- **Khác kế hoạch:** thêm `GitHubApi` và `PrInfo` cho P11 ngay trong bộ chuyển đổi GitHub.

@@ -8,6 +8,7 @@ from typing import Protocol
 
 from pr_triage.core.models import (
     Adjudication,
+    CheckAnnotation,
     ContextBundle,
     DisplayedAlert,
     FeedbackEvent,
@@ -50,6 +51,17 @@ class ScmPort(Protocol):
     def list_reactions(self, pr: PrRef, comment_ref: str) -> list[Reaction]: ...
 
     def list_commits(self, pr: PrRef) -> list[str]: ...
+
+    def upsert_check(
+        self,
+        pr: PrRef,
+        name: str,
+        title: str,
+        summary: str,
+        annotations: Sequence[CheckAnnotation],
+    ) -> str:
+        """Tạo hoặc cập nhật một check run có kết luận `neutral`. Trả về mã check run."""
+        ...
 
     def pr_state(self, pr: PrRef) -> str:
         """Trả về `open`, `merged` hoặc `closed`."""

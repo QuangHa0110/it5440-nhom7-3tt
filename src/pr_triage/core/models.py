@@ -206,6 +206,7 @@ class FeedbackEvent:
     actor_alias: str
     at: str
     value: str = ""
+    actor_role: str = ""
 
 
 @dataclass(frozen=True)
@@ -241,6 +242,7 @@ class Reply:
     author: str
     body: str
     at: str
+    role: str = ""
 
 
 @dataclass(frozen=True)
@@ -249,6 +251,7 @@ class Reaction:
     author: str
     content: str
     at: str
+    role: str = ""
 
 
 @dataclass(frozen=True)
@@ -265,6 +268,17 @@ class PrRef:
     number: int
     head_sha: str = ""
     base_sha: str = ""
+    author: str = ""
+
+
+@dataclass(frozen=True)
+class CheckAnnotation:
+    path: str
+    start_line: int
+    end_line: int
+    level: str
+    title: str
+    message: str
 
 
 @dataclass(frozen=True)

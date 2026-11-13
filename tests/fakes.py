@@ -52,6 +52,7 @@ class FakeScm:
         self.reactions: list[Reaction] = []
         self.commits: list[str] = []
         self.state = "open"
+        self.checks: dict[str, tuple[str, str, list[object]]] = {}
 
     def upsert_comment(self, pr: PrRef, marker: str, body: str) -> str:
         self.comments[marker] = body
@@ -65,6 +66,12 @@ class FakeScm:
 
     def list_commits(self, pr: PrRef) -> list[str]:
         return list(self.commits)
+
+    def upsert_check(
+        self, pr: PrRef, name: str, title: str, summary: str, annotations: Sequence[object]
+    ) -> str:
+        self.checks[name] = (title, summary, list(annotations))
+        return f"check-{name}"
 
     def pr_state(self, pr: PrRef) -> str:
         return self.state

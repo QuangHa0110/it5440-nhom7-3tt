@@ -36,11 +36,19 @@ def resolve_states(
     events: Sequence[FeedbackEvent],
     fixed_ids: Collection[str] = (),
     closed: bool = False,
+    trusted_roles: Collection[str] | None = None,
 ) -> list[DisplayedAlert]:
+    """`trusted_roles`: chỉ `fp` của các vai trò này làm MARKED_FALSE (ADR 0014 D2)."""
     out: list[DisplayedAlert] = []
     for a in alerts:
         mine = [e for e in events if e.finding_id == a.finding_id]
         kinds = {e.kind for e in mine}
+        if trusted_roles is not None and FeedbackKind.REPLY_FP in kinds:
+            trusted = any(
+                e.kind is FeedbackKind.REPLY_FP and e.actor_role in trusted_roles for e in mine
+            )
+            if not trusted:
+                kinds = (kinds - {FeedbackKind.REPLY_FP}) | {FeedbackKind.REPLY_TP}
         if a.finding_id in fixed_ids:
             state = AlertState.FIXED
         elif FeedbackKind.REPLY_FP in kinds:

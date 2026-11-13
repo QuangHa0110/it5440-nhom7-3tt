@@ -32,7 +32,11 @@ class FeedbackCollector:
                 fid = by_code.get(m.group(2).lower()[:6]) or by_code.get(m.group(2).lower())
                 if fid is None:
                     continue
-                found.append(FeedbackEvent(run_id, fid, kind, actor, reply.at, m.group(3).strip()))
+                found.append(
+                    FeedbackEvent(
+                        run_id, fid, kind, actor, reply.at, m.group(3).strip(), reply.role
+                    )
+                )
         for r in self.scm.list_reactions(pr, comment_ref):
             found.append(
                 FeedbackEvent(

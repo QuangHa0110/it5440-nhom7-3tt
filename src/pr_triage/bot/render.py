@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
+from pr_triage.bot.sanitize import clean, clean_inline_code
 from pr_triage.core.models import (
     DisplayedAlert,
     Finding,
@@ -19,17 +22,20 @@ _NEVER_SAFE = "Việc không có cảnh báo không có nghĩa là mã an toàn.
 
 def _alert_block(f: Finding, v: Verdict | None, code: str) -> str:
     cwe = f" ({f.cwe})" if f.cwe else ""
-    head = f"**{_SEV.get(f.severity, f.severity)}**, {f.message}{cwe} `{f.file}:{f.line_start}`"
+    head = (
+        f"**{_SEV.get(f.severity, f.severity)}**, {clean(f.message, 160)}{cwe} "
+        f"`{clean_inline_code(f.file)}:{f.line_start}`"
+    )
     lines = [head]
     if v is not None and v.explanation and v.error is None:
-        lines.append(v.explanation)
+        lines.append(clean(v.explanation))
     if v is not None and v.label is VerdictLabel.UNKNOWN and v.missing_context:
-        lines.append("Chưa đủ thông tin: " + "; ".join(v.missing_context))
+        lines.append("Chưa đủ thông tin: " + clean("; ".join(v.missing_context)))
     lines.append(f"Mã `{code}`")
     return "\n".join(lines)
 
 
-def render(result: TriageResult) -> str:
+def render(result: TriageResult, cc: Sequence[str] = ()) -> str:
     run = result.run
     if run.status is RunStatus.FAILED:
         return "\n".join(
@@ -90,6 +96,8 @@ def render(result: TriageResult) -> str:
             "Phản hồi: trả lời comment với `fp <mã>` nếu cảnh báo sai, `tp <mã>` nếu đúng.",
             "Bot không chặn merge và không sửa mã. " + _NEVER_SAFE,
         ]
+    if cc:
+        out += ["", "cc " + " ".join(cc)]
     for note in run.notes:
         if note.startswith("ẩn:"):
             out += ["", f"_{note[3:].strip().capitalize()}._"]

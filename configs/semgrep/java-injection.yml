@@ -1,0 +1,25 @@
+rules:
+  - id: java-sqli-taint
+    mode: taint
+    languages: [java]
+    severity: ERROR
+    message: Dữ liệu từ request đi tới câu truy vấn SQL mà không được làm sạch
+    metadata:
+      cwe: "CWE-89"
+      origin: viết tay cho dự án (không lấy từ registry)
+    pattern-sources:
+      - pattern: $REQ.getParameter(...)
+    pattern-sinks:
+      - pattern: $STMT.executeQuery(...)
+    pattern-sanitizers:
+      - pattern: Integer.parseInt(...)
+  - id: java-sql-string-concat
+    languages: [java]
+    severity: WARNING
+    message: Câu truy vấn SQL được nối chuỗi
+    metadata:
+      cwe: "CWE-89"
+      origin: viết tay cho dự án (không lấy từ registry)
+    patterns:
+      - pattern: $STMT.executeQuery($A + $B)
+      - pattern-not: $STMT.executeQuery("..." + "...")

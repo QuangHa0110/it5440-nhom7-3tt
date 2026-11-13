@@ -1,1 +1,5 @@
-"""Trích ngữ cảnh luồng dữ liệu (nguồn, hàm làm sạch, sink) cho cách C."""
+"""Trích ngữ cảnh cho cách B và C."""
+
+from pr_triage.context.symbols import Method, SymbolIndex
+
+__all__ = ["Method", "SymbolIndex"]

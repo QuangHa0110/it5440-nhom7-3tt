@@ -1,11 +1,11 @@
 # P02. Quét, đọc SARIF, chuẩn hóa và lấy cảnh báo mới
 
-- **Status:** queued
+- **Status:** done
 - **Người làm:** trinq (với Claude Code)
 - **Đóng:** cách A chạy được
 - **Quyết định cho phép:** ADR 0005, 0011
 - **Nhánh:** `trinq/scan/semgrep-and-normalize`
-- **Bắt đầu / Kết thúc:** — / —
+- **Bắt đầu / Kết thúc:** 2026-11-13 / 2026-11-13
 
 ---
 
@@ -53,3 +53,7 @@ make check && uv run pytest -m integration tests/scan
 ## Kết quả
 
 *Điền khi đóng.*
+
+- **Kết quả:** `make check` qua với 38 test (có integration chạy Semgrep thật). `SarifReader`, `SemgrepAdapter`, `SymbolIndex` (tree-sitter-java), `to_findings`, `deduplicate`, `new_findings`.
+- **Khác kế hoạch:** `SymbolIndex` làm ở `context/` (không phải `normalize/`) để giữ ranh giới import, pipeline truyền hàm phân giải vào `normalize`. T7 (cặp commit thật) làm ở P05 cùng `gitrepo`. T3 cho kết quả âm có giá trị: CE không nối taint xuyên hàm.
+- **Ghi ở:** devlog 2026-11-13 Semgrep CE.

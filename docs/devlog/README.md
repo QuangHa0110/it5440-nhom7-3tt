@@ -18,4 +18,4 @@ Nơi ghi **phát hiện**, không ghi việc đã xong: xung đột, vật cản
 
 ## Mục lục (mới nhất ở trên)
 
-Chưa có mục nào.
+- [2026-11-13 Semgrep CE không nối taint xuyên hàm](2026-11-13-semgrep-ce-khong-noi-taint-xuyen-ham.md) 🟢

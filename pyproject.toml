@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "httpx>=0.28.1",
     "langgraph>=1.2.21",
+    "pyyaml>=6.0.3",
     "tree-sitter>=0.26.1",
     "tree-sitter-java>=0.23.5",
 ]
@@ -29,6 +30,7 @@ dev = [
     "pytest>=8",
     "ruff>=0.6",
     "semgrep>=1.185.0",
+    "types-pyyaml>=6.0.12.20261113",
 ]
 
 [tool.ruff]

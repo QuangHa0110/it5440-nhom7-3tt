@@ -1,11 +1,11 @@
 # P04. Ngữ cảnh luồng dữ liệu (cách C)
 
-- **Status:** queued
+- **Status:** done
 - **Người làm:** trinq (với Claude Code)
 - **Đóng:** cách C chạy được, có số đo `missing`
 - **Quyết định cho phép:** ADR 0003, 0005
 - **Nhánh:** `trinq/context/dataflow-extractor`
-- **Bắt đầu / Kết thúc:** — / —
+- **Bắt đầu / Kết thúc:** 2026-11-13 / 2026-11-13
 
 ---
 
@@ -54,3 +54,7 @@ make check
 ## Kết quả
 
 *Điền khi đóng.*
+
+- **Kết quả:** `DataflowProvider` (cách C) với `Catalog` nạp từ `configs/context/java.yml`, lần ngược từ sink về nguồn, tối đa 2 bước gọi, ghi `missing`, trần dung lượng và thời gian. Trên 30 cảnh báo Benchmark: nguồn tìm thấy 26/30, `missing` ở 4/30, trích 2,1 s tổng.
+- **Khác kế hoạch:** T7 (dùng vết của Semgrep làm hạt giống) bỏ vì Semgrep CE không sinh vết (devlog Semgrep CE). Thêm `entry_points` và `framework_types` vào danh mục, lần theo đối tượng nhận lời gọi khi sink không có đối số.
+- **Ghi ở:** devlog 2026-11-13 (cách C trên Benchmark).

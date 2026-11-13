@@ -1,0 +1,55 @@
+# Danh mục nguồn, sink và hàm làm sạch cho Java (ADR 0005, ý tưởng từ IRIS).
+# Viết tay, theo CWE. Khớp theo tên phương thức hoặc theo regex trên văn bản biểu thức.
+version: 1
+
+sources:
+  # văn bản biểu thức khớp regex -> nhãn nguồn
+  - {regex: '\.getParameter(Values|Map)?\(', kind: request-parameter}
+  - {regex: '\.getHeaders?\(', kind: request-header}
+  - {regex: '\.getCookies\(', kind: request-cookie}
+  - {regex: '\.getQueryString\(', kind: request-query}
+  - {regex: '\.getInputStream\(|\.getReader\(', kind: request-body}
+  - {regex: '\bSystem\.getenv\(|\bSystem\.getProperty\(', kind: environment}
+  - {regex: '\.readLine\(', kind: stream-input}
+  - {regex: '\.getAttribute\(', kind: session-or-request-attribute}
+
+parameter_annotations:
+  - {name: RequestParam, kind: request-parameter}
+  - {name: PathVariable, kind: request-path}
+  - {name: RequestBody, kind: request-body}
+  - {name: RequestHeader, kind: request-header}
+  - {name: QueryParam, kind: request-parameter}
+  - {name: PathParam, kind: request-path}
+
+sinks:
+  CWE-89:
+    kind: sql-query
+    methods: [executeQuery, executeUpdate, execute, prepareStatement, prepareCall, addBatch,
+              query, queryForObject, queryForList, update, createQuery, createNativeQuery]
+  CWE-78:
+    kind: os-command
+    methods: [exec, start]
+    constructors: [ProcessBuilder]
+  CWE-79:
+    kind: html-output
+    methods: [println, print, write, append, format, printf]
+  CWE-22:
+    kind: file-path
+    methods: [get, resolve, newInputStream, newOutputStream, readAllBytes, readString]
+    constructors: [File, FileInputStream, FileOutputStream, FileReader, FileWriter]
+  CWE-90:
+    kind: ldap-query
+    methods: [search]
+  CWE-643:
+    kind: xpath-query
+    methods: [evaluate, compile]
+
+# Tên hàm gợi ý làm sạch hoặc kiểm tra. Chỉ là ứng viên: LLM phải đọc thân hàm để kết luận.
+sanitizer_name_regex: '(?i)(escape|sanitiz|encode|quote|clean|validate|whitelist|allowlist|parameteriz|filter|safe|strip)'
+
+# Hàm là điểm vào của framework: không truy ngược nơi gọi.
+entry_points: [doGet, doPost, doPut, doDelete, doHead, service, main, handle, handleRequest]
+
+# Kiểu đối tượng của framework: bản thân biến không phải dữ liệu cần lần theo.
+framework_types: [HttpServletRequest, HttpServletResponse, ServletRequest, ServletResponse,
+                  Statement, Connection, PreparedStatement, ResultSet, PrintWriter, HttpSession]

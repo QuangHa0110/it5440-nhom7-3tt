@@ -80,7 +80,10 @@ class JavaFile:
         return sorted(out, key=lambda m: m.start)
 
     def enclosing_method_node(self, line: int) -> Node | None:
-        point = (line - 1, 0)
+        text = self.source.decode("utf-8", "replace").splitlines()
+        row = max(min(line, len(text)) - 1, 0)
+        col = len(text[row]) - len(text[row].lstrip()) if text else 0
+        point = (row, col)
         node = self.tree.root_node.descendant_for_point_range(point, point)
         while node is not None and node.type not in _METHOD_KINDS:
             node = node.parent

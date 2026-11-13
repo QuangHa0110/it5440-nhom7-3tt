@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import threading
 
 
 class BudgetGuard:
@@ -11,6 +12,7 @@ class BudgetGuard:
         self._per_day = per_day_tokens
         self._pr_used = 0
         self._day: dict[str, int] = {}
+        self._lock = threading.Lock()
 
     @staticmethod
     def _today() -> str:
@@ -20,9 +22,10 @@ class BudgetGuard:
         return self._pr_used < self._per_pr and self._day.get(self._today(), 0) < self._per_day
 
     def record(self, tokens: int) -> None:
-        self._pr_used += tokens
-        today = self._today()
-        self._day[today] = self._day.get(today, 0) + tokens
+        with self._lock:
+            self._pr_used += tokens
+            today = self._today()
+            self._day[today] = self._day.get(today, 0) + tokens
 
     @property
     def pr_used(self) -> int:

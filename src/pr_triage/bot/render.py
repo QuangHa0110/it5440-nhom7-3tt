@@ -57,7 +57,13 @@ def render(result: TriageResult) -> str:
         and v.label is not VerdictLabel.LIKELY_TRUE
     )
     out = [MARKER]
-    if not result.displayed:
+    if not result.displayed and result.findings:
+        out += [
+            "## Kiểm tra bảo mật: không có cảnh báo nào đạt ngưỡng hiển thị",
+            "",
+            "Các cảnh báo còn lại nằm dưới ngưỡng hoặc vượt giới hạn cấu hình. " + _NEVER_SAFE,
+        ]
+    elif not result.displayed:
         out += [
             "## Kiểm tra bảo mật: không có cảnh báo mới",
             "",
@@ -84,6 +90,9 @@ def render(result: TriageResult) -> str:
             "Phản hồi: trả lời comment với `fp <mã>` nếu cảnh báo sai, `tp <mã>` nếu đúng.",
             "Bot không chặn merge và không sửa mã. " + _NEVER_SAFE,
         ]
+    for note in run.notes:
+        if note.startswith("ẩn:"):
+            out += ["", f"_{note[3:].strip().capitalize()}._"]
     if run.status is RunStatus.DEGRADED:
         out += [
             "",

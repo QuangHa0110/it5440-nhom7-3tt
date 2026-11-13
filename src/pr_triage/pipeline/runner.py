@@ -71,6 +71,7 @@ class PrPipeline:
         manifest_hash: str = "",
         workers: int = 4,
         symbols: SymbolFactory = _default_symbols,
+        finding_filter: Callable[[Finding], bool] | None = None,
     ) -> None:
         self.scanners = list(scanners)
         self.contexts = contexts
@@ -82,12 +83,15 @@ class PrPipeline:
         self.manifest_hash = manifest_hash
         self.workers = workers
         self.symbols = symbols
+        self.finding_filter = finding_filter
 
     def _scan(self, root: Path) -> list[Finding]:
         raws: list[RawFinding] = []
         for scanner in self.scanners:
             raws.extend(scanner.scan(root))
-        return to_findings(raws, root, self.symbols(root))
+        found = to_findings(raws, root, self.symbols(root))
+        keep = self.finding_filter
+        return [f for f in found if keep(f)] if keep else found
 
     def _bundle(self, port: ContextPort, f: Finding, root: Path, notes: list[str]) -> ContextBundle:
         try:
@@ -187,10 +191,13 @@ class PrPipeline:
                 notes.extend(local)
         for v in verdicts:
             self.store.save_verdict(run.run_id, v)
-        displayed = self.policy.decide(run.run_id, merged, verdicts)
+        shown, hidden = self.policy.select(merged)
+        if hidden:
+            notes.append(f"ẩn: {hidden} cảnh báo dưới ngưỡng mức độ hoặc vượt giới hạn số cảnh báo")
+        displayed = self.policy.decide(run.run_id, shown, verdicts)
         for d in displayed:
             self.store.save_displayed(d)
-        errors = tuple(n for n in notes) + tuple(
+        errors = tuple(n for n in notes if not n.startswith("ẩn:")) + tuple(
             f"{v.finding_id}/{v.variant.value}: {v.error}" for v in verdicts if v.error
         )
         status = RunStatus.DEGRADED if errors else RunStatus.OK

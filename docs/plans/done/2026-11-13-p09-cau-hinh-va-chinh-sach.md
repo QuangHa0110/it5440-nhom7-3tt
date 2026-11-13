@@ -1,10 +1,10 @@
 # P09. Cấu hình theo repo, bộ lọc đường dẫn, ngưỡng mức độ, giới hạn
 
-- **Status:** queued
+- **Status:** done
 - **Người làm:** trinq (với Claude Code)
 - **Quyết định cho phép:** ADR 0012 D5
 - **Nhánh:** `trinq/config/repo-config`
-- **Bắt đầu / Kết thúc:** — / —
+- **Bắt đầu / Kết thúc:** 2026-11-13 / 2026-11-13
 
 ---
 
@@ -38,3 +38,6 @@ make check
 ## Kết quả
 
 *Điền khi đóng.*
+
+- **Kết quả:** `RepoConfig` (`.pr-triage.yml`) kiểm tra chặt, báo mọi lỗi cùng lúc, mặc định an toàn. `pathglob` kiểu gitignore, `codeowners` (khớp cuối thắng). `DisplayPolicy` có `min_severity` và `max_findings` sắp theo mức độ, phần bị ẩn ghi chú trong comment (không bao giờ nói là an toàn). `PrPipeline` có `finding_filter`. 187 test qua.
+- **Khác kế hoạch:** thêm `severity_rank` vào `core`; ghi chú "ẩn:" nằm trong `run.notes` nhưng không tính là lỗi.

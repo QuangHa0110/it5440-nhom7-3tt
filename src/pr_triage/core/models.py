@@ -5,6 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+
+
+def severity_rank(severity: str) -> int:
+    return SEVERITY_RANK.get(severity, 1)
+
 
 class Variant(StrEnum):
     A = "A"

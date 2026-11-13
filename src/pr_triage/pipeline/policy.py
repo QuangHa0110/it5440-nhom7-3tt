@@ -1,4 +1,4 @@
-"""Chính sách hiển thị (kiến trúc mục 7.2): cách nào được đăng, cảnh báo nào bị thu gọn."""
+"""Chính sách hiển thị (kiến trúc mục 7.2): cách nào được đăng, cảnh báo nào bị thu gọn hoặc ẩn."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from pr_triage.core.models import (
     Variant,
     Verdict,
     VerdictLabel,
+    severity_rank,
 )
 
 
@@ -19,6 +20,18 @@ from pr_triage.core.models import (
 class DisplayPolicy:
     variant: Variant = Variant.B
     collapse_false: bool = True
+    min_severity: str = "low"
+    max_findings: int = 1000
+
+    def select(self, findings: Sequence[Finding]) -> tuple[list[Finding], int]:
+        """Lọc theo mức độ tối thiểu, sắp giảm dần, cắt theo giới hạn. Trả về (chọn, số bị ẩn)."""
+        floor = severity_rank(self.min_severity)
+        eligible = [f for f in findings if severity_rank(f.severity) >= floor]
+        eligible.sort(
+            key=lambda f: (-severity_rank(f.severity), f.file, f.line_start, f.finding_id)
+        )
+        chosen = eligible[: self.max_findings]
+        return chosen, len(findings) - len(chosen)
 
     def decide(
         self, run_id: str, findings: Sequence[Finding], verdicts: Sequence[Verdict]

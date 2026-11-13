@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 
-
 EMPTY_BASE = frozenset({"none", "empty"})
 
 

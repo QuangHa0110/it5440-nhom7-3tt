@@ -106,6 +106,9 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--split", choices=["dev", "eval"], required=True)
     p.add_argument("--out", type=Path, default=Path("reports/results/summary.json"))
     p.add_argument("--k", type=int, default=5)
+    srv = sub.add_parser("serve", help="chạy GitHub App (máy chủ webhook)")
+    srv.add_argument("--host", default="0.0.0.0")
+    srv.add_argument("--port", type=int, default=8080)
     rep = sub.add_parser("replay", help="chạy lại trên các commit đã merge gần đây")
     _common(rep)
     rep.add_argument("--ref", default="HEAD")
@@ -240,6 +243,22 @@ def _eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def _serve(args: argparse.Namespace) -> int:
+    import uvicorn
+
+    from pr_triage.app.server import build_services, create_app
+    from pr_triage.app.settings import SettingsError
+
+    try:
+        services = build_services()
+    except SettingsError as exc:
+        print(f"không khởi động được: {exc}", file=sys.stderr)
+        return 2
+    logging.getLogger("pr_triage").setLevel(logging.INFO)
+    uvicorn.run(create_app(services), host=args.host, port=args.port, log_level="info")
+    return 0
+
+
 def _publish(args: argparse.Namespace) -> int:
     from pr_triage.store import SqlStore
 
@@ -289,6 +308,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         store.close()
         print(json.dumps(summarize(result), ensure_ascii=False))
         return 1 if result.run.status.value == "failed" else 0
+    if args.cmd == "serve":
+        return _serve(args)
     if args.cmd == "eval":
         return _eval(args)
     if args.cmd == "publish":

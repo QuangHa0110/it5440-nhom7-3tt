@@ -51,6 +51,7 @@ select = ["E", "F", "I", "UP", "B"]
 ".claude/hooks/*" = ["E501"]
 "src/pr_triage/llm/prompt.py" = ["E501"]
 "src/pr_triage/evaluation/compute.py" = ["E501"]
+"src/pr_triage/store/sql.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

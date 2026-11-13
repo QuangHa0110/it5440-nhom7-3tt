@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from functools import lru_cache
 
 
@@ -45,3 +46,14 @@ def matches(pattern: str, path: str) -> bool:
 
 def any_match(patterns: tuple[str, ...] | list[str], path: str) -> bool:
     return any(matches(p, path) for p in patterns)
+
+
+def make_path_filter(include: tuple[str, ...], exclude: tuple[str, ...]) -> Callable[[str], bool]:
+    """Trả về hàm giữ lại đường dẫn: khớp include (nếu có) và không khớp exclude."""
+
+    def keep(path: str) -> bool:
+        if any_match(exclude, path):
+            return False
+        return not include or any_match(include, path)
+
+    return keep

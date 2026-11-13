@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import sqlite3
 import threading
+from dataclasses import replace
 from importlib import resources
 from pathlib import Path
 from typing import Any
@@ -14,6 +16,8 @@ from pr_triage.core.models import (
     DisplayedAlert,
     FeedbackEvent,
     Finding,
+    Job,
+    JobStatus,
     Label,
     Occurrence,
     PoolEntry,
@@ -249,3 +253,105 @@ class SqlStore:
 
     def list_adjudications(self) -> list[Adjudication]:
         return self._many(Adjudication, "SELECT data FROM adjudications ORDER BY finding_id", ())
+
+    # --- hàng đợi việc của GitHub App (ADR 0012 D4) ---
+    @staticmethod
+    def _now() -> str:
+        return dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    def enqueue_job(self, job: Job) -> Job | None:
+        """None nếu lần giao đã có, hoặc đã có việc cùng khóa đang chờ, đang chạy hay đã xong."""
+        with self._lock:
+            try:
+                with self._db:
+                    cur = self._db.execute(
+                        "INSERT INTO jobs (delivery_id, kind, repo, pr_number, key, status, created_at, data)"
+                        " VALUES (?,?,?,?,?,?,?,?)",
+                        (job.delivery_id, job.kind.value, job.repo, job.pr_number, job.key,
+                         JobStatus.QUEUED.value, self._now(), "{}"),
+                    )  # fmt: skip
+                    job_id = int(cur.lastrowid or 0)
+                    saved = replace(
+                        job, job_id=job_id, status=JobStatus.QUEUED, created_at=self._now()
+                    )
+                    self._db.execute(
+                        "UPDATE jobs SET data=? WHERE job_id=?", (to_json(saved), job_id)
+                    )
+                    return saved
+            except sqlite3.IntegrityError:
+                return None
+
+    def get_job(self, job_id: int) -> Job | None:
+        return self._one(Job, "SELECT data FROM jobs WHERE job_id=?", (job_id,))
+
+    def _update_job(self, job_id: int, **changes: object) -> None:
+        with self._lock, self._db:
+            row = self._db.execute("SELECT data FROM jobs WHERE job_id=?", (job_id,)).fetchone()
+            if row is None:
+                return
+            job = replace(from_json(Job, row[0]), **changes)  # type: ignore[arg-type]
+            self._db.execute(
+                "UPDATE jobs SET status=?, data=? WHERE job_id=?",
+                (job.status.value, to_json(job), job_id),
+            )
+
+    def claim_job(self, job_id: int) -> Job | None:
+        with self._lock:
+            job = self.get_job(job_id)
+            if job is None or job.status is not JobStatus.QUEUED:
+                return None
+            self._update_job(
+                job_id, status=JobStatus.RUNNING, started_at=self._now(), attempts=job.attempts + 1
+            )
+            return self.get_job(job_id)
+
+    def finish_job(self, job_id: int, status: JobStatus, error: str = "") -> None:
+        self._update_job(job_id, status=status, finished_at=self._now(), error=error[:500])
+
+    def requeue_unfinished(self) -> list[Job]:
+        """Khi khởi động lại: việc đang chạy dở được xếp lại hàng."""
+        with self._lock:
+            rows = self._db.execute(
+                "SELECT job_id FROM jobs WHERE status IN ('queued','running') ORDER BY job_id"
+            ).fetchall()
+            out: list[Job] = []
+            for (jid,) in rows:
+                self._update_job(jid, status=JobStatus.QUEUED)
+                job = self.get_job(jid)
+                if job:
+                    out.append(job)
+            return out
+
+    def latest_job(self, kind: str, repo: str, pr_number: int) -> Job | None:
+        return self._one(
+            Job,
+            "SELECT data FROM jobs WHERE kind=? AND repo=? AND pr_number=? ORDER BY job_id DESC LIMIT 1",
+            (kind, repo, pr_number),
+        )
+
+    def job_counts(self) -> dict[str, int]:
+        with self._lock:
+            rows = self._db.execute("SELECT status, COUNT(*) FROM jobs GROUP BY status").fetchall()
+        return {r[0]: int(r[1]) for r in rows}
+
+    def list_jobs(self, limit: int = 50) -> list[Job]:
+        return self._many(Job, "SELECT data FROM jobs ORDER BY job_id DESC LIMIT ?", (limit,))
+
+    def latest_run_with_comment(
+        self, repo_alias: str, pr_number: int
+    ) -> tuple[PrRun, PostedComment] | None:
+        with self._lock:
+            row = self._db.execute(
+                "SELECT r.data, c.data FROM runs r JOIN comments c ON c.run_id = r.run_id"
+                " WHERE r.repo_alias=? AND r.pr_number=? ORDER BY r.started_at DESC, r.run_id DESC LIMIT 1",
+                (repo_alias, pr_number),
+            ).fetchone()
+        return (from_json(PrRun, row[0]), from_json(PostedComment, row[1])) if row else None
+
+    def previous_run(self, repo_alias: str, pr_number: int, exclude_run: str) -> PrRun | None:
+        return self._one(
+            PrRun,
+            "SELECT data FROM runs WHERE repo_alias=? AND pr_number=? AND run_id<>? AND status<>'failed'"
+            " ORDER BY started_at DESC, run_id DESC LIMIT 1",
+            (repo_alias, pr_number, exclude_run),
+        )

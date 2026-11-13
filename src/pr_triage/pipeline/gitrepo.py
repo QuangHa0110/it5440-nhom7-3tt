@@ -58,10 +58,18 @@ class Checkouts:
 
 
 @contextmanager
-def checkouts(repo: Path, base_ref: str, head_ref: str) -> Iterator[Checkouts]:
+def checkouts(
+    repo: Path, base_ref: str, head_ref: str, exact_base: bool = False
+) -> Iterator[Checkouts]:
+    """`exact_base`: `base_ref` đã là merge-base, không tính lại (kho nông không đủ lịch sử)."""
     head = rev_parse(repo, head_ref)
     empty_base = base_ref in EMPTY_BASE
-    base = "" if empty_base else merge_base(repo, rev_parse(repo, base_ref), head)
+    if empty_base:
+        base = ""
+    elif exact_base:
+        base = rev_parse(repo, base_ref)
+    else:
+        base = merge_base(repo, rev_parse(repo, base_ref), head)
     with tempfile.TemporaryDirectory(prefix="pr-triage-co-") as tmp:
         root = Path(tmp)
         export_tree(repo, head, root / "head")

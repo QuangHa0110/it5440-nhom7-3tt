@@ -106,9 +106,16 @@ class PrPipeline:
                 b, variant=port.variant, missing=(*b.missing, f"dùng ngữ cảnh B vì lỗi: {exc}")
             )
 
-    def run(self, repo: Path, base_ref: str, head_ref: str, pr_number: int) -> TriageResult:
+    def run(
+        self,
+        repo: Path,
+        base_ref: str,
+        head_ref: str,
+        pr_number: int,
+        exact_base: bool = False,
+    ) -> TriageResult:
         t0 = time.monotonic()
-        with checkouts(repo, base_ref, head_ref) as co:
+        with checkouts(repo, base_ref, head_ref, exact_base) as co:
             run_id = hashlib.sha256(
                 f"{self.repo_alias}{pr_number}{co.head_sha}{self.mode}{time.time_ns()}".encode()
             ).hexdigest()[:12]

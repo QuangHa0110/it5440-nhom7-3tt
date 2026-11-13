@@ -281,6 +281,38 @@ class CheckAnnotation:
     message: str
 
 
+class JobKind(StrEnum):
+    TRIAGE = "triage"
+    FEEDBACK = "feedback"
+    CLOSE = "close"
+
+
+class JobStatus(StrEnum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    DONE = "done"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+
+@dataclass(frozen=True)
+class Job:
+    kind: JobKind
+    repo: str
+    pr_number: int
+    installation_id: int
+    key: str
+    delivery_id: str
+    status: JobStatus = JobStatus.QUEUED
+    job_id: int = 0
+    created_at: str = ""
+    started_at: str = ""
+    finished_at: str = ""
+    error: str = ""
+    attempts: int = 0
+    extra: str = ""
+
+
 @dataclass(frozen=True)
 class TriageResult:
     """Kết quả một lượt chạy, trao từ job triage sang job publish."""

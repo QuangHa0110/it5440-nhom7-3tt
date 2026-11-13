@@ -1,11 +1,11 @@
 # P06. Bot comment và thu phản hồi
 
-- **Status:** queued
+- **Status:** done
 - **Người làm:** trinq (với Claude Code)
 - **Đóng:** comment một lần cập nhật tại chỗ, thu phản hồi theo từng cảnh báo
 - **Quyết định cho phép:** ADR 0007, 0010
 - **Nhánh:** `trinq/bot/comment-and-feedback`
-- **Bắt đầu / Kết thúc:** — / —
+- **Bắt đầu / Kết thúc:** 2026-11-13 / 2026-11-13
 
 ---
 
@@ -55,3 +55,7 @@ Gọi GitHub thật chỉ khi người dùng yêu cầu và chỉ trên một PR
 ## Kết quả
 
 *Điền khi đóng.*
+
+- **Kết quả:** `CommentRenderer` (một comment, `<details>` cho cảnh báo thu gọn, mã ngắn mỗi cảnh báo, không bao giờ kết luận an toàn), `Publisher` (một comment cập nhật tại chỗ, shadow/replay và dry-run không gọi SCM), `GitHubScm` (kiểm thử bằng máy chủ giả HTTP), `FeedbackCollector` (`fp`/`tp <mã>`, phản ứng, commit, merge/close, ẩn danh, không ghi trùng), `resolve_states` theo sơ đồ 8, `detect_fixed` (dấu vân tay biến mất và hàm có trong diff, file xóa không tính). CLI `publish` (mặc định dry-run, `--post` mới đăng) và `feedback`. `make e2e` chạy thêm vòng đăng comment, phản hồi `fp` trên `FakeScm` và ra trạng thái `marked_false`.
+- **Khác kế hoạch:** thêm bảng `comments` (migration 002). `SqlStore` thêm khóa luồng sau khi test phát hiện ghi đồng thời không an toàn. Chưa gọi GitHub thật.
+- **Ghi ở:** không có devlog mới.

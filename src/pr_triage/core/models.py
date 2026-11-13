@@ -238,6 +238,14 @@ class Reaction:
 
 
 @dataclass(frozen=True)
+class PostedComment:
+    run_id: str
+    comment_ref: str
+    body_hash: str
+    posted_at: str
+
+
+@dataclass(frozen=True)
 class PrRef:
     repo: str
     number: int

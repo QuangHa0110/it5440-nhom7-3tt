@@ -70,3 +70,19 @@ def test_blobs_through_store(tmp_path: Path) -> None:
     s = SqlStore(tmp_path / "t.sqlite")
     ref = s.put_blob(b"noi dung")
     assert s.get_blob(ref) == b"noi dung"
+
+
+def test_concurrent_writes_are_safe(tmp_path: Path) -> None:
+    from concurrent.futures import ThreadPoolExecutor
+
+    s = SqlStore(tmp_path / "t.sqlite")
+    findings = [make_finding(ordinal=i) for i in range(60)]
+
+    def put(f):  # type: ignore[no-untyped-def]
+        s.upsert_finding(f)
+        s.save_verdict("r1", make_verdict(f))
+        return s.get_finding(f.finding_id)
+
+    with ThreadPoolExecutor(8) as ex:
+        got = list(ex.map(put, findings))
+    assert got == findings and len(s.list_verdicts("r1")) == 60

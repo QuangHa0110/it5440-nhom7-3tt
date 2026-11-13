@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+import threading
 from importlib import resources
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,7 @@ from pr_triage.core.models import (
     FeedbackEvent,
     Finding,
     Occurrence,
+    PostedComment,
     PrRun,
     Verdict,
 )
@@ -36,6 +38,7 @@ class SqlStore:
         if not self._memory:
             Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self._db = sqlite3.connect(str(db_path), check_same_thread=False)
+        self._lock = threading.RLock()
         if not self._memory:
             self._db.execute("PRAGMA journal_mode=WAL")
         self._db.execute("PRAGMA foreign_keys=ON")
@@ -65,15 +68,18 @@ class SqlStore:
         self._db.close()
 
     def _exec(self, sql: str, params: tuple[Any, ...] = ()) -> None:
-        with self._db:
+        with self._lock, self._db:
             self._db.execute(sql, params)
 
     def _one[T](self, cls: type[T], sql: str, params: tuple[Any, ...]) -> T | None:
-        row = self._db.execute(sql, params).fetchone()
+        with self._lock:
+            row = self._db.execute(sql, params).fetchone()
         return from_json(cls, row[0]) if row else None
 
     def _many[T](self, cls: type[T], sql: str, params: tuple[Any, ...]) -> list[T]:
-        return [from_json(cls, r[0]) for r in self._db.execute(sql, params).fetchall()]
+        with self._lock:
+            rows = self._db.execute(sql, params).fetchall()
+        return [from_json(cls, r[0]) for r in rows]
 
     def put_blob(self, data: bytes) -> str:
         return self._blobs.put(data)
@@ -183,3 +189,18 @@ class SqlStore:
         return self._many(
             FeedbackEvent, "SELECT data FROM feedback WHERE run_id=? ORDER BY id", (run_id,)
         )
+
+    def save_comment(self, comment: PostedComment) -> None:
+        self._exec(
+            "INSERT OR REPLACE INTO comments VALUES (?,?,?,?,?)",
+            (
+                comment.run_id,
+                comment.comment_ref,
+                comment.body_hash,
+                comment.posted_at,
+                to_json(comment),
+            ),
+        )
+
+    def get_comment(self, run_id: str) -> PostedComment | None:
+        return self._one(PostedComment, "SELECT data FROM comments WHERE run_id=?", (run_id,))

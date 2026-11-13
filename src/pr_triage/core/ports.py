@@ -12,6 +12,7 @@ from pr_triage.core.models import (
     FeedbackEvent,
     Finding,
     Occurrence,
+    PostedComment,
     PrRef,
     PrRun,
     RawFinding,
@@ -84,5 +85,9 @@ class StorePort(Protocol):
     def add_feedback(self, event: FeedbackEvent) -> None: ...
 
     def list_feedback(self, run_id: str) -> list[FeedbackEvent]: ...
+
+    def save_comment(self, comment: PostedComment) -> None: ...
+
+    def get_comment(self, run_id: str) -> PostedComment | None: ...
 
     def close(self) -> None: ...

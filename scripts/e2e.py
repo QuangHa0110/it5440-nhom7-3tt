@@ -15,7 +15,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from tests.fakes import FakeScm  # noqa: E402
+
 from pr_triage import cli  # noqa: E402
+from pr_triage.bot import FeedbackCollector, Publisher, render, resolve_states  # noqa: E402
+from pr_triage.core.alias import Aliaser  # noqa: E402
+from pr_triage.core.models import PrRef, Reply  # noqa: E402
+from pr_triage.pipeline import result_io  # noqa: E402
+from pr_triage.store import SqlStore  # noqa: E402
 
 VULN = """
     public String search(HttpServletRequest request, java.sql.Statement stmt) throws Exception {
@@ -73,6 +80,8 @@ def main() -> int:
                 str(out),
                 "--repo-alias",
                 "e2e",
+                "--mode",
+                "comment",
             ]
         )
         result = json.loads((out / "triage-result.json").read_text("utf-8"))["result"]
@@ -89,12 +98,37 @@ def main() -> int:
                 indent=2,
             )
         )
+        res = result_io.read(out / "triage-result.json")
+        store = SqlStore(work / "store.sqlite")
+        scm = FakeScm()
+        pr = PrRef("e2e/repo", 1, res.run.head_sha, res.run.base_sha)
+        ref = Publisher(scm, store).publish(res, pr, post=True)
+        print("--- comment sẽ đăng ---")
+        print(render(res))
+        code_ = res.displayed[0].short_code
+        scm.replies = [Reply("9", "dev-a", f"fp {code_} thử nghiệm", "2026-11-13T00:00:00Z")]
+        FeedbackCollector(scm, store, Aliaser("e2e-salt")).collect(res, pr, ref or "")
+        state = resolve_states(res.displayed, store.list_feedback(res.run.run_id))[0].state.value
+        print("trạng thái sau phản hồi fp:", state)
         ok = (
-            code == 0
+            state == "marked_false"
+            and len(scm.comments) == 1
+            and code == 0
             and len(result["findings"]) >= 1
             and {"A", "B", "C"} <= set(by_variant)
             and all(not v["error"] for v in verdicts)
         )
+        if not ok:
+            print(
+                "chi tiết:",
+                {
+                    "code": code,
+                    "state": state,
+                    "comments": len(scm.comments),
+                    "variants": sorted(by_variant),
+                    "errors": [v["error"] for v in verdicts],
+                },
+            )
         print("E2E", "OK" if ok else "FAIL")
         return 0 if ok else 1
     finally:

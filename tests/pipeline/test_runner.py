@@ -49,7 +49,8 @@ def add_vuln(repo: Path) -> None:
     dao = repo / "src/app/OrderDao.java"
     dao.write_text(
         dao.read_text().replace(
-            '"SELECT * FROM orders WHERE id = 1"', '"SELECT * FROM orders WHERE id = " + 1 // VULN'
+            'stmt.executeQuery("SELECT * FROM orders WHERE id = 1").toString();',
+            'stmt.executeQuery("SELECT * FROM orders WHERE id = " + 1).toString(); // VULN',
         )
     )
     git(repo, "commit", "-qam", "thêm lỗ hổng")

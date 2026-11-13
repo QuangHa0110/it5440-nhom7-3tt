@@ -19,3 +19,4 @@ Nơi ghi **phát hiện**, không ghi việc đã xong: xung đột, vật cản
 ## Mục lục (mới nhất ở trên)
 
 - [2026-11-13 Semgrep CE không nối taint xuyên hàm](2026-11-13-semgrep-ce-khong-noi-taint-xuyen-ham.md) 🟢
+- [2026-11-13 Ba tên mô hình trên cổng LLM cho kết quả giống nhau](2026-11-13-cong-llm-ba-ten-mo-hinh-cho-ket-qua-giong-nhau.md) 🟡

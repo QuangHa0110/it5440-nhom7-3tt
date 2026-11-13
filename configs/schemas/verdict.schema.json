@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Verdict của LLM cho một cảnh báo",
+  "type": "object",
+  "required": ["label", "explanation", "evidence", "missing_context"],
+  "additionalProperties": true,
+  "properties": {
+    "finding_id": {"type": "string"},
+    "label": {"enum": ["likely_true", "likely_false", "unknown"]},
+    "explanation": {"type": "string"},
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "line"],
+        "properties": {
+          "file": {"type": "string"},
+          "line": {"type": "integer"},
+          "note": {"type": "string"}
+        }
+      }
+    },
+    "missing_context": {"type": "array", "items": {"type": "string"}}
+  }
+}

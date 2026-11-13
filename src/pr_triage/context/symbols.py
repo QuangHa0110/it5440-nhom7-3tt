@@ -79,13 +79,37 @@ class JavaFile:
             stack.extend(n.children)
         return sorted(out, key=lambda m: m.start)
 
-    def enclosing_method(self, line: int) -> Method | None:
-        """Hàm nhỏ nhất chứa dòng `line` (đánh số từ 1)."""
+    def enclosing_method_node(self, line: int) -> Node | None:
         point = (line - 1, 0)
         node = self.tree.root_node.descendant_for_point_range(point, point)
         while node is not None and node.type not in _METHOD_KINDS:
             node = node.parent
+        return node
+
+    def enclosing_method(self, line: int) -> Method | None:
+        """Hàm nhỏ nhất chứa dòng `line` (đánh số từ 1)."""
+        node = self.enclosing_method_node(line)
         return self._method_of(node) if node is not None else None
+
+    def method_info(self, node: Node) -> Method:
+        return self._method_of(node)
+
+    def text(self, node: Node | None) -> str:
+        return _text(node, self.source)
+
+    def line_text(self, start: int, end: int) -> str:
+        lines = self.source.decode("utf-8", "replace").splitlines()
+        return "\n".join(lines[max(start - 1, 0) : end])
+
+    def method_nodes(self) -> list[Node]:
+        out: list[Node] = []
+        stack = [self.tree.root_node]
+        while stack:
+            n = stack.pop()
+            if n.type in _METHOD_KINDS:
+                out.append(n)
+            stack.extend(n.children)
+        return sorted(out, key=lambda n: n.start_byte)
 
 
 class SymbolIndex:
@@ -102,6 +126,43 @@ class SymbolIndex:
                 else None
             )
         return self._cache[rel_path]
+
+    def files(self, limit: int = 5000) -> list[str]:
+        skip = {".git", "target", "build", "node_modules", ".gradle"}
+        out: list[str] = []
+        for p in sorted(self._root.rglob("*.java")):
+            rel = p.relative_to(self._root)
+            if skip.intersection(rel.parts):
+                continue
+            out.append(rel.as_posix())
+            if len(out) >= limit:
+                break
+        return out
+
+    def methods_named(self, name: str) -> list[tuple[JavaFile, Node]]:
+        found: list[tuple[JavaFile, Node]] = []
+        for rel in self.files():
+            jf = self.file(rel)
+            if jf is None:
+                continue
+            for n in jf.method_nodes():
+                if jf.text(n.child_by_field_name("name")) == name:
+                    found.append((jf, n))
+        return found
+
+    def calls_of(self, name: str) -> list[tuple[JavaFile, Node]]:
+        found: list[tuple[JavaFile, Node]] = []
+        for rel in self.files():
+            jf = self.file(rel)
+            if jf is None:
+                continue
+            stack = [jf.tree.root_node]
+            while stack:
+                n = stack.pop()
+                if n.type == "method_invocation" and jf.text(n.child_by_field_name("name")) == name:
+                    found.append((jf, n))
+                stack.extend(n.children)
+        return sorted(found, key=lambda t: (t[0].rel_path, t[1].start_byte))
 
     def enclosing_symbol(self, rel_path: str, line: int) -> str | None:
         f = self.file(rel_path)

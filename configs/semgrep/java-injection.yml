@@ -9,8 +9,16 @@ rules:
       origin: viết tay cho dự án (không lấy từ registry)
     pattern-sources:
       - pattern: $REQ.getParameter(...)
+      - pattern: $REQ.getParameterValues(...)
+      - pattern: $REQ.getHeader(...)
+      - pattern: $REQ.getQueryString()
+      - pattern: $REQ.getCookies()
     pattern-sinks:
       - pattern: $STMT.executeQuery(...)
+      - pattern: $STMT.executeUpdate(...)
+      - pattern: $STMT.execute(...)
+      - pattern: $CONN.prepareStatement(...)
+      - pattern: $CONN.prepareCall(...)
     pattern-sanitizers:
       - pattern: Integer.parseInt(...)
   - id: java-sql-string-concat

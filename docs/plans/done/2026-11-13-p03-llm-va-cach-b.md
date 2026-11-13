@@ -1,11 +1,11 @@
 # P03. Máy nhận định bằng LLM và cách B
 
-- **Status:** queued
+- **Status:** done
 - **Người làm:** trinq (với Claude Code)
 - **Đóng:** cách B chạy được trên cổng LLM thật
 - **Quyết định cho phép:** ADR 0003, 0008, 0009
 - **Nhánh:** `trinq/llm/triage-engine`
-- **Bắt đầu / Kết thúc:** — / —
+- **Bắt đầu / Kết thúc:** 2026-11-13 / 2026-11-13
 
 ---
 
@@ -56,3 +56,6 @@ make check && PR_TRIAGE_LLM_API_KEY=... uv run pytest -m integration tests/llm
 ## Kết quả
 
 *Điền khi đóng.*
+
+- **Kết quả:** `make check` qua với 78 test, gồm 2 test thật trên cổng LLM (cả hai máy nhận định). Có `OpenAICompatClient`, `Redactor`, `VerdictValidator`, `PromptBuilder`, `BudgetGuard`, `VerdictCache`, `PlainTriageEngine` và `TriageEngine` (LangGraph) cho kết quả trùng nhau, `SnippetProvider`. Thử 30 cảnh báo thật: JSON hợp lệ 30/30 ở cả ba mô hình.
+- **Khác kế hoạch:** thêm biến `PR_TRIAGE_LLM_ALLOW_EXTERNAL` và `PR_TRIAGE_LLM_JSON_MODE`. Mở rộng `SymbolIndex` (nút phương thức, tìm lời gọi) làm sớm cho P04. Luật Semgrep mở rộng nguồn và sink để chạy trên Benchmark.

@@ -1,4 +1,4 @@
-# rules
+# configs/semgrep
 
 Luật Semgrep/CodeQL tùy biến cho các lỗi đặc thù của dự án được phân tích.
 

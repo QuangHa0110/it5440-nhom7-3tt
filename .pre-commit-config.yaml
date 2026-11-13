@@ -25,3 +25,12 @@ repos:
     rev: v8.21.2
     hooks:
       - id: gitleaks
+
+  # Danh sách cấm nằm ngoài repo (xem scripts/guard_public_repo.py).
+  - repo: local
+    hooks:
+      - id: guard-public-repo
+        name: chặn dữ liệu nhạy cảm vào repo public
+        entry: python3 scripts/guard_public_repo.py
+        language: system
+        pass_filenames: true

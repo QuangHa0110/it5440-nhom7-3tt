@@ -6,22 +6,30 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
 
+[project.scripts]
+pr-triage = "pr_triage.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pr_triage"]
+
 [dependency-groups]
 dev = [
     "bump-my-version>=0.26",
+    "mypy>=1.11",
     "pre-commit>=3.5",
     "pytest>=8",
     "ruff>=0.6",
 ]
 
-# Chưa có package Python: các thư mục pipeline/, analysis/ là script. Đổi khi có mã dùng chung.
-[tool.uv]
-package = false
-
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-extend-exclude = ["results", "paper", "slides"]
+src = ["src", "tests"]
+extend-exclude = ["reports", "data"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
@@ -32,6 +40,16 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+markers = [
+    "unit: kiểm thử đơn vị, chạy nhanh, không mạng",
+    "integration: cần công cụ quét hoặc dịch vụ ngoài",
+    "slow: chạy lâu, không chạy trong CI mặc định",
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "tests"]
 
 # Phiên bản chỉ đổi bằng `make bump PART=patch|minor|major` (xem docs/git-workflow.md, ADR 0001).
 [tool.bumpversion]
@@ -51,3 +69,8 @@ filename = "pyproject.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
 regex = false
+
+[[tool.bumpversion.files]]
+filename = "src/pr_triage/__init__.py"
+search = '__version__ = "{current_version}"'
+replace = '__version__ = "{new_version}"'

@@ -23,12 +23,16 @@ fmt:  ## Ruff: tự sửa lỗi và định dạng
 	$(UV) run ruff check --fix .
 	$(UV) run ruff format .
 
+.PHONY: typecheck
+typecheck:  ## Mypy strict
+	$(UV) run mypy
+
 .PHONY: test
 test:  ## Chạy pytest (bỏ qua nếu chưa có test)
 	$(UV) run pytest || [ $$? -eq 5 ]
 
 .PHONY: check
-check: lint test  ## Cổng trước khi mở PR (giống CI)
+check: lint typecheck test  ## Cổng trước khi mở PR (giống CI)
 
 .PHONY: bump
 bump:  ## Nâng phiên bản + commit + tag. PART=patch|minor|major. Chạy trên main sạch

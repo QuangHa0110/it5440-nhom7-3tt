@@ -1,11 +1,13 @@
 # Tài liệu có bản quyền / nội bộ lớp: chỉ giữ trên máy, không đưa lên repo public
-docs/papers/*.pdf
-docs/course/*.pdf
+docs/project/papers/*.pdf
+docs/project/course/*.pdf
 *.xlsx
 
 # Kết quả quét thô của công ty Z: có thể chứa mã nguồn, đường dẫn nội bộ, secret
-results/raw/
-results/company/
+data/raw/
+data/company/
+reports/results/raw/
+reports/results/company/
 *.sarif
 *.cdx.json
 *.spdx.json
@@ -26,14 +28,14 @@ venv/
 .ipynb_checkpoints/
 
 # LaTeX
-paper/**/*.aux
-paper/**/*.log
-paper/**/*.out
-paper/**/*.bbl
-paper/**/*.blg
-paper/**/*.synctex.gz
-paper/**/*.fdb_latexmk
-paper/**/*.fls
+reports/paper/**/*.aux
+reports/paper/**/*.log
+reports/paper/**/*.out
+reports/paper/**/*.bbl
+reports/paper/**/*.blg
+reports/paper/**/*.synctex.gz
+reports/paper/**/*.fdb_latexmk
+reports/paper/**/*.fls
 
 # Hệ điều hành / IDE
 .DS_Store
@@ -48,3 +50,7 @@ desktop.ini
 .pytest_cache/
 .mypy_cache/
 uv.lock.bak
+
+# Dữ liệu: chỉ README trong data/
+data/*
+!data/README.md

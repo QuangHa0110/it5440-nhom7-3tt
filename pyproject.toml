@@ -40,6 +40,7 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+pythonpath = ["."]
 markers = [
     "unit: kiểm thử đơn vị, chạy nhanh, không mạng",
     "integration: cần công cụ quét hoặc dịch vụ ngoài",

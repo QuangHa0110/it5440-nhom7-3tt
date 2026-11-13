@@ -14,7 +14,7 @@ Dữ liệu gồm lượt chạy, cảnh báo, ngữ cảnh, nhận định, nh�
 - **D2.** Văn bản lớn lưu thành blob trên hệ tệp, đặt tên theo băm SHA-256 của nội dung, bảng chỉ giữ tham chiếu.
 - **D3.** Lược đồ nằm trong các file migration SQL đánh số, áp dụng tuần tự khi mở kho.
 - **D4.** Bảng `Label` và `Adjudication` tách khỏi `Verdict`. Mã xuất phiếu gán nhãn không được truy vấn `Verdict`.
-- **D5.** Tên file, tên người và tên repo lưu dưới dạng bí danh. Bảng ánh xạ nằm trong kho và không bao giờ được `Exporter` xuất.
+- **D5.** Kho nằm trong vùng của Z nên lưu giá trị gốc (cần cho gán nhãn và đọc mã). Bí danh hóa (HMAC với muối nằm trong Z) được áp ở hai chỗ: người thao tác ngay khi thu `FeedbackEvent`, và mọi tên file, người, repo khi `Exporter` xuất. Sửa ngày 2026-11-13 khi làm P01, trước khi ADR được chấp nhận.
 - **D6.** `FeedbackEvent` chỉ thêm, không sửa.
 
 ## Phương án khác

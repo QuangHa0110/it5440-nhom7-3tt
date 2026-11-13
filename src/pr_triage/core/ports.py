@@ -1,0 +1,88 @@
+"""Năm cổng giữa lõi và thế giới bên ngoài (ADR 0004)."""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+from pathlib import Path
+from typing import Protocol
+
+from pr_triage.core.models import (
+    ContextBundle,
+    DisplayedAlert,
+    FeedbackEvent,
+    Finding,
+    Occurrence,
+    PrRef,
+    PrRun,
+    RawFinding,
+    Reaction,
+    Reply,
+    Variant,
+    Verdict,
+)
+
+
+class ScannerPort(Protocol):
+    name: str
+
+    def scan(self, checkout: Path, paths: Sequence[str] | None = None) -> list[RawFinding]: ...
+
+
+class ContextPort(Protocol):
+    variant: Variant
+
+    def extract(self, finding: Finding, checkout: Path) -> ContextBundle: ...
+
+
+class LlmPort(Protocol):
+    def triage(self, finding: Finding, bundle: ContextBundle) -> Verdict: ...
+
+
+class ScmPort(Protocol):
+    def upsert_comment(self, pr: PrRef, marker: str, body: str) -> str: ...
+
+    def list_replies(self, pr: PrRef, comment_ref: str) -> list[Reply]: ...
+
+    def list_reactions(self, pr: PrRef, comment_ref: str) -> list[Reaction]: ...
+
+    def list_commits(self, pr: PrRef) -> list[str]: ...
+
+    def pr_state(self, pr: PrRef) -> str:
+        """Trả về `open`, `merged` hoặc `closed`."""
+        ...
+
+
+class StorePort(Protocol):
+    def put_blob(self, data: bytes) -> str: ...
+
+    def get_blob(self, ref: str) -> bytes: ...
+
+    def save_run(self, run: PrRun) -> None: ...
+
+    def get_run(self, run_id: str) -> PrRun | None: ...
+
+    def upsert_finding(self, finding: Finding) -> None: ...
+
+    def get_finding(self, finding_id: str) -> Finding | None: ...
+
+    def add_occurrence(self, occurrence: Occurrence) -> None: ...
+
+    def list_occurrences(self, run_id: str) -> list[Occurrence]: ...
+
+    def save_bundle(self, bundle: ContextBundle) -> None: ...
+
+    def get_bundle(self, bundle_hash: str) -> ContextBundle | None: ...
+
+    def save_verdict(self, run_id: str, verdict: Verdict) -> None: ...
+
+    def list_verdicts(self, run_id: str) -> list[Verdict]: ...
+
+    def save_displayed(self, alert: DisplayedAlert) -> None: ...
+
+    def list_displayed(self, run_id: str) -> list[DisplayedAlert]: ...
+
+    def add_feedback(self, event: FeedbackEvent) -> None: ...
+
+    def list_feedback(self, run_id: str) -> list[FeedbackEvent]: ...
+
+    def close(self) -> None: ...

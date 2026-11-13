@@ -1,11 +1,11 @@
 # P01. Mô hình miền, cổng và kho lưu trữ
 
-- **Status:** queued
+- **Status:** done
 - **Người làm:** trinq (với Claude Code)
 - **Đóng:** nền cho P02 đến P07
 - **Quyết định cho phép:** ADR 0004, 0006, 0011
 - **Nhánh:** `trinq/core/domain-and-store`
-- **Bắt đầu / Kết thúc:** — / —
+- **Bắt đầu / Kết thúc:** 2026-11-13 / 2026-11-13
 
 ---
 
@@ -52,3 +52,7 @@ make check
 ## Kết quả
 
 *Điền khi đóng.*
+
+- **Kết quả:** `make check` qua với 22 test. Có `core` (models, ports, serde, fingerprint, alias), `store` (SqlStore, BlobStore, migration 001), bộ giả `tests/fakes.py`, test ranh giới import.
+- **Khác kế hoạch:** T6 (bí danh) chuyển từ lưu trữ sang lớp `Aliaser` dùng ở `Exporter` và `FeedbackCollector`, sửa ADR 0006 D5. `ScannerPort.scan` trả `list[RawFinding]` thay vì SARIF thô. Chuẩn hóa đoạn mã còn bỏ khoảng trắng quanh dấu câu.
+- **Ghi ở:** ADR 0006 D5.

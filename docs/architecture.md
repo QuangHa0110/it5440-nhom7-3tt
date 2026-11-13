@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Trạng thái | Đã được người dùng duyệt (2026-11-13). Đã hiện thực P01 đến P07, xem [kế hoạch](plans/done/) và [devlog](devlog/) |
+| Trạng thái | Đã được người dùng duyệt (2026-11-13). Đã hiện thực P01 đến P12 (gồm GitHub App, xem [github-app.md](github-app.md)), xem [kế hoạch](plans/done/) và [devlog](devlog/) |
 | Phạm vi | Hệ thống chạy tại công ty Z và luồng đánh giá ngoại tuyến. Căn cứ: [proposal](project/proposal-llm-loc-canh-bao-pr.md) |
 | Sơ đồ | Nguồn PlantUML ở [diagrams/](diagrams/), bản render ở `diagrams/out/`. Render lại bằng `make diagrams` |
 

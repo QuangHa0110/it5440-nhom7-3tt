@@ -1,0 +1,8 @@
+version: 1
+mode: comment
+display: C
+mentions:
+  mode: [author]
+  min_severity: high
+feedback:
+  trusted_roles: [reviewer]

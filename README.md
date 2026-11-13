@@ -25,7 +25,9 @@ make setup                      # môi trường uv và pre-commit
 cp .env.example .env            # điền PR_TRIAGE_LLM_API_KEY và PR_TRIAGE_LLM_MODEL, không commit
 make check                      # lint, mypy, test
 make e2e                        # đầu cuối trên repo Java thử với cổng LLM thật
-uv run pr-triage --help         # run, replay, publish, feedback, eval
+uv run pr-triage --help         # run, replay, publish, feedback, eval, serve
+uv run pr-triage serve          # GitHub App, xem docs/github-app.md
+python scripts/demo_repo.py --workdir /tmp/demo --dry-run   # bộ demo, xem docs/demo.md
 ```
 
 Với dữ liệu của công ty Z, chỉ dùng mô hình tại chỗ hoặc khi Z đồng ý bằng văn bản (`PR_TRIAGE_LLM_ALLOW_EXTERNAL`). Xem [docs/architecture.md](docs/architecture.md) và [docs/adr/](docs/adr/).

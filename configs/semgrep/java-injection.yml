@@ -31,3 +31,21 @@ rules:
     patterns:
       - pattern: $STMT.executeQuery($A + $B)
       - pattern-not: $STMT.executeQuery("..." + "...")
+  - id: java-sql-concat-flow
+    mode: taint
+    languages: [java]
+    severity: WARNING
+    message: Chuỗi SQL được dựng bằng nối chuỗi rồi đưa vào câu truy vấn
+    metadata:
+      cwe: "CWE-89"
+      origin: viết tay cho dự án (không lấy từ registry)
+    pattern-sources:
+      - patterns:
+          - pattern: '"..." + $X'
+          - pattern-not: '"..." + "..."'
+    pattern-sinks:
+      - pattern: $STMT.executeQuery(...)
+      - pattern: $STMT.executeUpdate(...)
+      - pattern: $STMT.execute(...)
+    pattern-sanitizers:
+      - pattern: Integer.parseInt(...)

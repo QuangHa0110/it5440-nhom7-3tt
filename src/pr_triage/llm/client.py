@@ -59,6 +59,7 @@ class OpenAICompatClient:
             "temperature": cfg.temperature,
             "max_tokens": cfg.max_tokens,
             "seed": cfg.seed,
+            "stream": False,
         }
         if cfg.json_mode:
             body["response_format"] = {"type": "json_object"}

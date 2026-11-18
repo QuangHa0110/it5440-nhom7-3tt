@@ -30,6 +30,10 @@ class Settings:
     admin_token: str = field(default="", repr=False)
     allowed_repos: tuple[str, ...] = ()
     max_body_bytes: int = 5_000_000
+    snippet_radius: int = 10  # bán kính đoạn mã của cách B
+    budget_pr_tokens: int = (
+        200_000  # trần token của engine LLM (xem TD-4: cộng dồn theo tiến trình)
+    )
 
     def repo_allowed(self, repo: str) -> bool:
         return not self.allowed_repos or any(
@@ -73,4 +77,6 @@ class Settings:
             engine=e.get("PR_TRIAGE_ENGINE", cls.engine),
             admin_token=e.get("PR_TRIAGE_ADMIN_TOKEN", ""),
             allowed_repos=csv("PR_TRIAGE_ALLOWED_REPOS"),
+            snippet_radius=int(e.get("PR_TRIAGE_SNIPPET_RADIUS", "10")),
+            budget_pr_tokens=int(e.get("PR_TRIAGE_BUDGET_PR_TOKENS", "200000")),
         )

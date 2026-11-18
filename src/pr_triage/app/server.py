@@ -134,6 +134,7 @@ def build_services(settings_env: dict[str, str] | None = None) -> Services:
     from pr_triage.app.auth import AppAuth
     from pr_triage.app.fetcher import GitFetcher
     from pr_triage.app.settings import Settings
+    from pr_triage.llm.budget import BudgetGuard
     from pr_triage.llm.client import OpenAICompatClient
     from pr_triage.llm.config import LlmConfig
     from pr_triage.llm.engine import PlainTriageEngine, TriageEngine
@@ -142,7 +143,12 @@ def build_services(settings_env: dict[str, str] | None = None) -> Services:
     st = Settings.from_env(settings_env)
     cfg = LlmConfig.from_env(settings_env)
     client = OpenAICompatClient(cfg)
-    llm = TriageEngine(client) if st.engine == "graph" else PlainTriageEngine(client)
+    # TD-4: một BudgetGuard cho cả tiến trình, nên trần "mỗi PR" thực chất cộng dồn mọi PR.
+    budget = BudgetGuard(
+        per_pr_tokens=st.budget_pr_tokens, per_day_tokens=max(2_000_000, st.budget_pr_tokens)
+    )
+    engine_cls = TriageEngine if st.engine == "graph" else PlainTriageEngine
+    llm = engine_cls(client, budget=budget)
     return Services(
         settings=st,
         auth=AppAuth(st.app_id, st.private_key, st.api_url),

@@ -112,7 +112,7 @@ def handle_triage(sv: Services, job: Job) -> tuple[JobStatus, str]:
         repo_alias=job.repo, mode=mode, display=Variant(cfg.display), engine=sv.settings.engine,
         workers=sv.settings.pipeline_workers, secrets=cfg.secrets, min_severity=cfg.min_severity,
         max_findings=cfg.max_findings, path_include=cfg.paths.include,
-        path_exclude=cfg.paths.exclude,
+        path_exclude=cfg.paths.exclude, snippet_radius=sv.settings.snippet_radius,
     )  # fmt: skip
     optional = [prev.head_sha] if prev and prev.head_sha not in (info.head_sha, base) else []
     try:

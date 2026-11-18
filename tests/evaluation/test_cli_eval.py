@@ -79,3 +79,28 @@ def test_full_flow_with_freeze_gate(
     assert run("export", "--split", "eval", "--out", str(out), "--k", "5") == 0
     text = out.read_text()
     assert "src/" not in text and "f01" not in text
+
+
+def test_cli_single_labeler_then_audit_sample(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    db = tmp_path / "s.sqlite"
+    s = SqlStore(db)
+    add_run(s, "r", "repoA", "2026-11-10T00:00:00Z", [(f"f{i:02d}", {}) for i in range(12)])
+    s.close()
+    base = ["eval", "--db", str(db)]
+    assert cli.main([*base, "pool", "--cutoff", "2026-11-05T00:00:00Z"]) == 0
+    out = tmp_path / "sheets"
+    assert cli.main([*base, "label-export", "--split", "eval",
+                     "--labelers", "ai-claude", "--single", "--out", str(out)]) == 0  # fmt: skip
+    sheet = out / "labels-eval-ai-claude.csv"
+    fill(sheet, {f"f{i:02d}": "false" for i in range(12)})
+    assert cli.main([*base, "label-import", "--labeler", "ai-claude",
+                     "--file", str(sheet)]) == 0  # fmt: skip
+    capsys.readouterr()
+    assert cli.main([*base, "audit-sample", "--split", "eval",
+                     "--primary", "ai-claude", "--auditor", "human-1", "--n", "5",
+                     "--seed", "1", "--out", str(out)]) == 0  # fmt: skip
+    got = json.loads(capsys.readouterr().out)
+    rows = list(csv.DictReader(Path(got["sheet"]).open()))
+    assert len(rows) == 5 and all(r["label"] == "" for r in rows)

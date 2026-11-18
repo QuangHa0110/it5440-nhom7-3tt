@@ -19,7 +19,7 @@ from pr_triage.core.models import HumanLabel, PrRef, RunMode, TriageResult, Vari
 from pr_triage.core.ports import StorePort
 from pr_triage.pipeline import result_io
 from pr_triage.pipeline.build import BuildOptions, build_pipeline
-from pr_triage.pipeline.gitrepo import first_parent_commits, parents
+from pr_triage.pipeline.replay import plan_replay
 
 
 def load_dotenv(path: Path = Path(".env")) -> None:
@@ -48,6 +48,12 @@ def _common(p: argparse.ArgumentParser) -> None:
         "--snippet-radius", type=int, default=10, help="số dòng quanh vị trí báo của cách B"
     )
     p.add_argument("--out", type=Path, default=Path("out"))
+    p.add_argument(
+        "--variants",
+        choices=["B,C", "B", "C", "none"],
+        default="B,C",
+        help="cách gọi LLM; none = chỉ quét (cách A)",
+    )
 
 
 def parser() -> argparse.ArgumentParser:
@@ -85,6 +91,16 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--labelers", required=True, help="tên cách nhau bằng dấu phẩy, ít nhất hai")
     p.add_argument("--out", type=Path, default=Path("data/dev/labels"))
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument(
+        "--single", action="store_true", help="một người gán toàn bộ; kiểm định bằng audit-sample"
+    )
+    p = es.add_parser("audit-sample", help="phiếu kiểm định mẫu phân tầng cho người thứ hai")
+    p.add_argument("--split", choices=["dev", "eval"], required=True)
+    p.add_argument("--primary", required=True, help="người gán chính, đã nhập nhãn")
+    p.add_argument("--auditor", required=True)
+    p.add_argument("--n", type=int, default=50)
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--out", type=Path, default=Path("data/dev/labels"))
     p = es.add_parser("label-import", help="nhập phiếu đã điền")
     p.add_argument("--labeler", required=True)
     p.add_argument("--file", type=Path, required=True)
@@ -101,6 +117,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--split", choices=["dev", "eval"], required=True)
     p.add_argument("--manifest", type=Path, default=Path("configs/eval/manifest.json"))
     p.add_argument("--rounds", type=int, default=1000)
+    p.add_argument("--only-labeled-by", default=None, help="chỉ tính ca người này đã gán nhãn")
     p.add_argument("--markdown", action="store_true")
     p = es.add_parser("export", help="xuất số liệu tổng hợp ẩn danh")
     p.add_argument("--split", choices=["dev", "eval"], required=True)
@@ -113,6 +130,12 @@ def parser() -> argparse.ArgumentParser:
     _common(rep)
     rep.add_argument("--ref", default="HEAD")
     rep.add_argument("--count", type=int, default=10)
+    rep.add_argument(
+        "--side",
+        choices=["merged", "first"],
+        default="merged",
+        help="head là đỉnh nhánh PR (merged) hay commit đầu của PR (first, mốc RQ3)",
+    )
     return ap
 
 
@@ -127,6 +150,9 @@ def _opts(args: argparse.Namespace, mode: RunMode) -> BuildOptions:
         "workers": args.workers,
         "snippet_radius": args.snippet_radius,
         "secrets": not args.no_secrets,
+        "variants": ()
+        if args.variants == "none"
+        else tuple(Variant(v) for v in args.variants.split(",")),
     }
     if args.rules:
         kw["rules"] = args.rules
@@ -197,9 +223,14 @@ def _eval(args: argparse.Namespace) -> int:
                               "eval": sum(e.split == "eval" for e in entries)}))  # fmt: skip
         elif cmd == "label-export":
             paths = blind.export_sheets(
-                store, args.split, args.labelers.split(","), args.out, args.seed
+                store, args.split, args.labelers.split(","), args.out, args.seed, args.single
             )
             print(json.dumps({k: str(v) for k, v in paths.items()}, ensure_ascii=False))
+        elif cmd == "audit-sample":
+            sheet = blind.export_audit_sheet(
+                store, args.split, args.primary, args.auditor, args.n, args.out, args.seed
+            )
+            print(json.dumps({"sheet": str(sheet)}, ensure_ascii=False))
         elif cmd == "label-import":
             print(json.dumps({"imported": blind.import_sheet(store, args.labeler, args.file)}))
         elif cmd == "kappa":
@@ -217,7 +248,7 @@ def _eval(args: argparse.Namespace) -> int:
         elif cmd == "metrics":
             if args.split == "eval":
                 check_manifest(args.manifest, _current_manifest())
-            report = compute_report(store, args.split, args.rounds)
+            report = compute_report(store, args.split, args.rounds, args.only_labeled_by)
             print(
                 to_markdown(report)
                 if args.markdown
@@ -231,7 +262,7 @@ def _eval(args: argparse.Namespace) -> int:
             print(f"đã ghi {args.out}")
         else:
             print(
-                "dùng: pr-triage eval {pool|label-export|label-import|kappa|finalize|"
+                "dùng: pr-triage eval {pool|label-export|audit-sample|label-import|kappa|finalize|"
                 "adjudicate|freeze|metrics|export}"
             )
             return 0
@@ -298,7 +329,8 @@ def _feedback(args: argparse.Namespace) -> int:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    load_dotenv()
+    if os.environ.get("PR_TRIAGE_NO_DOTENV") != "1":
+        load_dotenv()
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
     args = parser().parse_args(argv)
     if args.cmd == "run":
@@ -319,14 +351,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.cmd == "replay":
         pipeline, store = build_pipeline(_opts(args, RunMode.REPLAY))
         failed = 0
-        for i, sha in enumerate(first_parent_commits(args.repo, args.ref, args.count), 1):
-            ps = parents(args.repo, sha)
-            if not ps:
+        for item in plan_replay(args.repo, args.ref, args.count, args.side):
+            if item.skip_reason:
+                print(json.dumps({"commit": item.sha[:8], "bỏ qua": item.skip_reason},
+                                 ensure_ascii=False))  # fmt: skip
                 continue
-            base, head = (ps[0], ps[1]) if len(ps) > 1 else (ps[0], sha)
-            result = pipeline.run(args.repo, base, head, i)
-            result_io.write(result, args.out / f"replay-{sha[:8]}.json")
-            print(json.dumps({"commit": sha[:8], **summarize(result)}, ensure_ascii=False))
+            result = pipeline.run(args.repo, item.base, item.head, item.pr_number)
+            result_io.write(result, args.out / f"replay-{item.sha[:8]}-{args.side}.json")
+            print(json.dumps({"commit": item.sha[:8], "pr": item.pr_number, **summarize(result)},
+                             ensure_ascii=False))  # fmt: skip
             failed += result.run.status.value == "failed"
         store.close()
         return 1 if failed else 0

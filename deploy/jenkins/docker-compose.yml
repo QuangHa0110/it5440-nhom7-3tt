@@ -1,0 +1,22 @@
+# Jenkins cục bộ để thử pr-triage. Hướng dẫn: deploy/jenkins/README.md
+services:
+  jenkins:
+    build:
+      context: ../..
+      dockerfile: deploy/jenkins/Dockerfile
+    image: pr-triage-jenkins:local
+    env_file: .env
+    ports:
+      - "8081:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      # SQLite trên ổ Windows mount vào container dễ lỗi khóa file, nên dùng volume của Docker.
+      # Lấy dữ liệu ra: docker compose -f deploy/jenkins/docker-compose.yml cp jenkins:/data ./data/jenkins
+      - triage_data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
+  triage_data:

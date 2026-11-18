@@ -10,6 +10,7 @@ from pathlib import Path
 from pr_triage.context import DataflowProvider, SnippetProvider, load_catalog
 from pr_triage.core.models import ContextBundle, Finding, RunMode, Variant, Verdict
 from pr_triage.core.ports import ContextPort, LlmPort, ScannerPort
+from pr_triage.llm.budget import BudgetGuard
 from pr_triage.llm.client import OpenAICompatClient
 from pr_triage.llm.config import LlmConfig
 from pr_triage.llm.engine import PlainTriageEngine, TriageEngine
@@ -39,6 +40,7 @@ class BuildOptions:
     path_include: tuple[str, ...] = ()
     path_exclude: tuple[str, ...] = ()
     variants: tuple[Variant, ...] = (Variant.B, Variant.C)
+    budget_pr_tokens: int = 200_000  # trần token mỗi lượt chạy (ADR 0008)
 
 
 def manifest_hash(opts: BuildOptions, cfg: LlmConfig) -> str:
@@ -69,7 +71,11 @@ class _ScanOnlyLlm:
 
 def _engine(opts: BuildOptions, cfg: LlmConfig) -> LlmPort:
     client = OpenAICompatClient(cfg)
-    return TriageEngine(client) if opts.engine == "graph" else PlainTriageEngine(client)
+    per_day = max(2_000_000, opts.budget_pr_tokens)
+    budget = BudgetGuard(per_pr_tokens=opts.budget_pr_tokens, per_day_tokens=per_day)
+    if opts.engine == "graph":
+        return TriageEngine(client, budget=budget)
+    return PlainTriageEngine(client, budget=budget)
 
 
 def build_pipeline(

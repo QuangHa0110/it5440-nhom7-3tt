@@ -49,6 +49,12 @@ def _common(p: argparse.ArgumentParser) -> None:
     )
     p.add_argument("--out", type=Path, default=Path("out"))
     p.add_argument(
+        "--budget-pr-tokens",
+        type=int,
+        default=200_000,
+        help="trần token LLM mỗi lượt chạy; hết trần thì nhận định là unknown (error=budget)",
+    )
+    p.add_argument(
         "--variants",
         choices=["B,C", "B", "C", "none"],
         default="B,C",
@@ -150,6 +156,7 @@ def _opts(args: argparse.Namespace, mode: RunMode) -> BuildOptions:
         "workers": args.workers,
         "snippet_radius": args.snippet_radius,
         "secrets": not args.no_secrets,
+        "budget_pr_tokens": args.budget_pr_tokens,
         "variants": ()
         if args.variants == "none"
         else tuple(Variant(v) for v in args.variants.split(",")),

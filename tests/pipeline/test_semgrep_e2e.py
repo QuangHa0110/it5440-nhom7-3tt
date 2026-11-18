@@ -215,3 +215,23 @@ def test_cli_replay_records_real_pr_numbers(
     store.close()
     if side == "first":
         assert "bỏ qua" in capsys.readouterr().out
+
+
+def test_budget_per_run_is_configurable(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Trần token mỗi lượt chạy chỉnh được (lượt quét mốc lịch sử có hàng chục cảnh báo)."""
+    from pr_triage.core.models import RunMode
+    from pr_triage.llm.config import LlmConfig
+    from pr_triage.pipeline.build import BuildOptions, _engine
+
+    monkeypatch.setattr("pr_triage.pipeline.build.OpenAICompatClient", lambda cfg: object())
+    for engine in ("graph", "plain"):
+        eng = _engine(BuildOptions(engine=engine, budget_pr_tokens=900_000), LlmConfig.from_env({}))
+        budget = eng.steps.budget  # type: ignore[attr-defined]
+        budget.record(500_000)
+        assert budget.allowed()
+        budget.record(500_000)
+        assert not budget.allowed()
+    args = cli.parser().parse_args(["run", "--base", "a", "--head", "b", "--pr", "1",
+                                    "--budget-pr-tokens", "900000"])  # fmt: skip
+    assert cli._opts(args, RunMode.SHADOW).budget_pr_tokens == 900_000
+    assert BuildOptions().budget_pr_tokens == 200_000

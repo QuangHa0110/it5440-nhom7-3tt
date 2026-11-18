@@ -173,16 +173,49 @@ def summarize(result: TriageResult) -> dict[str, object]:
     }
 
 
+RUN_CONFIG = Path("configs/eval/run.yml")
+
+
 def _manifest_roots() -> list[Path]:
     return [Path("configs/semgrep"), Path("configs/context"), Path("configs/schemas"),
-            Path("configs/eval/thresholds.yml")]  # fmt: skip
+            Path("configs/eval/thresholds.yml"), RUN_CONFIG]  # fmt: skip
+
+
+def _external_rules() -> dict[str, str]:
+    """Băm các file luật nằm ngoài repo được liệt kê trong `configs/eval/run.yml`.
+
+    Bộ luật registry không được đưa vào repo public (giấy phép), nên manifest khóa nội dung
+    của chúng bằng băm thay vì bằng file trong `configs/`.
+    """
+    import hashlib
+
+    import yaml
+
+    from pr_triage.evaluation import FreezeMismatch
+
+    if not RUN_CONFIG.is_file():
+        return {}
+    cfg = yaml.safe_load(RUN_CONFIG.read_text("utf-8")) or {}
+    out: dict[str, str] = {}
+    for raw in cfg.get("external_rules") or []:
+        path = Path(str(raw)).expanduser()
+        if not path.is_file():
+            raise FreezeMismatch(f"không tìm thấy file luật ngoài repo: {raw}")
+        out[str(raw)] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return out
 
 
 def _current_manifest() -> dict[str, object]:
     from pr_triage.evaluation import compute_manifest
     from pr_triage.llm.prompt import PROMPT_VERSION
 
-    extra = {"prompt_version": PROMPT_VERSION, "model": os.environ.get("PR_TRIAGE_LLM_MODEL", "")}
+    extra: dict[str, object] = {
+        "prompt_version": PROMPT_VERSION,
+        "model": os.environ.get("PR_TRIAGE_LLM_MODEL", ""),
+    }
+    external = _external_rules()
+    if external:
+        extra["external_rules"] = external
     return compute_manifest([r for r in _manifest_roots() if r.exists()], extra)
 
 

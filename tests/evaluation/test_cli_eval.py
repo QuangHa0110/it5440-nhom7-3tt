@@ -104,3 +104,47 @@ def test_cli_single_labeler_then_audit_sample(
     got = json.loads(capsys.readouterr().out)
     rows = list(csv.DictReader(Path(got["sheet"]).open()))
     assert len(rows) == 5 and all(r["label"] == "" for r in rows)
+
+
+@pytest.mark.parametrize("change", ["run_config", "external_rules"])
+def test_freeze_covers_run_config_and_external_rules(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, change: str
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "configs/eval").mkdir(parents=True)
+    ext = tmp_path / "outside" / "registry.yml"
+    ext.parent.mkdir()
+    ext.write_text("rules: [a]")
+    run_yml = tmp_path / "configs/eval/run.yml"
+    run_yml.write_text(f"snippet_radius: 40\ndisplay: C\nexternal_rules:\n  - {ext}\n")
+    monkeypatch.setenv("PR_TRIAGE_LLM_MODEL", "m")
+    db = tmp_path / "s.sqlite"
+    SqlStore(db).close()
+
+    def run(*argv: str) -> int:
+        return cli.main(["eval", "--db", str(db), *argv])
+
+    assert run("freeze") == 0
+    manifest = json.loads((tmp_path / "configs/eval/manifest.json").read_text())
+    assert "configs/eval/run.yml" in manifest["files"]
+    assert str(ext) in manifest["extra"]["external_rules"]
+    assert run("metrics", "--split", "eval", "--rounds", "5") == 0
+    capsys.readouterr()
+    if change == "run_config":
+        run_yml.write_text(run_yml.read_text().replace("40", "10"))
+    else:
+        ext.write_text("rules: [b]")
+    assert run("metrics", "--split", "eval") == 3
+    assert "lệch manifest" in capsys.readouterr().err
+
+
+def test_freeze_rejects_missing_external_rules(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "configs/eval").mkdir(parents=True)
+    (tmp_path / "configs/eval/run.yml").write_text("external_rules:\n  - /khong/ton/tai.yml\n")
+    db = tmp_path / "s.sqlite"
+    SqlStore(db).close()
+    assert cli.main(["eval", "--db", str(db), "freeze"]) == 3
+    assert "không tìm thấy" in capsys.readouterr().err

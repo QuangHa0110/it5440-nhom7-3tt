@@ -24,7 +24,8 @@ class Settings:
     db: str = "data/app/store.sqlite"
     workers: int = 2
     pipeline_workers: int = 4
-    rules: tuple[str, ...] = ("configs/semgrep/java-injection.yml",)
+    rules: tuple[str, ...] = ("data/rules/semgrep-default.yml",)
+    rules_lock: str = "configs/semgrep/rulesets.lock"
     catalog: str = "configs/context/java.yml"
     engine: str = "graph"
     admin_token: str = field(default="", repr=False)
@@ -69,6 +70,7 @@ class Settings:
             workers=int(e.get("PR_TRIAGE_WORKERS", "2")),
             pipeline_workers=int(e.get("PR_TRIAGE_PIPELINE_WORKERS", "4")),
             rules=csv("PR_TRIAGE_RULES", ",".join(cls.rules)) or cls.rules,
+            rules_lock=e.get("PR_TRIAGE_RULES_LOCK", cls.rules_lock),
             catalog=e.get("PR_TRIAGE_CATALOG", cls.catalog),
             engine=e.get("PR_TRIAGE_ENGINE", cls.engine),
             admin_token=e.get("PR_TRIAGE_ADMIN_TOKEN", ""),

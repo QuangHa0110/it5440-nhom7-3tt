@@ -1,4 +1,5 @@
-# Chạy GitHub App: `cp .env.example .env`, điền biến, rồi `docker compose up --build`.
+# Chạy GitHub App: `cp .env.example .env`, điền biến, tải bộ luật Semgrep
+# (`uv run python scripts/fetch_semgrep_rules.py --frozen`, ADR 0015), rồi `docker compose up --build`.
 services:
   pr-triage:
     build: .
@@ -7,4 +8,6 @@ services:
       - "8080:8080"
     volumes:
       - ./data/app:/data
+      # Bộ luật không nằm trong image (giấy phép không cho phân phối lại), gắn từ máy chủ.
+      - ./data/rules:/app/data/rules:ro
     restart: unless-stopped

@@ -8,6 +8,7 @@ chạy nếu file luật có tên trong lock mà thiếu hoặc lệch mã băm.
 from __future__ import annotations
 
 import hashlib
+import re
 from collections.abc import Iterable, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -19,6 +20,9 @@ from pr_triage.core.errors import ScanError
 
 DEFAULT_LOCK = "configs/semgrep/rulesets.lock"
 FETCH_HINT = "chạy: python scripts/fetch_semgrep_rules.py"
+DEFAULT_RULES = "data/rules/semgrep-default.yml"
+# Tên file do scripts/fetch_semgrep_rules.py ghi: luôn phải có lock đi kèm.
+_REGISTRY_FILE = re.compile(r"^semgrep-[\w.-]+\.ya?ml$")
 
 
 @dataclass(frozen=True)
@@ -101,7 +105,13 @@ def filter_languages(text: str, languages: Sequence[str]) -> str:
 
 def verify_rules(rule_paths: Sequence[str], lock_path: Path) -> list[Ruleset]:
     """Kiểm tra mọi file luật có tên trong lock. File luật tự viết (không có trong lock) bỏ qua."""
-    by_file = {Path(r.file).name: r for r in load_lock(lock_path).values()}
+    lock = load_lock(lock_path)
+    if not lock:
+        fetched = [rp for rp in rule_paths if _REGISTRY_FILE.match(Path(rp).name)]
+        if fetched:
+            raise ScanError(f"không đọc được lock {lock_path} để kiểm tra {fetched[0]}")
+        return []
+    by_file = {Path(r.file).name: r for r in lock.values()}
     checked: list[Ruleset] = []
     for rp in rule_paths:
         entry = by_file.get(Path(rp).name)

@@ -13,6 +13,8 @@ services:
       # SQLite trên ổ Windows mount vào container dễ lỗi khóa file, nên dùng volume của Docker.
       # Lấy dữ liệu ra: docker compose -f deploy/jenkins/docker-compose.yml cp jenkins:/data ./data/jenkins
       - triage_data:/data
+      # Bộ luật Semgrep (ADR 0015): tải trên máy chủ bằng scripts/fetch_semgrep_rules.py, gắn chỉ đọc.
+      - ../../data/rules:/opt/pr-triage/data/rules:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

@@ -17,13 +17,21 @@ from pr_triage.llm.prompt import PROMPT_VERSION
 from pr_triage.pipeline.pathglob import make_path_filter
 from pr_triage.pipeline.policy import DisplayPolicy
 from pr_triage.pipeline.runner import PrPipeline
-from pr_triage.scan import SecretScanner, SemgrepAdapter
+from pr_triage.scan import (
+    DEFAULT_LOCK,
+    DEFAULT_RULES,
+    SecretScanner,
+    SemgrepAdapter,
+    verify_rules,
+)
 from pr_triage.store import SqlStore
 
 
 @dataclass(frozen=True)
 class BuildOptions:
-    rules: Sequence[str] = field(default_factory=lambda: ["configs/semgrep/java-injection.yml"])
+    # Bộ luật tải về và khóa bằng mã băm (ADR 0015). Test truyền luật tự viết rõ ràng.
+    rules: Sequence[str] = field(default_factory=lambda: [DEFAULT_RULES])
+    rules_lock: str = DEFAULT_LOCK
     catalog: str = "configs/context/java.yml"
     db: str = "data/dev/store.sqlite"
     repo_alias: str = "repo"
@@ -61,6 +69,7 @@ def _finding_filter(opts: BuildOptions) -> Callable[[Finding], bool] | None:
 def build_pipeline(
     opts: BuildOptions, llm: LlmPort | None = None, store: SqlStore | None = None
 ) -> tuple[PrPipeline, SqlStore]:
+    verify_rules(opts.rules, Path(opts.rules_lock))
     cfg = LlmConfig.from_env()
     store = store or SqlStore(opts.db)
     if llm is None:

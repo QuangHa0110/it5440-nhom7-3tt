@@ -31,11 +31,24 @@ Cả hai đường đều kích cùng một job `pr-triage` với cùng tham s�
 
 ## Bước 1. Chọn repo được quét
 
-Dùng repo GitHub **của bạn** có PR đang mở, hoặc repo mà chủ repo đã đồng ý. Repo nên là Java: luật quét hiện chỉ phủ SQL
-injection trên Java và secret viết cứng. Repo khác vẫn chạy được, nhưng gần như luôn ra "không có cảnh báo mới".
+Dùng repo GitHub **của bạn** có PR đang mở, hoặc repo mà chủ repo đã đồng ý. Bot quét bằng bộ luật Semgrep `p/default`
+(mọi ngôn ngữ phổ biến) và bộ quét secret. Phần ngữ cảnh luồng dữ liệu (cách C) hiện chỉ cho Java.
 
 - Chưa có repo phù hợp thì dựng repo demo 6 PR (xem [docs/demo.md](../../docs/demo.md)). Trên Windows đặt `PYTHONIOENCODING=utf-8` trước khi chạy `scripts/demo_repo.py`.
 - **Không** cần chép file nào vào repo. Nếu trước đây đã chép `Jenkinsfile` của bản cũ vào repo thì có thể xóa đi.
+
+## Bước 1b. Tải bộ luật Semgrep
+
+Bộ luật không nằm trong repo hay image, vì giấy phép Semgrep Rules License không cho phân phối lại (ADR 0015).
+Tải một lần trên máy chạy Jenkins, từ gốc repo:
+
+```bash
+uv run python scripts/fetch_semgrep_rules.py --frozen
+```
+
+Lệnh ghi `data/rules/semgrep-default.yml`, đúng bản đã khóa trong `configs/semgrep/rulesets.lock`. Compose gắn thư mục này
+vào container ở chế độ chỉ đọc. Nếu registry đã đổi bộ luật thì lệnh báo lệch mã băm: muốn cập nhật thì chạy lại không có
+`--frozen` rồi commit lock mới (và phải làm trước khi gắn tag khóa eval). Thiếu file hoặc lệch mã băm thì job dừng ở bước `run`.
 
 ## Bước 2. Tạo token GitHub
 

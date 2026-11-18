@@ -15,6 +15,7 @@ from pr_triage import __version__
 from pr_triage.bot import FeedbackCollector, Publisher, render, resolve_states
 from pr_triage.bot.github import GitHubScm
 from pr_triage.core.alias import Aliaser
+from pr_triage.core.errors import ScanError
 from pr_triage.core.models import HumanLabel, PrRef, RunMode, TriageResult, Variant
 from pr_triage.core.ports import StorePort
 from pr_triage.pipeline import result_io
@@ -39,6 +40,9 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--repo-alias", default="repo")
     p.add_argument("--db", default="data/dev/store.sqlite")
     p.add_argument("--rules", action="append", help="file luật Semgrep (lặp được)")
+    p.add_argument(
+        "--rules-lock", default="configs/semgrep/rulesets.lock", help="lock mã băm (ADR 0015)"
+    )
     p.add_argument("--catalog", default="configs/context/java.yml")
     p.add_argument("--display", choices=["A", "B", "C"], default="B")
     p.add_argument("--engine", choices=["graph", "plain"], default="graph")
@@ -119,6 +123,7 @@ def parser() -> argparse.ArgumentParser:
 def _opts(args: argparse.Namespace, mode: RunMode) -> BuildOptions:
     kw: dict[str, object] = {
         "catalog": args.catalog,
+        "rules_lock": args.rules_lock,
         "db": args.db,
         "repo_alias": args.repo_alias,
         "mode": mode,
@@ -248,10 +253,12 @@ def _serve(args: argparse.Namespace) -> int:
 
     from pr_triage.app.server import build_services, create_app
     from pr_triage.app.settings import SettingsError
+    from pr_triage.scan import verify_rules
 
     try:
         services = build_services()
-    except SettingsError as exc:
+        verify_rules(services.settings.rules, Path(services.settings.rules_lock))
+    except (SettingsError, ScanError) as exc:
         print(f"không khởi động được: {exc}", file=sys.stderr)
         return 2
     logging.getLogger("pr_triage").setLevel(logging.INFO)
@@ -301,6 +308,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     load_dotenv()
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
     args = parser().parse_args(argv)
+    try:
+        return _dispatch(args)
+    except ScanError as exc:
+        print(f"LỖI: {exc}", file=sys.stderr)
+        return 2
+
+
+def _dispatch(args: argparse.Namespace) -> int:
     if args.cmd == "run":
         pipeline, store = build_pipeline(_opts(args, RunMode(args.mode)))
         result = pipeline.run(args.repo, args.base, args.head, args.pr)

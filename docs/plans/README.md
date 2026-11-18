@@ -43,6 +43,13 @@ Mục tiêu: **cài được lên repo GitHub và thử ngay**. Thứ tự: P08,
 | P11 | [GitHub App](queued/2026-11-13-p11-github-app.md) | P08 đến P10 |
 | P12 | [Đóng gói và demo](queued/2026-11-13-p12-trien-khai-va-demo.md) | P11 |
 
+## Sau báo cáo lần 1
+
+| # | Kế hoạch | Phụ thuộc |
+|---|---|---|
+| P13 | [Jenkins: job trung tâm nhiều repo](done/2026-11-17-p13-jenkins-job-trung-tam-nhieu-repo.md) | P12 |
+| P14 | [Bộ luật Semgrep có sẵn `p/default`](queued/2026-11-19-p14-semgrep-bo-luat-co-san.md) | P13 merge vào `dev` |
+
 ## Quy tắc chạy xuyên đêm
 
 Áp dụng khi người dùng giao cho Claude Code chạy các kế hoạch trên mà không có mặt.

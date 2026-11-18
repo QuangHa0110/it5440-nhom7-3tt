@@ -6,3 +6,4 @@ Chỉ ghi **cái còn nợ**. Thêm một dòng ngay khi nợ phát sinh. Khi đ
 |---|---|---|---|---|
 | TD-1 | Bật branch protection cho `main` và `dev` trên GitHub (cần quản trị viên repo) | 2026-11-13 | | |
 | TD-2 | Chốt công cụ quét và ngôn ngữ chính khi Z trả lời Phụ lục A, rồi điền `[project]` dependencies và workflow CI tương ứng. *2026-11-19: công cụ quét đã chốt (ADR 0015); còn ngôn ngữ chính và dependencies* | 2026-11-13 | | |
+| TD-3 | Trên Windows, Semgrep trả đường dẫn dạng `src\app\X.java`: dấu vân tay và so khớp đường dẫn khác Linux, 4 test hỏng. `tests/app/fakegithub.py` ghi file không chỉ định `utf-8`. Chuẩn hóa đường dẫn về `/` trong `scan/sarif.py` (xem devlog 2026-11-19-p14) | 2026-11-19 | | |

@@ -43,6 +43,35 @@ sinks:
   CWE-643:
     kind: xpath-query
     methods: [evaluate, compile]
+  # Bổ sung theo các CWE có luồng dữ liệu trong luật Java của p/default (ADR 0015).
+  CWE-23:
+    kind: file-path
+    methods: [get, resolve, newInputStream, newOutputStream, readAllBytes, readString]
+    constructors: [File, FileInputStream, FileOutputStream, FileReader, FileWriter]
+  CWE-611:
+    kind: xml-parse
+    methods: [parse, unmarshal, read, transform, createXMLStreamReader, createXMLEventReader]
+  CWE-502:
+    kind: deserialization
+    methods: [readObject, readUnshared, fromXML, load, loadAs, loadAll]
+    constructors: [ObjectInputStream, XMLDecoder]
+  CWE-94:
+    kind: code-eval
+    methods: [eval, parseExpression, evaluate, parse]
+  CWE-918:
+    kind: outbound-request
+    methods: [openConnection, openStream, getForObject, getForEntity, postForObject,
+              postForEntity, exchange, execute, send, retrieve]
+    constructors: [URL, HttpGet, HttpPost]
+  CWE-601:
+    kind: redirect
+    methods: [sendRedirect, setHeader, addHeader]
+
+# CWE do cấu hình hay chọn thuật toán, không do dữ liệu vào: C ghi "không áp dụng", không đoán
+# sink (ADR 0015 D6). Lấy từ các CWE xuất hiện trong luật Java của p/default.
+no_dataflow_cwes: [CWE-200, CWE-269, CWE-276, CWE-287, CWE-295, CWE-297, CWE-319, CWE-323,
+                   CWE-326, CWE-327, CWE-328, CWE-329, CWE-330, CWE-345, CWE-352, CWE-614,
+                   CWE-704, CWE-798, CWE-1004]
 
 # Tên hàm gợi ý làm sạch hoặc kiểm tra. Chỉ là ứng viên: LLM phải đọc thân hàm để kết luận.
 sanitizer_name_regex: '(?i)(escape|sanitiz|encode|quote|clean|validate|whitelist|allowlist|parameteriz|filter|safe|strip)'

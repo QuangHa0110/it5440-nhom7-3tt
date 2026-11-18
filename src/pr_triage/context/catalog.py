@@ -25,6 +25,7 @@ class Catalog:
     sanitizer_name: re.Pattern[str]
     entry_points: frozenset[str] = frozenset()
     framework_types: frozenset[str] = frozenset()
+    no_dataflow_cwes: frozenset[str] = frozenset()
     version: int = 1
     raw: dict[str, Any] = field(default_factory=dict, compare=False, repr=False)
 
@@ -39,6 +40,9 @@ class Catalog:
 
     def sink_for(self, cwe: str | None) -> SinkSpec | None:
         return self.sinks.get(cwe or "")
+
+    def no_dataflow(self, cwe: str | None) -> bool:
+        return cwe is not None and cwe in self.no_dataflow_cwes
 
     def any_sink_method(self) -> frozenset[str]:
         return frozenset(m for s in self.sinks.values() for m in s.methods)
@@ -61,6 +65,7 @@ def load_catalog(path: Path) -> Catalog:
         sanitizer_name=re.compile(data.get("sanitizer_name_regex", r"(?!)")),
         entry_points=frozenset(data.get("entry_points", [])),
         framework_types=frozenset(data.get("framework_types", [])),
+        no_dataflow_cwes=frozenset(data.get("no_dataflow_cwes", [])),
         version=int(data.get("version", 1)),
         raw=data,
     )

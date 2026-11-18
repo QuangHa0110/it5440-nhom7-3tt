@@ -5,4 +5,4 @@ Chỉ ghi **cái còn nợ**. Thêm một dòng ngay khi nợ phát sinh. Khi đ
 | Id | Nợ | Phát sinh | Chủ | Đóng bởi |
 |---|---|---|---|---|
 | TD-1 | Bật branch protection cho `main` và `dev` trên GitHub (cần quản trị viên repo) | 2026-11-13 | | |
-| TD-2 | Chốt công cụ quét và ngôn ngữ chính khi Z trả lời Phụ lục A, rồi điền `[project]` dependencies và workflow CI tương ứng | 2026-11-13 | | |
+| TD-2 | Chốt công cụ quét và ngôn ngữ chính khi Z trả lời Phụ lục A, rồi điền `[project]` dependencies và workflow CI tương ứng. *2026-11-19: công cụ quét đã chốt (ADR 0015); còn ngôn ngữ chính và dependencies* | 2026-11-13 | | |

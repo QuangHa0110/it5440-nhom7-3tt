@@ -1,11 +1,11 @@
 # P14. Thay luật Semgrep tự viết bằng bộ luật có sẵn `p/default`, chạy từ bản tải về được khóa bằng mã băm
 
-- **Status:** queued
+- **Status:** active
 - **Người làm:** hadvq (với Claude Code)
 - **Đóng:** một nửa TD-2 (chốt công cụ quét; ngôn ngữ chính vẫn mở)
 - **Quyết định cho phép:** hadvq chọn `p/default` ngày 2026-11-19, sau khi so 5 bộ luật trên repo demo; ghi thành ADR 0015 ở T1
-- **Nhánh:** `hadvq/scan/semgrep-p-default`, tách từ `dev` sau khi PR của P13 đã merge
-- **Bắt đầu / Kết thúc:** — / —
+- **Nhánh:** `hadvq/scan/semgrep-p-default`, tách từ nhánh P13 (`hadvq/deploy/jenkins-central-job`) vì PR #7 chưa merge; rebase lên `dev` khi PR #7 merge
+- **Bắt đầu / Kết thúc:** 2026-11-19 / —
 
 ---
 

@@ -48,7 +48,7 @@ Mục tiêu: **cài được lên repo GitHub và thử ngay**. Thứ tự: P08,
 | # | Kế hoạch | Phụ thuộc |
 |---|---|---|
 | P13 | [Jenkins: job trung tâm nhiều repo](done/2026-11-17-p13-jenkins-job-trung-tam-nhieu-repo.md) | P12 |
-| P14 | [Bộ luật Semgrep có sẵn `p/default`](queued/2026-11-19-p14-semgrep-bo-luat-co-san.md) | P13 merge vào `dev` |
+| P14 | [Bộ luật Semgrep có sẵn `p/default`](active/2026-11-19-p14-semgrep-bo-luat-co-san.md) | P13 merge vào `dev` |
 
 ## Quy tắc chạy xuyên đêm
 

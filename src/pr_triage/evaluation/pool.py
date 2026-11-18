@@ -17,8 +17,13 @@ def build_pool(
     """
     first: dict[str, PoolEntry] = {}
     for run in store.list_runs():
+        # Chỉ cảnh báo pipeline đã xử lý sau gộp trùng mới có nhận định (ít nhất A hình thức);
+        # bản trùng giữa các luật bị gộp có occurrence nhưng không có nhận định (TD-3).
+        processed = {v.finding_id for v in store.list_verdicts(run.run_id)}
         for occ in store.list_occurrences(run.run_id):
             if occ.side is not Side.HEAD or not occ.is_new or occ.finding_id in first:
+                continue
+            if occ.finding_id not in processed:
                 continue
             when = run.head_committed_at or run.started_at
             is_eval = run.repo_alias in eval_only_repos or when >= cutoff

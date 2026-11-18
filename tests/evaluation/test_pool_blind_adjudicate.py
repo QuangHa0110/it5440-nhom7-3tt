@@ -1,5 +1,6 @@
 import csv
 import re
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,7 @@ from pr_triage.evaluation import adjudicate as adj
 from pr_triage.evaluation import blind, build_pool
 from pr_triage.store import SqlStore
 from tests.evaluation.helpers import add_run
+from tests.factories import make_finding
 
 T = VerdictLabel.LIKELY_TRUE
 
@@ -244,3 +246,16 @@ def test_kappa_on_audit_overlap(tmp_path: Path) -> None:
     queue = adj.queue(s)
     assert set(audited[:5]) <= set(queue)
     assert not set(queue) - set(audited)
+
+
+def test_pool_excludes_findings_merged_away_by_dedup() -> None:
+    """Bản trùng giữa các luật bị pipeline gộp không có nhận định; không vào pool (TD-3)."""
+    from pr_triage.core.models import Occurrence, Side
+
+    s = SqlStore(":memory:")
+    add_run(s, "r", "repoA", "2026-11-10T00:00:00Z", [("kept", {})])
+    twin = replace(make_finding(path="src/kept.java", ordinal=9), finding_id="merged-away")
+    s.upsert_finding(twin)
+    s.add_occurrence(Occurrence("r", "merged-away", Side.HEAD, 1, 1, "t", True))
+    entries = build_pool(s, "2026-11-05T00:00:00Z")
+    assert [e.finding_id for e in entries] == ["kept"]

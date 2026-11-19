@@ -1,11 +1,11 @@
 # P14. Thay luật Semgrep tự viết bằng bộ luật có sẵn `p/default`, chạy từ bản tải về được khóa bằng mã băm
 
-- **Status:** active
+- **Status:** done
 - **Người làm:** hadvq (với Claude Code)
 - **Đóng:** một nửa TD-2 (chốt công cụ quét; ngôn ngữ chính vẫn mở)
 - **Quyết định cho phép:** hadvq chọn `p/default` ngày 2026-11-19, sau khi so 5 bộ luật trên repo demo; ghi thành ADR 0015 ở T1
 - **Nhánh:** `hadvq/scan/semgrep-p-default`, tách từ nhánh P13 (`hadvq/deploy/jenkins-central-job`) vì PR #7 chưa merge; rebase lên `dev` khi PR #7 merge
-- **Bắt đầu / Kết thúc:** 2026-11-19 / —
+- **Bắt đầu / Kết thúc:** 2026-11-19 / 2026-11-19
 
 ---
 
@@ -86,6 +86,13 @@ Chạy thêm một PR demo đầu cuối bằng `p/default`; comment phải có 
 
 *Điền khi đóng kế hoạch. Không sửa phần thân phía trên.*
 
-- **Kết quả:**
+*Ghi chú 2026-11-19, khi đóng.*
+
+- **Kết quả:** Bot chạy bằng `p/default` tải về `data/rules/`, khóa bằng `configs/semgrep/rulesets.lock`; thiếu hoặc lệch mã băm thì dừng (CLI thoát mã 2, máy chủ App không khởi động). Hai luật SQLi cùng dòng gộp thành một cảnh báo. Cách C có thêm sink cho CWE-611, 502, 94, 918, 601, 23 và ghi "không áp dụng luồng dữ liệu" cho các CWE cấu hình hoặc thuật toán. Sáu PR demo chạy lại, `docs/demo.md` cập nhật. BenchmarkJava toàn repo quét trong 130 giây.
 - **Khác kế hoạch ở đâu:**
-- **Ghi ở:** devlog, mục nợ, ADR
+  - T3: luật được **gắn vào container bằng volume chỉ đọc** từ `data/rules` của máy chủ, không tải lúc build image. Lý do: image không chứa bản sao luật (giấy phép), và Jenkins của Z có thể không ra được internet lúc build. Chưa build image Jenkins để kiểm tra.
+  - T4 lộ ra lỗi thật: id luật từ file JSON của registry mang đường dẫn tuyệt đối, làm dấu vân tay phụ thuộc máy. Đã sửa (`fix(scan)`). Fixture luật viết ngay trong test, không thêm file vào `tests/fixtures/`.
+  - T5: thêm CWE-601 và CWE-23 ngoài bốn CWE dự kiến, và danh sách `no_dataflow_cwes`, dựa trên đếm CWE thật của luật Java.
+  - T6: máy không có khóa LLM nên chỉ đo phía công cụ quét, chưa có số token. PR 02 không còn im lặng (XSS có cơ sở ở `doPost`); chưa sửa mã demo.
+  - Cổng: ruff, mypy, `--verify` qua; `git status` không có file dưới `data/`. `make check` trên Windows còn 4 test hỏng có từ trước (đường dẫn `\`, TD-3), CI Linux không bị. Chưa chạy demo đầu cuối với LLM thật.
+- **Ghi ở:** devlog `2026-11-19-p14-bo-luat-p-default.md`, nợ TD-3, ADR 0015.

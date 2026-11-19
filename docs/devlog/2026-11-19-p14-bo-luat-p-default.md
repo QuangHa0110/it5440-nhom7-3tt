@@ -37,6 +37,21 @@ Chạy bằng pipeline thật, LLM giả (máy không có khóa LLM), nên chỉ
 - Thời gian khoảng 19 giây mỗi PR, gấp khoảng 3 lần bộ luật tự viết (quét hai lần: nhánh đích và nhánh PR).
 - Chưa có số token và nhận định LLM: cần chạy lại với khóa LLM thật (`make e2e`).
 
+## Thời gian quét trên repo cỡ vừa (T7)
+
+OWASP BenchmarkJava, bản clone nông commit `c6717ea` (2026-11-18), 2766 file Java, máy 8 nhân, Windows, Semgrep 1.185.0, bộ `p/default` đủ 1074 luật:
+
+| Phạm vi | Thời gian | Cảnh báo |
+|---|---|---|
+| 10 file | 10,0 s | 2 |
+| 50 file | 10,7 s | 33 |
+| Toàn repo | 129,7 s | 3252 |
+
+- Khoảng 10 giây là chi phí cố định để nạp luật, không phụ thuộc số file.
+- Toàn repo dưới ngưỡng 10 phút của kế hoạch, nên chưa cần lọc luật theo ngôn ngữ.
+- Pipeline hiện quét **toàn bộ** cả nhánh đích lẫn nhánh PR, nên một PR trên repo cỡ này mất khoảng 4 đến 5 phút chỉ cho bước quét. Nếu Z có repo lớn hơn nhiều, nên chỉ quét các file PR thay đổi ở cả hai nhánh (bộ chuyển đổi đã nhận tham số `paths`), khi đó còn khoảng 10 đến 20 giây.
+- 3252 cảnh báo trên BenchmarkJava (nhiều nhất CWE-352, 89, 79, 326, 22, 78) chỉ cho thấy bộ luật ồn trên mã cố ý chứa lỗi. Không dùng làm số đánh giá: chạy BenchmarkJava đúng nghĩa thuộc kế hoạch đánh giá riêng.
+
 ## Test vốn đã hỏng trên Windows (không do P14)
 
 Kiểm tra bằng `git stash` trước khi sửa: bốn test hỏng trên Windows từ trước, ghi ở TD-3.

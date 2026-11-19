@@ -8,7 +8,7 @@ Kịch bản: thiết kế `2026-11-18-kich-ban-danh-gia-design.md` (hồ sơ `.
 |---|---|---|
 | K1 truy vết | Có bảng ID test-plan → test; chưa có: CTX-04, LLM-07, SEC-06, SEC-09, OPS-06; một phần: 10 ca | `traceability.md` |
 | K2.1 tĩnh | Ruff, format, MyPy đạt | `make check` |
-| K2.2 pytest | **273 passed, 1 skipped** (live LLM, chạy riêng) tại `f4204a6` | `uv run pytest` |
+| K2.2 pytest | **276 passed, 1 skipped** (live LLM, chạy riêng) tại `121fa04` | `uv run pytest` |
 | K2.3 LLM thật | 2 passed (sau khi cấp khóa mới; lần đầu 401 khóa hết hạn) | `tests/llm/test_live.py` |
 | K2.4 đặc tả khác mã | LLM-09 chốt: từ chối nhiều JSON object | `test_validate_rejects_two_json_objects` |
 | K3 khóa manifest | Đổi một byte cấu hình chạy hoặc luật ngoài repo → `eval metrics` từ chối | `test_freeze_covers_run_config_and_external_rules` |
@@ -32,8 +32,9 @@ Kịch bản: thiết kế `2026-11-18-kich-ban-danh-gia-design.md` (hồ sơ `.
 | Manifest không khóa cấu hình chạy, luật ngoài repo | major | `2fed98e` | `test_freeze_covers_run_config_and_external_rules` |
 | Pool lấy bản trùng theo luật đã bị gộp | major | `0812e89` | `test_pool_excludes_findings_merged_away_by_dedup` |
 | Trần token mỗi lượt chạy cố định 200.000 | major | `f4204a6` | `test_budget_per_run_is_configurable` |
+| GitHub App không đọc bán kính đoạn mã và trần token | major (lệch cấu hình đã khóa khi chạy App) | `121fa04` | `test_app_passes_snippet_radius_to_pipeline`, `test_settings_snippet_radius_and_budget` |
 
-Còn mở: đầu ra LLM bị cắt cụt (`finish_reason=length`, 15/242 nhận định `eval`) — minor, cảnh báo vẫn được giữ.
+Còn mở: đầu ra LLM bị cắt cụt (`finish_reason=length`, 15/242 nhận định `eval`) — minor, cảnh báo vẫn được giữ. TD-4: App dùng một engine LLM cho cả tiến trình nên trần token cộng dồn giữa các PR — major cho vận hành dài, chưa sửa.
 
 ## Tiêu chí R — kết quả nghiên cứu
 
@@ -49,9 +50,9 @@ Còn mở: đầu ra LLM bị cắt cụt (`finish_reason=length`, 15/242 nhận
 | Độ ổn định | Xong | đổi nhãn qua 3 lần: B 12%, C 22% (n = 90) |
 | D2 BenchmarkJava | Xong | B 69%, C 92% FP-removal; TP-loss 1/89, 3/89; McNemar p ≈ 9e-06 |
 | D3 Vul4J (RQ4) | **Chưa làm** | — |
-| D4 PR trên fork (RQ3 mô tả) | **Chưa làm** | — |
+| D4 PR trên fork (RQ3 mô tả) | Xong (2026-11-19) | 6 PR trên fork Roller qua GitHub App: mở PR → xong trung vị 80 s, tối đa 94 s; 65.110 token; 2 lỗi cố ý được B và C giữ; không cảnh báo thừa ở PR an toàn/tài liệu; 1 ca bộ quét bỏ sót |
 | Mốc RQ3 lịch sử (`--side first`) | **Chưa làm** | — |
-| Kết luận "đáng dùng" | — | **Chưa đủ bằng chứng** (thời gian/chi phí trên PR chưa đo, cận trên TP-loss 23%) |
+| Kết luận "đáng dùng" | — | **Chưa đủ bằng chứng**: FP-removal 74% (đạt), thời gian trên PR 80 s (đạt, D4), nhưng cận trên TP-loss 23% > 10% và chưa có ngân sách chi phí |
 
 ## Cổng 5.7 (trước `freeze`)
 

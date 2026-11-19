@@ -19,7 +19,7 @@ pipeline {
             steps {
                 script {
                     currentBuild.displayName = "#${env.BUILD_NUMBER} ${params.REPO}#${params.PR}"
-                    def rc = sh(returnStatus: true, script: 'python "$PR_TRIAGE_JENKINS/ci_helper.py" allowed "$REPO" "$PR"')
+                    def rc = sh(returnStatus: true, script: 'pr-triage ci allowed --repo "$REPO" --pr "$PR"')
                     env.ALLOWED = (rc == 0) ? 'true' : 'false'
                     if (rc != 0) {
                         currentBuild.result = 'NOT_BUILT'

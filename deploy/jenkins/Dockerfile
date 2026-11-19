@@ -32,6 +32,6 @@ ENV PATH="/opt/pr-triage/.venv/bin:${PATH}" \
 USER jenkins
 COPY deploy/jenkins/plugins.txt /usr/share/jenkins/ref/plugins.txt
 RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
-COPY deploy/jenkins/triage.Jenkinsfile deploy/jenkins/poll.Jenkinsfile deploy/jenkins/ci_helper.py /usr/share/jenkins/pr-triage/
+COPY deploy/jenkins/triage.Jenkinsfile deploy/jenkins/poll.Jenkinsfile /usr/share/jenkins/pr-triage/
 COPY deploy/jenkins/casc.yaml /usr/share/jenkins/casc.yaml
 WORKDIR /var/jenkins_home

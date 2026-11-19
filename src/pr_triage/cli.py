@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from pr_triage import __version__
-from pr_triage.bot import FeedbackCollector, Publisher, render, resolve_states
+from pr_triage.bot import FeedbackCollector, choose_sink, resolve_states
 from pr_triage.bot.github import GitHubScm
 from pr_triage.core.alias import Aliaser
 from pr_triage.core.models import HumanLabel, PrRef, RunMode, TriageResult, Variant
@@ -129,6 +129,15 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--split", choices=["dev", "eval"], required=True)
     p.add_argument("--out", type=Path, default=Path("reports/results/summary.json"))
     p.add_argument("--k", type=int, default=5)
+    ci = sub.add_parser("ci", help="đường Jenkins: kiểm tra repo cho phép, hỏi PR đang mở")
+    cs = ci.add_subparsers(dest="ci_cmd")
+    p = cs.add_parser("allowed", help="thoát 0 nếu repo được quét qua Jenkins (1: từ chối, 2: sai)")
+    p.add_argument("--repo", required=True)
+    p.add_argument("--pr", required=True)
+    p.add_argument("--base-ref", default="")
+    p.add_argument("--head-sha", default="")
+    p = cs.add_parser("poll", help="in PR đang mở có đầu nhánh mới (TSV), ghi FILE.next")
+    p.add_argument("--state", type=Path, required=True)
     srv = sub.add_parser("serve", help="chạy GitHub App (máy chủ webhook)")
     srv.add_argument("--host", default="0.0.0.0")
     srv.add_argument("--port", type=int, default=8080)
@@ -330,19 +339,70 @@ def _serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def _ci(args: argparse.Namespace) -> int:
+    from pr_triage.core.delivery import DeliveryConfigError, RepoAllowList, RepoGate, RoutePolicy
+    from pr_triage.triggers import (
+        GitHubPullLister,
+        JenkinsParamsTrigger,
+        JenkinsPoller,
+        PollState,
+        TriggerError,
+    )
+
+    try:
+        gate = RepoGate(
+            RepoAllowList.from_csv(os.environ.get("PR_TRIAGE_ALLOWED_REPOS", ""), False),
+            RoutePolicy.parse(os.environ.get("PR_TRIAGE_ROUTES", "")),
+        )
+    except DeliveryConfigError as exc:
+        print(f"PR_TRIAGE_ROUTES: {exc}", file=sys.stderr)
+        return 2
+    if args.ci_cmd == "allowed":
+        params = {"REPO": args.repo, "PR": args.pr, "BASE_REF": args.base_ref,
+                  "HEAD_SHA": args.head_sha}  # fmt: skip
+        try:
+            admitted = JenkinsParamsTrigger().collect(params, gate)
+        except TriggerError as exc:
+            print(f"Tham số không hợp lệ: {exc}", file=sys.stderr)
+            return 2
+        if not admitted:
+            print(f"{args.repo} không được quét qua Jenkins (danh sách cho phép hoặc định tuyến).",
+                  file=sys.stderr)  # fmt: skip
+            return 1
+        return 0
+    if args.ci_cmd == "poll":
+        token = os.environ.get("GITHUB_TOKEN", "")
+        if not token:
+            print("Thiếu GITHUB_TOKEN.", file=sys.stderr)
+            return 2
+        if not gate.allow.patterns:
+            print("PR_TRIAGE_ALLOWED_REPOS trống: không có repo nào để hỏi.", file=sys.stderr)
+        lister = GitHubPullLister(token, os.environ.get("GITHUB_API_URL", "https://api.github.com"))
+        poller = JenkinsPoller(lister, gate)
+        outcome = poller.poll(PollState.load(args.state))
+        outcome.next_state.save(args.state.with_name(args.state.name + ".next"))
+        for line in poller.errors:
+            print(line, file=sys.stderr)
+        for r in outcome.requests:
+            print(f"{r.repo}\t{r.pr_number}\t{r.base_ref}\t{r.head_sha}")
+        print(f"{outcome.asked} repo, {len(outcome.requests)} PR cần quét.", file=sys.stderr)
+        return 0
+    return 2
+
+
 def _publish(args: argparse.Namespace) -> int:
     from pr_triage.store import SqlStore
 
     result = result_io.read(args.result)
     store = SqlStore(args.db)
     pr = PrRef(args.slug, args.pr, result.run.head_sha, result.run.base_sha)
-    if not args.post:
-        print(render(result))
-        return 0
-    scm = GitHubScm(os.environ["GITHUB_TOKEN"])
-    ref = Publisher(scm, store).publish(result, pr, post=True)
-    print(json.dumps({"comment_ref": ref, "mode": result.run.mode.value}))
-    store.close()
+    try:
+        sink = choose_sink(args.post, lambda: GitHubScm(os.environ["GITHUB_TOKEN"]), store)
+        ref = sink.deliver(result, pr)
+        if args.post:
+            print(json.dumps({"comment_ref": ref, "mode": result.run.mode.value}))
+    finally:
+        store.close()
     return 0
 
 
@@ -386,6 +446,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _eval(args)
     if args.cmd == "publish":
         return _publish(args)
+    if args.cmd == "ci":
+        return _ci(args)
     if args.cmd == "feedback":
         return _feedback(args)
     if args.cmd == "replay":

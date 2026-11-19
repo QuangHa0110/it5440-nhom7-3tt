@@ -117,11 +117,11 @@ class GitHubPullLister:
     """Liệt kê PR đang mở của một repo. Token không bao giờ vào log hay thông báo lỗi."""
 
     def __init__(
-        self, token: str, api_url: str = "https://api.github.com", fetch: Fetch = http_get_json
+        self, token: str, api_url: str = "https://api.github.com", fetch: Fetch | None = None
     ) -> None:
         self._token = token
         self._api = api_url.rstrip("/")
-        self._fetch = fetch
+        self._fetch: Fetch = fetch or (lambda url, tok: http_get_json(url, tok))
 
     def open_prs(self, repo: str) -> list[dict[str, Any]]:
         out: list[dict[str, Any]] = []

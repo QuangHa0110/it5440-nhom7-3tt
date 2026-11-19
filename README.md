@@ -14,6 +14,8 @@ Hướng TT: áp dụng các kỹ thuật phân tích chương trình hướng b
 | [docs/project/tom-tat-bai-bao.md](docs/project/tom-tat-bai-bao.md) | Tóm tắt 4 bài báo giảng viên giao và cách dùng trong đề tài |
 | [docs/project/papers/README.md](docs/project/papers/README.md) | Link tải 4 bài báo (PDF không lưu trên repo) |
 | [docs/project/proposal-llm-loc-canh-bao-pr.md](docs/project/proposal-llm-loc-canh-bao-pr.md) | Proposal đề tài: LLM lọc cảnh báo bảo mật trên PR |
+| [docs/khao-sat/README.md](docs/khao-sat/README.md) | Khảo sát tài liệu 2023–2026: mảng nào đã đông, khoảng trống còn lại |
+| [docs/de-xuat-son.md](docs/de-xuat-son.md) | Đề xuất của Sơn: cổng bảo mật PR có LLM lọc tại công ty Z (chưa chốt) |
 | [docs/git-workflow.md](docs/git-workflow.md) | Quy trình nhánh, PR, release |
 | [docs/adr/](docs/adr/), [docs/plans/](docs/plans/), [docs/devlog/](docs/devlog/) | Quyết định, kế hoạch, nhật ký kỹ thuật |
 | [CLAUDE.md](CLAUDE.md) | Ngữ cảnh cho Claude Code |

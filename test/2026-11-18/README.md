@@ -8,10 +8,11 @@ Kiểm tra webhook với payload tổng hợp, chạy kiểm chứng tự độn
 
 - [Xác thực chữ ký, allowlist, draft và retry trùng](scenarios/01-webhook-validation-and-retry.md)
 - [Bộ test và xác minh app hoạt động](scenarios/02-suite-and-service-readiness.md)
+- **[Kịch bản đánh giá A/B/C trên mã nguồn mở](scenarios/03-kich-ban-danh-gia-oss.md)**
 
 ## Kết quả và người thực hiện
 
 - [Tổng hợp kết quả](results/verification-results.md)
 - [Truy vết ca test-plan sang bằng chứng](results/traceability.md)
-- [Báo cáo hoàn tất kịch bản đánh giá trên mã nguồn mở](results/evaluation-scenario-report.md)
+- **[Kết quả đánh giá A/B/C trên mã nguồn mở](results/03-ket-qua-danh-gia-oss.md)** (kèm đối chiếu tiêu chí K/R và cổng 5.7)
 - [Người thực hiện và người yêu cầu](testers/tester-record.md)

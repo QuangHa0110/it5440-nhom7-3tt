@@ -5,8 +5,15 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from fnmatch import fnmatchcase
 from pathlib import Path
+
+from pr_triage.core.delivery import (
+    Channel,
+    DeliveryConfigError,
+    RepoAllowList,
+    RepoGate,
+    RoutePolicy,
+)
 
 
 class SettingsError(ValueError):
@@ -29,16 +36,25 @@ class Settings:
     engine: str = "graph"
     admin_token: str = field(default="", repr=False)
     allowed_repos: tuple[str, ...] = ()
+    routes: str = ""  # PR_TRIAGE_ROUTES, ADR 0018 D4
     max_body_bytes: int = 5_000_000
     snippet_radius: int = 10  # bán kính đoạn mã của cách B
     budget_pr_tokens: int = (
         200_000  # trần token của engine LLM (xem TD-4: cộng dồn theo tiến trình)
     )
 
+    def gate(self) -> RepoGate:
+        """Danh sách rỗng cho mọi repo (tương thích); định tuyến chỉ cho kênh GitHub App."""
+        return RepoGate(RepoAllowList(self.allowed_repos, empty_allows_all=True), self._routes())
+
+    def _routes(self) -> RoutePolicy:
+        try:
+            return RoutePolicy.parse(self.routes)
+        except DeliveryConfigError as exc:
+            raise SettingsError(f"PR_TRIAGE_ROUTES: {exc}") from exc
+
     def repo_allowed(self, repo: str) -> bool:
-        return not self.allowed_repos or any(
-            fnmatchcase(repo.lower(), p.lower()) for p in self.allowed_repos
-        )
+        return self.gate().admits(Channel.GITHUB_APP, repo)
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> Settings:
@@ -62,6 +78,10 @@ class Settings:
         def csv(name: str, default: str = "") -> tuple[str, ...]:
             return tuple(x.strip() for x in e.get(name, default).split(",") if x.strip())
 
+        try:
+            RoutePolicy.parse(e.get("PR_TRIAGE_ROUTES", ""))
+        except DeliveryConfigError as exc:
+            raise SettingsError(f"PR_TRIAGE_ROUTES: {exc}") from exc
         return cls(
             app_id=e["GITHUB_APP_ID"],
             private_key=key,
@@ -77,6 +97,7 @@ class Settings:
             engine=e.get("PR_TRIAGE_ENGINE", cls.engine),
             admin_token=e.get("PR_TRIAGE_ADMIN_TOKEN", ""),
             allowed_repos=csv("PR_TRIAGE_ALLOWED_REPOS"),
+            routes=e.get("PR_TRIAGE_ROUTES", ""),
             snippet_radius=int(e.get("PR_TRIAGE_SNIPPET_RADIUS", "10")),
             budget_pr_tokens=int(e.get("PR_TRIAGE_BUDGET_PR_TOKENS", "200000")),
         )

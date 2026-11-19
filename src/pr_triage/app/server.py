@@ -15,6 +15,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pr_triage.app.handlers import Services
 from pr_triage.app.queue import JobQueue
 from pr_triage.app.webhook import parse_event, verify_signature
+from pr_triage.core.delivery import Channel
 from pr_triage.core.models import Job
 
 log = logging.getLogger("pr_triage.app")
@@ -22,6 +23,7 @@ log = logging.getLogger("pr_triage.app")
 
 def create_app(sv: Services, queue: JobQueue | None = None) -> FastAPI:
     jobs = queue or JobQueue(sv, sv.settings.workers)
+    gate = sv.settings.gate()
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -80,7 +82,7 @@ def create_app(sv: Services, queue: JobQueue | None = None) -> FastAPI:
         except ValueError as exc:
             raise HTTPException(status_code=400, detail="thân không phải JSON") from exc
         event = parse_event(x_github_event or "", payload, sv.auth.bot_login())
-        if event is None or not sv.settings.repo_allowed(event.repo):
+        if event is None or not gate.admits(Channel.GITHUB_APP, event.repo):
             counters["ignored"] += 1
             return JSONResponse({"ignored": True}, status_code=200)
         if event.draft and event.kind.value == "triage":

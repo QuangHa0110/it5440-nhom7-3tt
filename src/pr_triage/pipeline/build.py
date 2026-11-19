@@ -8,8 +8,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from pr_triage.context import DataflowProvider, SnippetProvider, load_catalog
-from pr_triage.core.models import Finding, RunMode, Variant
+from pr_triage.core.models import ContextBundle, Finding, RunMode, Variant, Verdict
 from pr_triage.core.ports import ContextPort, LlmPort, ScannerPort
+from pr_triage.llm.budget import BudgetGuard
 from pr_triage.llm.client import OpenAICompatClient
 from pr_triage.llm.config import LlmConfig
 from pr_triage.llm.engine import PlainTriageEngine, TriageEngine
@@ -38,6 +39,8 @@ class BuildOptions:
     max_findings: int = 1000
     path_include: tuple[str, ...] = ()
     path_exclude: tuple[str, ...] = ()
+    variants: tuple[Variant, ...] = (Variant.B, Variant.C)
+    budget_pr_tokens: int = 200_000  # trần token mỗi lượt chạy (ADR 0008)
 
 
 def manifest_hash(opts: BuildOptions, cfg: LlmConfig) -> str:
@@ -48,6 +51,7 @@ def manifest_hash(opts: BuildOptions, cfg: LlmConfig) -> str:
     h.update(
         f"{cfg.model}|{cfg.temperature}|{cfg.seed}|{opts.display}|{opts.engine}|{PROMPT_VERSION}|r{opts.snippet_radius}|s{opts.secrets}|m{opts.min_severity}|x{opts.max_findings}|{opts.path_include}|{opts.path_exclude}".encode()
     )
+    h.update(("|v" + ",".join(v.value for v in opts.variants)).encode())
     return h.hexdigest()[:16]
 
 
@@ -58,18 +62,34 @@ def _finding_filter(opts: BuildOptions) -> Callable[[Finding], bool] | None:
     return lambda f: keep(f.file)
 
 
+class _ScanOnlyLlm:
+    """Chạy chỉ quét: pipeline không có ngữ cảnh B/C nên không bao giờ gọi tới đây."""
+
+    def triage(self, finding: Finding, bundle: ContextBundle) -> Verdict:
+        raise AssertionError("chạy chỉ quét không được gọi LLM")
+
+
+def _engine(opts: BuildOptions, cfg: LlmConfig) -> LlmPort:
+    client = OpenAICompatClient(cfg)
+    per_day = max(2_000_000, opts.budget_pr_tokens)
+    budget = BudgetGuard(per_pr_tokens=opts.budget_pr_tokens, per_day_tokens=per_day)
+    if opts.engine == "graph":
+        return TriageEngine(client, budget=budget)
+    return PlainTriageEngine(client, budget=budget)
+
+
 def build_pipeline(
     opts: BuildOptions, llm: LlmPort | None = None, store: SqlStore | None = None
 ) -> tuple[PrPipeline, SqlStore]:
     cfg = LlmConfig.from_env()
     store = store or SqlStore(opts.db)
     if llm is None:
-        client = OpenAICompatClient(cfg)
-        llm = TriageEngine(client) if opts.engine == "graph" else PlainTriageEngine(client)
-    contexts: dict[Variant, ContextPort] = {
-        Variant.B: SnippetProvider(radius=opts.snippet_radius),
-        Variant.C: DataflowProvider(load_catalog(Path(opts.catalog))),
-    }
+        llm = _ScanOnlyLlm() if not opts.variants else _engine(opts, cfg)
+    contexts: dict[Variant, ContextPort] = {}
+    if Variant.B in opts.variants:
+        contexts[Variant.B] = SnippetProvider(radius=opts.snippet_radius)
+    if Variant.C in opts.variants:
+        contexts[Variant.C] = DataflowProvider(load_catalog(Path(opts.catalog)))
     scanners: list[ScannerPort] = [SemgrepAdapter(opts.rules, timeout_s=opts.semgrep_timeout_s)]
     if opts.secrets:
         scanners.append(SecretScanner())

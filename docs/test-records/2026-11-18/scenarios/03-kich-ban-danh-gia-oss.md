@@ -106,7 +106,7 @@ Khi một cảnh báo bị "đánh giá sai", phải quy về đúng một thàn
 
 **Việc:** lập bảng `test-plan ID → test pytest / hồ sơ E2E / chưa có`. Mỗi dòng có trạng thái đã chạy hay chưa và SHA lần chạy.
 
-**Đầu ra:** `code/it5440-nhom7-3tt/test/<ngày>/results/traceability.md`.
+**Đầu ra:** `docs/test-records/<ngày>/results/traceability.md`.
 
 **Cách làm [Đề xuất]:** đọc tên test trong `tests/` theo nhóm (`scan`, `normalize`, `context`, `llm`, `bot`, `app`, `evaluation`, `pipeline`, `store`), đối chiếu với SCN/NRM/CTX/LLM/BOT/FB/SEC/OPS/EVAL. Một ca chỉ được tính "có test" khi test đó khẳng định đúng oracle của ca, không chỉ cùng chủ đề.
 
@@ -333,7 +333,7 @@ Diễn giải bắt buộc: kết quả là của **các repo mã nguồn mở �
 
 | Đầu ra | Nơi lưu |
 |---|---|
-| Hồ sơ K (traceability, kết quả chạy, issue) | `code/it5440-nhom7-3tt/test/<ngày>/` theo quy ước scenarios/results/testers |
+| Hồ sơ K (traceability, kết quả chạy, issue) | `docs/test-records/<ngày>/` theo quy ước scenarios/results/testers |
 | Runbook đợt đánh giá (lệnh, SHA, tham số) | `.docs/quality/evaluation/runbook-<ngày>.md` |
 | Kết quả R tổng hợp | `.docs/quality/evaluation/results-<ngày>.md` |
 | SARIF thô, phiếu nhãn có mã, DB | Ngoài repo, trong thư mục dữ liệu local. Không commit |

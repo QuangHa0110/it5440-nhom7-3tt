@@ -2,7 +2,7 @@
 
 > Bản lưu trong repo. Tài liệu gốc và các tài liệu được nhắc tới (proposal, ADR 0015–0017, runbook) nằm trong hồ sơ `.docs/` của nhóm, ngoài repo.
 
-Kịch bản: `test/2026-11-18/scenarios/03-kich-ban-danh-gia-oss.md`.
+Kịch bản: `docs/test-records/2026-11-18/scenarios/03-kich-ban-danh-gia-oss.md`.
 
 > **Đính chính (bản 2, cùng ngày):** bản đầu báo B 64%, C 66% FP-removal trên `eval`. 31 nhận định ở mốc DSpace `462ed443` là `unknown` giả do hết trần 200.000 token mỗi lượt chạy (không gọi LLM). Sau khi thêm `--budget-pr-tokens` và chạy lại mốc đó, số đúng là **B 74%, C 74%**. TP-loss không đổi. Chi tiết ở mục 5 và runbook.
 

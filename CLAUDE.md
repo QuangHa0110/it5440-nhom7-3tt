@@ -33,7 +33,7 @@ Nguồn sự thật: [docs/project/proposal-llm-loc-canh-bao-pr.md](docs/project
 ```
 src/pr_triage/   package Python, mỗi thư mục con ứng với một phần việc
   core/ store/ pipeline/ scan/ normalize/ context/ llm/ bot/ evaluation/ app/   cli.py
-tests/           phản chiếu src/, dữ liệu giả ở tests/fixtures/
+tests/           phản chiếu src/, dữ liệu giả ở tests/fixtures/  (test tự động; hồ sơ test thủ công ở docs/test-records/)
 deploy/ demo/    manifest GitHub App, ứng dụng mẫu và kịch bản demo
 configs/         semgrep/ prompts/ schemas/ eval/ (cấu hình có phiên bản, khóa bằng tag)
 data/            dữ liệu chạy, KHÔNG commit (chỉ README)

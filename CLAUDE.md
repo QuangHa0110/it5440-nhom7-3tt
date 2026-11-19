@@ -42,7 +42,7 @@ docs/            project/ (proposal, tài liệu môn), adr/, plans/, devlog/
 scripts/         script tiện ích của repo (không phải mã sản phẩm)
 ```
 
-`app/` là GitHub App (máy chủ webhook, hàng đợi, xử lý sự kiện), xem docs/github-app.md.
+`app/` là GitHub App (máy chủ webhook, hàng đợi, xử lý sự kiện), xem docs/github-app.md. `triggers/` là đường Jenkins và lớp trừu tượng `Trigger`; `core/delivery.py` giữ `ScanRequest`, danh sách repo cho phép và định tuyến (ADR 0018: mỗi repo một đường, cấu hình `PR_TRIAGE_ROUTES`).
 Ranh giới mã: mọi gói phụ thuộc `core`, `core` không phụ thuộc gói nào; `context`, `llm`, `evaluation` không import `bot`; chỉ `pipeline` và `cli` nối các gói với nhau. Mỗi thư mục con trong `src/` có một người phụ trách (xem `.github/CODEOWNERS`).
 
 ## Lệnh thường dùng

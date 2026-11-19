@@ -6,3 +6,5 @@ Chỉ ghi **cái còn nợ**. Thêm một dòng ngay khi nợ phát sinh. Khi đ
 |---|---|---|---|---|
 | TD-1 | Bật branch protection cho `main` và `dev` trên GitHub (cần quản trị viên repo) | 2026-11-13 | | |
 | TD-2 | Chốt công cụ quét và ngôn ngữ chính khi Z trả lời Phụ lục A, rồi điền `[project]` dependencies và workflow CI tương ứng | 2026-11-13 | | |
+| TD-5 | Đường Jenkins chưa tách quyền theo ADR 0007: một container giữ cả token ghi, khóa LLM và chạy mã PR | 2026-11-17 | | |
+| TD-6 | Chưa chạy lại `deploy/jenkins/` trong Docker sau khi thay `ci_helper.py` bằng `pr-triage ci` (P14); chưa kiểm chứng LLM thật, comment thật, webhook thật | 2026-11-20 | | |

@@ -1,11 +1,11 @@
 # P14. Hai đường kích hoạt dùng chung lõi, thiết kế hướng đối tượng
 
-- **Status:** active
+- **Status:** done
 - **Người làm:** trinq (với Claude Code, chạy xuyên đêm)
 - **Đóng:** [ADR 0018](../../adr/0018-hai-duong-kich-hoat-mot-loi-moi-repo-mot-duong.md)
 - **Quyết định cho phép:** ADR 0018
 - **Nhánh:** `trinq/arch/trigger-adapters`
-- **Bắt đầu / Kết thúc:** 2026-11-20 / —
+- **Bắt đầu / Kết thúc:** 2026-11-20 / 2026-11-20
 
 ---
 

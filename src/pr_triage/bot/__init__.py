@@ -6,15 +6,20 @@ from pr_triage.bot.mentions import compute_cc
 from pr_triage.bot.publisher import Publisher
 from pr_triage.bot.render import MARKER, render
 from pr_triage.bot.sanitize import clean, clean_inline_code
+from pr_triage.bot.sinks import ConsoleSink, ResultSink, ScmSink, choose_sink
 from pr_triage.bot.states import FixStatus, fix_status, resolve_states
 
 __all__ = [
     "CHECK_NAME",
     "MARKER",
+    "ConsoleSink",
     "FeedbackCollector",
     "FixStatus",
     "Publisher",
+    "ResultSink",
+    "ScmSink",
     "build_check",
+    "choose_sink",
     "clean",
     "clean_inline_code",
     "compute_cc",

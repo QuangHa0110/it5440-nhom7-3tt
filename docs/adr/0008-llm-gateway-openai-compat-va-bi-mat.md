@@ -3,6 +3,7 @@
 - **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq
 - **Liên quan:** [architecture.md](../architecture.md) mục 8.2; proposal 6.6, 10, 15
+- **Cập nhật 2026-11-19:** dòng "Từ nay phải đúng" về LLM bên ngoài được thay bằng [ADR 0020](0020-gui-ma-cua-z-len-llm-cloud.md) (Z cho dùng LLM cloud, kèm điều kiện).
 
 ## Bối cảnh
 

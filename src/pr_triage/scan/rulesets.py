@@ -1,4 +1,4 @@
-"""Bộ luật Semgrep tải từ registry, khóa bằng mã băm (ADR 0015).
+"""Bộ luật Semgrep tải từ registry, khóa bằng mã băm (ADR 0019).
 
 File luật không vào repo (giấy phép không cho phân phối lại). Repo chỉ giữ
 `configs/semgrep/rulesets.lock`: tên bộ, URL, ngày tải, sha256, số luật. Pipeline từ chối
@@ -75,7 +75,7 @@ def dump_lock(path: Path, rulesets: Iterable[Ruleset]) -> None:
         },
     }
     header = (
-        "# Khóa bộ luật Semgrep (ADR 0015). Chỉ chứa mã băm, KHÔNG chứa luật.\n"
+        "# Khóa bộ luật Semgrep (ADR 0019). Chỉ chứa mã băm, KHÔNG chứa luật.\n"
         "# Sửa bằng scripts/fetch_semgrep_rules.py, không sửa tay.\n"
     )
     path.write_text(header + yaml.safe_dump(body, sort_keys=False, allow_unicode=True), "utf-8")

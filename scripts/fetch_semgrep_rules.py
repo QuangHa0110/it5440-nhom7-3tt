@@ -1,4 +1,4 @@
-"""Tải bộ luật Semgrep từ registry vào data/rules/ và ghi mã băm vào lock (ADR 0015).
+"""Tải bộ luật Semgrep từ registry vào data/rules/ và ghi mã băm vào lock (ADR 0019).
 
 File luật KHÔNG được commit (Semgrep Rules License không cho phân phối lại). Chạy script này
 trong hạ tầng nơi bot chạy: máy dev, image Jenkins của công ty.

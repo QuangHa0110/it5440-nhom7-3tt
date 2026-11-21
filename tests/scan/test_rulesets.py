@@ -1,4 +1,4 @@
-"""Khóa bộ luật bằng mã băm (ADR 0015): lock, lọc ngôn ngữ, kiểm tra khi chạy."""
+"""Khóa bộ luật bằng mã băm (ADR 0019): lock, lọc ngôn ngữ, kiểm tra khi chạy."""
 
 from pathlib import Path
 

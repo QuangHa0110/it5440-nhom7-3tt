@@ -4,7 +4,7 @@ Mục tiêu: cho người xem thấy bot **phát hiện**, **lọc bớt cảnh 
 
 ## Chuẩn bị
 
-1. Tải bộ luật Semgrep đã khóa (`python scripts/fetch_semgrep_rules.py --frozen`, ADR 0015), rồi cài App theo [github-app.md](github-app.md) và chạy máy chủ.
+1. Tải bộ luật Semgrep đã khóa (`python scripts/fetch_semgrep_rules.py --frozen`, ADR 0019), rồi cài App theo [github-app.md](github-app.md) và chạy máy chủ.
 2. Tạo một repo **trống** trên GitHub (ví dụ `OWNER/pr-triage-demo`), cài App lên repo đó.
 3. Dựng và đẩy bộ demo:
 
@@ -41,7 +41,7 @@ Cảnh báo XSS ở `UserController.java:30` xuất hiện từ khi đổi sang 
 
 ## Nói thật về giới hạn
 
-Bot **không** tìm "mã độc". Nó lọc cảnh báo của công cụ quét, nên lỗi mà luật quét không định nghĩa thì bot không thấy. Bộ luật hiện là `p/default` của Semgrep (118 luật Java, ADR 0015), cộng quét secret. Backdoor có chủ đích, logic bomb hay lệnh tải mã từ ngoài, nếu không khớp luật, sẽ không được báo. Nêu rõ điều này làm demo đáng tin hơn.
+Bot **không** tìm "mã độc". Nó lọc cảnh báo của công cụ quét, nên lỗi mà luật quét không định nghĩa thì bot không thấy. Bộ luật hiện là `p/default` của Semgrep (118 luật Java, ADR 0019), cộng quét secret. Backdoor có chủ đích, logic bomb hay lệnh tải mã từ ngoài, nếu không khớp luật, sẽ không được báo. Nêu rõ điều này làm demo đáng tin hơn.
 
 ## Dọn dẹp
 

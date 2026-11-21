@@ -1,4 +1,4 @@
-"""Bộ luật dạng registry (ADR 0015): id luật và dấu vân tay không phụ thuộc nơi đặt file luật.
+"""Bộ luật dạng registry (ADR 0019): id luật và dấu vân tay không phụ thuộc nơi đặt file luật.
 
 File tải từ semgrep.dev là JSON một dòng, id có dấu chấm. Semgrep thêm đường dẫn thư mục chứa
 file luật vào trước id; nếu không bỏ được tiền tố này thì dấu vân tay đổi theo máy (dev, Docker,

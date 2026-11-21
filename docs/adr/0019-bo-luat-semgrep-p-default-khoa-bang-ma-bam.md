@@ -1,8 +1,9 @@
-# ADR 0015 — Quét bằng bộ luật Semgrep `p/default`, tải về trong hạ tầng chạy bot và khóa bằng mã băm, không commit luật
+# ADR 0019 — Quét bằng bộ luật Semgrep `p/default`, tải về trong hạ tầng chạy bot và khóa bằng mã băm, không commit luật
 
 - **Status:** accepted (2026-11-19)
 - **Người quyết định:** hadvq
-- **Liên quan:** [ADR 0005](0005-dung-lai-ma-nguon-mo.md) (hoãn D1 phần FindSecBugs), [ADR 0011](0011-dau-van-tay-va-so-head-base.md), kế hoạch [P14](../plans/active/2026-11-19-p14-semgrep-bo-luat-co-san.md), nợ TD-2
+- **Liên quan:** [ADR 0005](0005-dung-lai-ma-nguon-mo.md) (hoãn D1 phần FindSecBugs), [ADR 0011](0011-dau-van-tay-va-so-head-base.md), kế hoạch [P15](../plans/done/2026-11-19-p15-semgrep-bo-luat-co-san.md), nợ TD-2
+- **Đánh số lại 2026-11-21:** trước đây là ADR 0015. Các số 0015 đến 0017 đã được đợt đánh giá nguồn mở giữ chỗ ngoài repo, nên ADR này đổi sang 0019 trước khi đưa vào `dev`.
 
 ## Bối cảnh
 
@@ -10,7 +11,7 @@
 - Công ty Z chưa có công cụ phân tích tĩnh nào trong CI (xác nhận 2026-11-18). Vì vậy cách A ("chỉ công cụ quét") là một lựa chọn thật của Z: chỉ cài Semgrep. Bộ luật phải là bộ Z sẽ cài nếu tự làm.
 - Bộ luật trong registry của Semgrep dùng **Semgrep Rules License v1.0**: được dùng cho mục đích nội bộ của doanh nghiệp, **không được phân phối lại** hay cung cấp như dịch vụ. Repo này là public.
 - `manifest_hash` (`pipeline/build.py`) băm **nội dung** file luật. Nếu truyền tên registry (`p/default`) thì chỉ băm chuỗi tên, trong khi nội dung trên registry thay đổi theo thời gian. Khi đó tag khóa cấu hình eval không còn ý nghĩa.
-- So sánh ngày 2026-11-18, Semgrep 1.186.0, trên 7 nhánh của repo demo (chi tiết ở P14, mục Hiện trạng):
+- So sánh ngày 2026-11-18, Semgrep 1.186.0, trên 7 nhánh của repo demo (chi tiết ở P15, mục Hiện trạng):
 
 | Bộ | Luật Java | Nhận xét |
 |---|---|---|

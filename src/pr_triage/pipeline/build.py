@@ -29,7 +29,7 @@ from pr_triage.store import SqlStore
 
 @dataclass(frozen=True)
 class BuildOptions:
-    # Bộ luật tải về và khóa bằng mã băm (ADR 0015). Test truyền luật tự viết rõ ràng.
+    # Bộ luật tải về và khóa bằng mã băm (ADR 0019). Test truyền luật tự viết rõ ràng.
     rules: Sequence[str] = field(default_factory=lambda: [DEFAULT_RULES])
     rules_lock: str = DEFAULT_LOCK
     catalog: str = "configs/context/java.yml"

@@ -41,7 +41,7 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--db", default="data/dev/store.sqlite")
     p.add_argument("--rules", action="append", help="file luật Semgrep (lặp được)")
     p.add_argument(
-        "--rules-lock", default="configs/semgrep/rulesets.lock", help="lock mã băm (ADR 0015)"
+        "--rules-lock", default="configs/semgrep/rulesets.lock", help="lock mã băm (ADR 0019)"
     )
     p.add_argument("--catalog", default="configs/context/java.yml")
     p.add_argument("--display", choices=["A", "B", "C"], default="B")

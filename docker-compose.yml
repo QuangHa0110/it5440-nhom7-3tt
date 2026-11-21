@@ -1,5 +1,5 @@
 # Chạy GitHub App: `cp .env.example .env`, điền biến, tải bộ luật Semgrep
-# (`uv run python scripts/fetch_semgrep_rules.py --frozen`, ADR 0015), rồi `docker compose up --build`.
+# (`uv run python scripts/fetch_semgrep_rules.py --frozen`, ADR 0019), rồi `docker compose up --build`.
 services:
   pr-triage:
     build: .

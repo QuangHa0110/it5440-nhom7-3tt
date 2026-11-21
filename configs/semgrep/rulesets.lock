@@ -1,4 +1,4 @@
-# Khóa bộ luật Semgrep (ADR 0015). Chỉ chứa mã băm, KHÔNG chứa luật.
+# Khóa bộ luật Semgrep (ADR 0019). Chỉ chứa mã băm, KHÔNG chứa luật.
 # Sửa bằng scripts/fetch_semgrep_rules.py, không sửa tay.
 version: 1
 rulesets:

@@ -1,9 +1,9 @@
-# P14. Thay luật Semgrep tự viết bằng bộ luật có sẵn `p/default`, chạy từ bản tải về được khóa bằng mã băm
+# P15. Thay luật Semgrep tự viết bằng bộ luật có sẵn `p/default`, chạy từ bản tải về được khóa bằng mã băm
 
 - **Status:** done
 - **Người làm:** hadvq (với Claude Code)
 - **Đóng:** một nửa TD-2 (chốt công cụ quét; ngôn ngữ chính vẫn mở)
-- **Quyết định cho phép:** hadvq chọn `p/default` ngày 2026-11-19, sau khi so 5 bộ luật trên repo demo; ghi thành ADR 0015 ở T1
+- **Quyết định cho phép:** hadvq chọn `p/default` ngày 2026-11-19, sau khi so 5 bộ luật trên repo demo; ghi thành ADR 0019 ở T1
 - **Nhánh:** `hadvq/scan/semgrep-p-default`, tách từ nhánh P13 (`hadvq/deploy/jenkins-central-job`) vì PR #7 chưa merge; rebase lên `dev` khi PR #7 merge
 - **Bắt đầu / Kết thúc:** 2026-11-19 / 2026-11-19
 
@@ -22,7 +22,7 @@ Bot đang quét bằng 3 luật nhóm tự viết, chỉ phủ SQL injection (`c
 
 ## Ngoài phạm vi
 
-- **FindSecBugs/SpotBugs** (ADR 0005 D1): hoãn. ADR 0015 ghi lý do. Có thể làm sau, như công cụ quét thứ hai.
+- **FindSecBugs/SpotBugs** (ADR 0005 D1): hoãn. ADR 0019 ghi lý do. Có thể làm sau, như công cụ quét thứ hai.
 - **Chạy lại BenchmarkJava** với bộ luật mới: thuộc phần đánh giá (P07), sẽ làm trong kế hoạch riêng sau khi có cổng LLM và người chạy.
 - **Lọc luật theo ngôn ngữ của Z:** chưa biết Z viết bằng ngôn ngữ gì. Script T2 có sẵn tùy chọn lọc, nhưng mặc định giữ đủ bộ.
 - **Không xóa** `java-injection.yml`. Các test dùng nó vì cần chạy không có mạng và có kết quả cố định.
@@ -49,7 +49,7 @@ Kiểm tra ngày 2026-11-18 và 2026-11-19, Semgrep 1.186.0, bộ luật tải v
 
 | # | Task | Xong khi | Phụ thuộc |
 |---|---|---|---|
-| T1 | ADR 0015 "Bộ luật Semgrep `p/default`, tải về và khóa bằng mã băm": bối cảnh, quyết định, phương án khác (5 bộ đã so, FindSecBugs, Opengrep), hệ quả giấy phép. Thêm ghi chú có ngày trong ADR 0005 trỏ sang 0015. Cập nhật TD-2 | `docs/adr/0015-*.md` tồn tại; ADR 0005 có dòng trỏ sang 0015; TD-2 ghi rõ phần đã đóng | — |
+| T1 | ADR 0019 "Bộ luật Semgrep `p/default`, tải về và khóa bằng mã băm": bối cảnh, quyết định, phương án khác (5 bộ đã so, FindSecBugs, Opengrep), hệ quả giấy phép. Thêm ghi chú có ngày trong ADR 0005 trỏ sang 0015. Cập nhật TD-2 | `docs/adr/0015-*.md` tồn tại; ADR 0005 có dòng trỏ sang 0015; TD-2 ghi rõ phần đã đóng | — |
 | T2 | `scripts/fetch_semgrep_rules.py`: tải `https://semgrep.dev/c/p/<tên>` vào `data/rules/semgrep-<tên>.yml`. Tùy chọn `--languages` để lọc. Kiểm tra YAML hợp lệ. Ghi `configs/semgrep/rulesets.lock` gồm tên, URL, ngày tải, sha256, số luật, phiên bản Semgrep (không chứa nội dung luật). Có `--verify` để so file hiện có với lock | Test với HTTP giả: tải → lock đúng sha256; sửa 1 byte → `--verify` thoát mã khác 0. Sau khi chạy thật, `git status` không hiện file nào dưới `data/` | T1 |
 | T3 | Pipeline dùng bản đã khóa: `build.py`, `app/settings.py`, `Dockerfile`, `deploy/jenkins/triage.Jenkinsfile` mặc định trỏ tới `data/rules/semgrep-default.yml`. Khi khởi động, kiểm tra sha256 với `rulesets.lock`; lệch thì dừng với thông báo rõ. Image Jenkins tải luật lúc build rồi `--verify`. Test vẫn truyền `java-injection.yml` rõ ràng | Test: file luật lệch lock → `ScanError` có thông điệp nhắc chạy lại script. `make test` qua. Build image Jenkins có file luật và qua `--verify` | T2 |
 | T4 | Test chống trôi dấu vân tay: cùng một luật, đặt ở hai thư mục khác nhau → cùng `rule_id` và cùng dấu vân tay. Test gộp: hai luật CWE-89 trên cùng dòng → một cảnh báo với `rule_ids` có cả hai | Hai test mới qua (dùng luật nhỏ trong `tests/fixtures/`, không dùng file của registry) | T3 |
@@ -94,5 +94,7 @@ Chạy thêm một PR demo đầu cuối bằng `p/default`; comment phải có 
   - T4 lộ ra lỗi thật: id luật từ file JSON của registry mang đường dẫn tuyệt đối, làm dấu vân tay phụ thuộc máy. Đã sửa (`fix(scan)`). Fixture luật viết ngay trong test, không thêm file vào `tests/fixtures/`.
   - T5: thêm CWE-601 và CWE-23 ngoài bốn CWE dự kiến, và danh sách `no_dataflow_cwes`, dựa trên đếm CWE thật của luật Java.
   - T6: máy không có khóa LLM nên chỉ đo phía công cụ quét, chưa có số token. PR 02 không còn im lặng (XSS có cơ sở ở `doPost`); chưa sửa mã demo.
-  - Cổng: ruff, mypy, `--verify` qua; `git status` không có file dưới `data/`. `make check` trên Windows còn 4 test hỏng có từ trước (đường dẫn `\`, TD-3), CI Linux không bị. Chưa chạy demo đầu cuối với LLM thật.
-- **Ghi ở:** devlog `2026-11-19-p14-bo-luat-p-default.md`, nợ TD-3, ADR 0015.
+  - Cổng: ruff, mypy, `--verify` qua; `git status` không có file dưới `data/`. `make check` trên Windows còn 4 test hỏng có từ trước (đường dẫn `\`, TD-7), CI Linux không bị. Chưa chạy demo đầu cuối với LLM thật.
+- **Ghi ở:** devlog `2026-11-19-p15-bo-luat-p-default.md`, nợ TD-7, ADR 0019.
+
+> Ghi chú 2026-11-21: kế hoạch này trước đây mang số P14 và ADR 0015, nợ TD-3. Đổi sang P15, ADR 0019, TD-7 vì `trinq/dev` đã có P14 khác và ADR 0015 đến 0017 đã có người giữ chỗ. Nội dung giữ nguyên.

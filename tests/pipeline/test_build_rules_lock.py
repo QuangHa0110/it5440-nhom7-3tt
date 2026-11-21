@@ -1,4 +1,4 @@
-"""Pipeline từ chối chạy khi bộ luật tải về thiếu hoặc lệch mã băm (ADR 0015 D3)."""
+"""Pipeline từ chối chạy khi bộ luật tải về thiếu hoặc lệch mã băm (ADR 0019 D3)."""
 
 from pathlib import Path
 

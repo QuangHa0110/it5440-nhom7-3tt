@@ -1,6 +1,6 @@
-# P14: chuyển sang bộ luật `p/default`, những điều bất ngờ
+# P15: chuyển sang bộ luật `p/default`, những điều bất ngờ
 
-- **Ngày:** 2026-11-19. Kế hoạch P14, ADR 0015.
+- **Ngày:** 2026-11-19. Kế hoạch P15, ADR 0019.
 
 ## Id luật mang theo đường dẫn tuyệt đối của máy
 
@@ -52,9 +52,9 @@ OWASP BenchmarkJava, bản clone nông commit `c6717ea` (2026-11-18), 2766 file 
 - Pipeline hiện quét **toàn bộ** cả nhánh đích lẫn nhánh PR, nên một PR trên repo cỡ này mất khoảng 4 đến 5 phút chỉ cho bước quét. Nếu Z có repo lớn hơn nhiều, nên chỉ quét các file PR thay đổi ở cả hai nhánh (bộ chuyển đổi đã nhận tham số `paths`), khi đó còn khoảng 10 đến 20 giây.
 - 3252 cảnh báo trên BenchmarkJava (nhiều nhất CWE-352, 89, 79, 326, 22, 78) chỉ cho thấy bộ luật ồn trên mã cố ý chứa lỗi. Không dùng làm số đánh giá: chạy BenchmarkJava đúng nghĩa thuộc kế hoạch đánh giá riêng.
 
-## Test vốn đã hỏng trên Windows (không do P14)
+## Test vốn đã hỏng trên Windows (không do P15)
 
-Kiểm tra bằng `git stash` trước khi sửa: bốn test hỏng trên Windows từ trước, ghi ở TD-3.
+Kiểm tra bằng `git stash` trước khi sửa: bốn test hỏng trên Windows từ trước, ghi ở TD-7.
 
 - `tests/scan/test_semgrep_adapter.py::test_scan_sample_repo`, `tests/pipeline/test_semgrep_e2e.py::...contexts_differ`, hai test trong `tests/app/test_flow.py`: Semgrep trên Windows trả đường dẫn file dạng `src\app\X.java`.
 - `tests/app/fakegithub.py` ghi file không chỉ định mã hóa, lỗi với tiếng Việt khi thiếu `PYTHONUTF8=1`.

@@ -43,7 +43,7 @@ sinks:
   CWE-643:
     kind: xpath-query
     methods: [evaluate, compile]
-  # Bổ sung theo các CWE có luồng dữ liệu trong luật Java của p/default (ADR 0015).
+  # Bổ sung theo các CWE có luồng dữ liệu trong luật Java của p/default (ADR 0019).
   CWE-23:
     kind: file-path
     methods: [get, resolve, newInputStream, newOutputStream, readAllBytes, readString]
@@ -68,7 +68,7 @@ sinks:
     methods: [sendRedirect, setHeader, addHeader]
 
 # CWE do cấu hình hay chọn thuật toán, không do dữ liệu vào: C ghi "không áp dụng", không đoán
-# sink (ADR 0015 D6). Lấy từ các CWE xuất hiện trong luật Java của p/default.
+# sink (ADR 0019 D6). Lấy từ các CWE xuất hiện trong luật Java của p/default.
 no_dataflow_cwes: [CWE-200, CWE-269, CWE-276, CWE-287, CWE-295, CWE-297, CWE-319, CWE-323,
                    CWE-326, CWE-327, CWE-328, CWE-329, CWE-330, CWE-345, CWE-352, CWE-614,
                    CWE-704, CWE-798, CWE-1004]

@@ -122,7 +122,7 @@ def test_servlet_entry_point_has_no_caller_noise_and_receiver_is_traced(tmp_path
 
 
 def test_weak_crypto_is_marked_not_applicable_without_guessing(tmp_path: Path) -> None:
-    """ADR 0015 D6: CWE không có luồng dữ liệu thì C ghi rõ không áp dụng, không đoán sink."""
+    """ADR 0019 D6: CWE không có luồng dữ liệu thì C ghi rõ không áp dụng, không đoán sink."""
     (tmp_path / "K.java").write_text(
         "class K {\n"
         "  byte[] enc(byte[] data, java.security.Key key) throws Exception {\n"

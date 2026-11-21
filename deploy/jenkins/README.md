@@ -39,7 +39,7 @@ Dùng repo GitHub **của bạn** có PR đang mở, hoặc repo mà chủ repo 
 
 ## Bước 1b. Tải bộ luật Semgrep
 
-Bộ luật không nằm trong repo hay image, vì giấy phép Semgrep Rules License không cho phân phối lại (ADR 0015).
+Bộ luật không nằm trong repo hay image, vì giấy phép Semgrep Rules License không cho phân phối lại (ADR 0019).
 Tải một lần trên máy chạy Jenkins, từ gốc repo:
 
 ```bash

@@ -43,6 +43,13 @@ Mục tiêu: **cài được lên repo GitHub và thử ngay**. Thứ tự: P08,
 | P11 | [GitHub App](queued/2026-11-13-p11-github-app.md) | P08 đến P10 |
 | P12 | [Đóng gói và demo](queued/2026-11-13-p12-trien-khai-va-demo.md) | P11 |
 
+## Sau báo cáo lần 1
+
+| # | Kế hoạch | Phụ thuộc |
+|---|---|---|
+| P13 | [Jenkins: job trung tâm nhiều repo](done/2026-11-17-p13-jenkins-job-trung-tam-nhieu-repo.md) | P12 |
+| P15 | [Bộ luật Semgrep có sẵn `p/default`](done/2026-11-19-p15-semgrep-bo-luat-co-san.md) | P13 merge vào `dev` |
+
 ## Quy tắc chạy xuyên đêm
 
 Áp dụng khi người dùng giao cho Claude Code chạy các kế hoạch trên mà không có mặt.
@@ -52,5 +59,5 @@ Mục tiêu: **cài được lên repo GitHub và thử ngay**. Thứ tự: P08,
 3. Gặp điều bất ngờ hoặc kết quả đo làm lung lay một ADR thì ghi vào `docs/devlog/` rồi đi tiếp bằng phương án an toàn. Không tự sửa ADR đã `accepted`.
 4. **Dừng và để lại ghi chú** khi: cần quyết định không có trong ADR, cổng LLM không dùng được sau 3 lần thử cách nhau, một task lỗi sau 3 lần sửa, hoặc phải chạm vào thứ nằm ngoài repo.
 5. Khóa API chỉ lấy từ biến môi trường. Không ghi vào file, log, commit hay devlog.
-6. Không gửi mã của công ty Z tới cổng LLM ngoài. Dữ liệu thử là mã nguồn mở công khai.
+6. Không gửi mã của công ty Z tới cổng LLM ngoài. Dữ liệu thử là mã nguồn mở công khai. (Bot chạy trên hạ tầng của Z được dùng LLM cloud theo [ADR 0020](../adr/0020-gui-ma-cua-z-len-llm-cloud.md). Quy tắc này chỉ áp dụng cho phiên Claude Code chạy không có người giám sát.)
 7. Cuối phiên viết bản tóm tắt vào `docs/devlog/` gồm: đã xong, đang dở, các quyết định tự đưa ra, lệnh để tái chạy.

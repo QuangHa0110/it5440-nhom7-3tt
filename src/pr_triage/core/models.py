@@ -186,6 +186,7 @@ class PrRun:
     duration_s: float = 0.0
     manifest_hash: str = ""
     notes: tuple[str, ...] = ()
+    head_committed_at: str = ""  # thời điểm commit của head (ISO 8601), dùng tách dev/eval
 
 
 @dataclass(frozen=True)

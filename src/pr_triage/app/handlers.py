@@ -14,7 +14,7 @@ from pr_triage.app.settings import Settings
 from pr_triage.bot import (
     MARKER,
     FeedbackCollector,
-    Publisher,
+    ScmSink,
     compute_cc,
     render,
     resolve_states,
@@ -108,11 +108,12 @@ def handle_triage(sv: Services, job: Job) -> tuple[JobStatus, str]:
     base = api.merge_base(job.repo, info.base_sha, info.head_sha)
     prev = sv.store.previous_run(job.repo, job.pr_number, "")
     opts = BuildOptions(
-        rules=sv.settings.rules, catalog=sv.settings.catalog, db=sv.settings.db,
+        rules=sv.settings.rules, rules_lock=sv.settings.rules_lock,
+        catalog=sv.settings.catalog, db=sv.settings.db,
         repo_alias=job.repo, mode=mode, display=Variant(cfg.display), engine=sv.settings.engine,
         workers=sv.settings.pipeline_workers, secrets=cfg.secrets, min_severity=cfg.min_severity,
         max_findings=cfg.max_findings, path_include=cfg.paths.include,
-        path_exclude=cfg.paths.exclude,
+        path_exclude=cfg.paths.exclude, snippet_radius=sv.settings.snippet_radius,
     )  # fmt: skip
     optional = [prev.head_sha] if prev and prev.head_sha not in (info.head_sha, base) else []
     try:
@@ -146,7 +147,7 @@ def handle_triage(sv: Services, job: Job) -> tuple[JobStatus, str]:
         result, cfg.mentions.mode, cfg.mentions.min_severity, info.author, cfg.mentions.users,
         owners_of=lambda files: codeowners.owners_for(files, rules), exclude=[sv.auth.bot_login()],
     )  # fmt: skip
-    Publisher(scm, sv.store).publish(result, pr, post=True, cc=cc, check=cfg.check_run)
+    ScmSink(scm, sv.store).deliver(result, pr, cc=cc, check=cfg.check_run)
     return JobStatus.DONE, ""
 
 

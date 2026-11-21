@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import datetime as dt
+import re
 import subprocess
 import tarfile
 import tempfile
@@ -36,6 +38,36 @@ def merge_base(repo: Path, a: str, b: str) -> str:
 def first_parent_commits(repo: Path, ref: str, count: int) -> list[str]:
     out = _git(repo, "rev-list", "--first-parent", f"--max-count={count}", ref).decode().split()
     return out
+
+
+def commit_time(repo: Path, sha: str) -> str:
+    """Thời điểm commit (committer date) theo UTC, dạng `YYYY-MM-DDTHH:MM:SSZ` như `started_at`.
+
+    Quy về UTC để so chuỗi với mốc `cutoff` không lệch theo múi giờ của người commit.
+    """
+    ts = int(_git(repo, "show", "-s", "--format=%ct", sha).decode().strip())
+    return dt.datetime.fromtimestamp(ts, dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+_MERGE_PR = re.compile(r"^Merge pull request #(\d+)\b")
+_SQUASH_PR = re.compile(r"\(#(\d+)\)\s*$")
+
+
+def pr_number_from_message(message: str) -> int | None:
+    """Số PR từ tiêu đề commit: `Merge pull request #N ...` hoặc `... (#N)` (squash)."""
+    title = message.splitlines()[0] if message else ""
+    m = _MERGE_PR.match(title) or _SQUASH_PR.search(title)
+    return int(m.group(1)) if m else None
+
+
+def commit_message(repo: Path, sha: str) -> str:
+    return _git(repo, "show", "-s", "--format=%B", sha).decode()
+
+
+def first_pr_commit(repo: Path, base: str, head: str) -> str:
+    """Commit đầu tiên trên nhánh PR: phần tử đầu của `base..head` theo thứ tự cũ → mới."""
+    out = _git(repo, "rev-list", "--reverse", f"{base}..{head}").decode().split()
+    return out[0] if out else head
 
 
 def parents(repo: Path, sha: str) -> list[str]:

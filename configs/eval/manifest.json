@@ -1,0 +1,19 @@
+{
+  "extra": {
+    "external_rules": {
+      "~/pr-triage-data/rules/registry-java-injection.yml": "217b9bafbc9bb1f1a58310f1cc386fec1825e996a8b839aade897c4846fbc5aa"
+    },
+    "model": "deepseek/deepseek-v4.1-flash-1017",
+    "prompt_version": "v1"
+  },
+  "files": {
+    "configs/context/java.yml": "c4ef05e98a505efa457333264b37c042b5133c320ca0d46d19712c027dbc7e92",
+    "configs/eval/run.yml": "3772e78806d62773f6c62d2de04f799c28219cc8fe8d164a40dd61e396ad3420",
+    "configs/eval/thresholds.yml": "92aca98a193fa32b180d006382a5345a3568d4ad64425e2a32af1fff426386e6",
+    "configs/schemas/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "configs/schemas/verdict.schema.json": "fe5770e89816565d3863e276a75d614435c590ad0c79952d758398b62c513f69",
+    "configs/semgrep/README.md": "5a71ae680427d72c808c91075135e4e699a291ae981fd7c54501d0ed3789b2d8",
+    "configs/semgrep/java-injection.yml": "3140e249aa411e401acbfe3e1f611858b3221e2ff509d4ecf9cc0a5cf2124b6e"
+  },
+  "hash": "8b941c3b494c85b5b32c96a330143486005bee05a408165b2e2329d031fcfab3"
+}

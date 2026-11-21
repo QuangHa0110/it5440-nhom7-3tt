@@ -26,6 +26,11 @@ class VerdictFormatError(ValueError):
 
 
 def _first_object(text: str) -> str:
+    return _object_span(text)[0]
+
+
+def _object_span(text: str) -> tuple[str, int]:
+    """Đối tượng JSON cân ngoặc đầu tiên và vị trí ngay sau nó."""
     start = text.find("{")
     if start < 0:
         raise VerdictFormatError("không có đối tượng JSON")
@@ -46,14 +51,34 @@ def _first_object(text: str) -> str:
         elif ch == "}":
             depth -= 1
             if depth == 0:
-                return text[start : i + 1]
+                return text[start : i + 1], i + 1
     raise VerdictFormatError("JSON bị cắt cụt")
+
+
+def _has_json_object(text: str) -> bool:
+    """Phần còn lại có chứa thêm một đối tượng JSON hợp lệ không (LLM-09)."""
+    pos = text.find("{")
+    while pos >= 0:
+        try:
+            chunk, _ = _object_span(text[pos:])
+            if isinstance(json.loads(chunk), dict):
+                return True
+        except (VerdictFormatError, json.JSONDecodeError):
+            pass
+        pos = text.find("{", pos + 1)
+    return False
 
 
 def extract_json(text: str) -> object:
     text = _THINK.sub("", text).strip()
     m = _FENCE.search(text)
-    chunk = m.group(1) if m else _first_object(text)
+    if m:
+        chunk, rest = m.group(1), text[m.end() :]
+    else:
+        chunk, end = _object_span(text)
+        rest = text[end:]
+    if _has_json_object(rest):
+        raise VerdictFormatError("đầu ra có nhiều đối tượng JSON, không rõ lấy cái nào")
     try:
         return json.loads(chunk)
     except json.JSONDecodeError as exc:

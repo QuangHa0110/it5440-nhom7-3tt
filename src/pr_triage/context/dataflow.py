@@ -324,6 +324,18 @@ class DataflowProvider:
             )
         run = _Run(self, index, finding)
         run.add_method_slice(jf, method, "sink-function", finding.line_start)
+        if self.catalog.no_dataflow(finding.cwe):
+            run.note(
+                f"không áp dụng luồng dữ liệu cho {finding.cwe}: lỗi do cấu hình hoặc thuật toán, "
+                "chỉ gửi hàm chứa dòng bị báo"
+            )
+            return make_bundle(
+                Variant.C,
+                finding.finding_id,
+                self._finalize(run, index),
+                missing=run.missing,
+                extract_ms=int((time.monotonic() - t0) * 1000),
+            )
         sink_node = self._find_sink(jf, method, finding)
         sink: str | None = None
         if sink_node is None:

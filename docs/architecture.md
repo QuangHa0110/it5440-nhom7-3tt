@@ -37,7 +37,7 @@ Hệ thống phục vụ hai việc cùng lúc: chạy như một bot trong CI c
 
 Nguồn: [01-context.puml](diagrams/01-context.puml).
 
-Có ba vùng. Vùng của Z chứa mọi thứ có mã nguồn. Vùng cloud chỉ được dùng khi Z đồng ý bằng văn bản, và chỉ nhận đoạn mã đã che secret. Vùng công khai chỉ nhận mã công cụ và số liệu tổng hợp đã được người của Z duyệt.
+Có ba vùng. Vùng của Z chứa mọi thứ có mã nguồn. Vùng cloud chỉ được dùng khi Z đồng ý bằng văn bản, và chỉ nhận đoạn mã đã che secret. Z đã cho phép dùng LLM cloud, điều kiện ở [ADR 0020](adr/0020-gui-ma-cua-z-len-llm-cloud.md). Vùng công khai chỉ nhận mã công cụ và số liệu tổng hợp đã được người của Z duyệt.
 
 ## 4. Dùng lại gì từ mã nguồn mở
 
@@ -262,7 +262,7 @@ Phần hiệu chuẩn bằng CVE (RQ4) chạy cùng pipeline ở chế độ `re
 |---|---|---|
 | RQ1 hiện trạng | `Finding`, `Occurrence`, `Adjudication` | `scan`, `normalize`, `evaluation` |
 | RQ2 lọc và ngữ cảnh | `Verdict` của A, B, C nối với `Adjudication` | `context`, `llm`, `evaluation` |
-| RQ2 tại chỗ so với cloud | `Verdict` theo `model_id` | `llm` |
+| RQ2 tại chỗ so với cloud (tùy chọn, ADR 0020 D6) | `Verdict` theo `model_id` | `llm` |
 | RQ3 lập trình viên | `DisplayedAlert`, `FeedbackEvent`, thời gian và chi phí ở `PrRun`, `Verdict` | `bot`, `pipeline` |
 | RQ4 hiệu chuẩn | Lượt chạy `replay` trên các cặp CVE | Toàn bộ pipeline |
 
@@ -275,7 +275,7 @@ Phần hiệu chuẩn bằng CVE (RQ4) chạy cùng pipeline ở chế độ `re
 | G1 | CI là Jenkins và chạy được container | Viết lại file pipeline. Mã không đổi |
 | G2 | SCM có API để comment, đọc phản ứng và đọc commit | Viết một `ScmAdapter` khác. Nếu không đọc được phản ứng thì chỉ còn kênh trả lời |
 | G3 | Ngôn ngữ chính là Java | Đổi danh mục ngữ cảnh và grammar tree-sitter. Bỏ SpotBugs nếu không phải Java |
-| G4 | Z có máy chạy được mô hình tại chỗ, hoặc cho gửi mã lên cloud | Thiếu cả hai thì không có cách B và C |
+| G4 | Z có máy chạy được mô hình tại chỗ, hoặc cho gửi mã lên cloud | Thiếu cả hai thì không có cách B và C. Đã đáp ứng 2026-11-19: Z cho dùng cloud ([ADR 0020](adr/0020-gui-ma-cua-z-len-llm-cloud.md)) |
 | G5 | Có một máy trong Z để lưu dữ liệu nghiên cứu | Cần thỏa thuận lại với Z |
 
 ### 12.2. Rủi ro kỹ thuật

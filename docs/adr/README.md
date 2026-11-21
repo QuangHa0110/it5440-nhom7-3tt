@@ -21,3 +21,5 @@ Mỗi file là một quyết định đáng tranh luận. Tên file: `NNNN-tieu-
 | [0012](0012-github-app-may-chu-va-hang-doi.md) | GitHub App: máy chủ webhook, token cài đặt, hàng đợi bền, cấu hình từ nhánh đích | accepted |
 | [0013](0013-quet-secret-tich-hop.md) | Quét secret tích hợp, giá trị bị che từ lúc phát hiện | accepted |
 | [0014](0014-phan-hoi-theo-vai-tro-va-cc.md) | Phản hồi theo vai trò, chính sách CC, làm sạch nội dung do mô hình sinh | accepted |
+| [0019](0019-bo-luat-semgrep-p-default-khoa-bang-ma-bam.md) | Bộ luật Semgrep `p/default`, tải trong hạ tầng chạy bot, khóa bằng mã băm, không commit luật | accepted |
+| [0020](0020-gui-ma-cua-z-len-llm-cloud.md) | Dùng LLM cloud cho mã của Z, cần văn bản, che secret, gửi tối thiểu, có trần chi phí | accepted |

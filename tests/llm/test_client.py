@@ -38,6 +38,9 @@ def test_success_sends_auth_and_parses() -> None:
     assert seen["auth"] == "Bearer sk-secret-1234"
     body = seen["body"]
     assert isinstance(body, dict) and body["temperature"] == 0.0 and body["seed"] == 0
+    # Một số gateway (vd. 9router) trả luồng SSE khi thiếu trường này,
+    # dù chuẩn OpenAI mặc định là false.
+    assert body["stream"] is False
 
 
 def test_retries_on_429_then_succeeds() -> None:

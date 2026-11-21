@@ -94,3 +94,22 @@ def test_snippet_provider_reads_window() -> None:
     s = b.slices[0]
     assert (s.start, s.end) == (8, 12) and "executeQuery" in s.text and b.variant is Variant.B
     assert b.bundle_hash == SnippetProvider(radius=2).extract(f, FIXTURE).bundle_hash
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        good() + " " + good(label="likely_false"),
+        "```json\n" + good() + "\n```\n```json\n" + good(label="likely_false") + "\n```",
+    ],
+)
+def test_validate_rejects_two_json_objects(text: str) -> None:
+    f, b = bundle()
+    with pytest.raises(VerdictFormatError, match="nhiều"):
+        validate_verdict(text, b, f.finding_id)
+
+
+def test_validate_accepts_one_object_with_stray_brace_in_prose() -> None:
+    f, b = bundle()
+    text = good() + "\nGhi chú: dấu { trong câu chữ không phải JSON"
+    assert validate_verdict(text, b, f.finding_id).label.value == "likely_true"

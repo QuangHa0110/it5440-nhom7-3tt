@@ -36,12 +36,14 @@ python scripts/github_app_manifest.py exchange CODE --out secrets/
 
 Lệnh này ghi `secrets/<tên>.env` (ID, đường dẫn khóa riêng, secret webhook) và tệp `.pem` với quyền `0600`, không in bí mật ra màn hình. Chép ba giá trị đó vào `.env`. **Không commit thư mục `secrets/`.**
 
-**4. Chạy máy chủ.**
+**4. Chạy máy chủ từ gốc repo.**
 
 ```bash
-docker compose up --build        # hoặc: uv run pr-triage serve --port 8080
+docker compose -f deploy/docker-compose.yml up --build
 curl http://localhost:8080/healthz
 ```
+
+Chạy trực tiếp bằng Python với `uv run pr-triage serve --port 8080`. Nếu container từ cấu hình Compose ở gốc repo còn chạy, dùng `docker compose ls` để tìm tên project cũ và thay `TEN_PROJECT_CU` trong lệnh `docker compose -p TEN_PROJECT_CU -f deploy/docker-compose.yml down` trước khi khởi động lại. Dữ liệu vẫn nằm trong `data/app/`.
 
 **5. Cài App lên repo thử.** Trên trang của App chọn *Install App*, chọn đúng repo. Mở một PR (xem [demo.md](demo.md)) và đợi khoảng 15 đến 60 giây: comment và check **PR Triage** xuất hiện.
 
@@ -103,6 +105,7 @@ Sự kiện đăng ký: `pull_request`, `issue_comment`. App không xin quyền 
 - **Webhook** bị từ chối nếu chữ ký `X-Hub-Signature-256` sai hoặc thiếu, hoặc thân lớn hơn 5 MB. Mỗi lần giao (`X-GitHub-Delivery`) chỉ xử lý một lần.
 - **Nội dung do mô hình sinh** được làm sạch trước khi vào comment: `@mention`, `#số`, liên kết và HTML bị vô hiệu.
 - **Secret trong mã** bị che từ lúc phát hiện, kể cả trong kho dữ liệu và trong prompt gửi LLM.
+- **Một repo một đường:** nếu Jenkins cũng chạy trên tổ chức này, đặt `PR_TRIAGE_ROUTES` (ví dụ `github-app:acme/web-*,jenkins:acme/legacy-*`) để một PR không bị quét hai lần. Xem ADR 0018.
 - **Giới hạn phạm vi:** đặt `PR_TRIAGE_ALLOWED_REPOS` để chỉ xử lý repo mong muốn. Người cài App lên repo khác sẽ không kích hoạt được chi phí LLM.
 - **Dừng khẩn cấp:** gỡ cài đặt App, hoặc đặt `enabled: false` ở nhánh đích, hoặc dừng container.
 

@@ -27,17 +27,30 @@ class Item:
     verdicts: dict[Variant, Verdict]
 
 
-def load_items(store: StorePort, split: str) -> list[Item]:
+def latest_verdicts(store: StorePort) -> dict[tuple[str, Variant], Verdict]:
+    """Nhận định mới nhất của mỗi (cảnh báo, cách) trên mọi lượt chạy.
+
+    Cảnh báo vào pool từ lượt chạy chỉ quét; B và C có thể đến từ lượt chạy sau.
+    """
+    by: dict[tuple[str, Variant], Verdict] = {}
+    for run in store.list_runs():  # sắp theo started_at tăng dần
+        for v in store.list_verdicts(run.run_id):
+            by[(v.finding_id, v.variant)] = v
+    return by
+
+
+def load_items(store: StorePort, split: str, only_labeled_by: str | None = None) -> list[Item]:
     truth = {a.finding_id: a.final_value for a in store.list_adjudications()}
-    cache: dict[str, dict[tuple[str, Variant], Verdict]] = {}
+    if only_labeled_by is not None:
+        keep = {
+            lab.finding_id for lab in store.list_labels() if lab.labeler_alias == only_labeled_by
+        }
+        truth = {k: v for k, v in truth.items() if k in keep}
+    by = latest_verdicts(store)
     items: list[Item] = []
     for e in store.list_pool(split):
         if e.finding_id not in truth:
             continue
-        by = cache.get(e.run_id)
-        if by is None:
-            by = {(v.finding_id, v.variant): v for v in store.list_verdicts(e.run_id)}
-            cache[e.run_id] = by
         verdicts = {v: by[(e.finding_id, v)] for v in Variant if (e.finding_id, v) in by}
         items.append(Item(e.finding_id, e.run_id, truth[e.finding_id], verdicts))
     return items
@@ -86,8 +99,12 @@ def _variant_report(
     }
 
 
-def compute_report(store: StorePort, split: str, rounds: int = 1000) -> dict[str, Any]:
-    items = load_items(store, split)
+def compute_report(
+    store: StorePort, split: str, rounds: int = 1000, only_labeled_by: str | None = None
+) -> dict[str, Any]:
+    """`only_labeled_by`: chỉ tính cảnh báo người này đã gán (phân tích độ nhạy trên mẫu kiểm
+    định). Nhãn cuối vẫn là nhãn đã phân xử."""
+    items = load_items(store, split, only_labeled_by)
     decided = [i for i in items if i.truth is not HumanLabel.UNDETERMINED]
     n_false = sum(i.truth is HumanLabel.FALSE for i in decided)
     fp_rate = wilson(n_false, len(decided))

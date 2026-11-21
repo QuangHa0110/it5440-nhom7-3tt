@@ -1,0 +1,23 @@
+# Cấu hình chạy đợt đánh giá trên mã nguồn mở (ADR 0015, 0016). Được `pr-triage eval freeze` băm.
+# Các giá trị chọn trên tập dev theo thiết kế mục 6.6, trước khi chạy B/C trên tập eval.
+# Lệnh `pr-triage run` nhận các giá trị này qua tham số CLI; runbook ghi đúng các tham số đã dùng.
+
+variants: [B, C]          # --variants B,C (A luôn có)
+snippet_radius: 40        # --snippet-radius 40: TP-loss hòa 0/15 ở 10/25/40, 40 ít unknown nhất
+display: C                # --display C: người dùng chọn 2026-11-18 (C 64% so với B 54% FP-removal trên dev)
+secrets: false            # --no-secrets: cùng cấu hình với lượt quét mốc lịch sử
+
+rules:
+  - configs/semgrep/java-injection.yml
+# Luật Java của semgrep/semgrep-rules @ a5ad1714f00c9f7fde980cab0ea1d6dc6d414fd2, lọc theo
+# CWE-89/78/79/22/90/643 (29 luật). Không đưa vào repo vì giấy phép Semgrep Rules License v1.0;
+# manifest khóa nội dung bằng băm.
+external_rules:
+  - ~/pr-triage-data/rules/registry-java-injection.yml
+
+scanner: semgrep-ce 1.185.0
+
+split:
+  method: repo                     # ADR 0016
+  eval: [DSpace, openmrs-core, roller]
+  dev: [ofbiz-framework, opencms-core, jspwiki]

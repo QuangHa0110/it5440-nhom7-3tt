@@ -33,8 +33,9 @@ Nguồn sự thật: [docs/project/proposal-llm-loc-canh-bao-pr.md](docs/project
 ```
 src/pr_triage/   package Python, mỗi thư mục con ứng với một phần việc
   core/ store/ pipeline/ scan/ normalize/ context/ llm/ bot/ evaluation/ app/   cli.py
-tests/           phản chiếu src/, dữ liệu giả ở tests/fixtures/
-deploy/ demo/    manifest GitHub App, ứng dụng mẫu và kịch bản demo
+tests/           phản chiếu src/, dữ liệu giả ở tests/fixtures/  (test tự động; hồ sơ test thủ công ở docs/test-records/)
+deploy/          cấu hình Docker Compose, manifest GitHub App và cấu hình Jenkins
+demo/            ứng dụng mẫu và kịch bản demo
 configs/         semgrep/ prompts/ schemas/ eval/ (cấu hình có phiên bản, khóa bằng tag)
 data/            dữ liệu chạy, KHÔNG commit (chỉ README)
 reports/         results/ (số liệu ẩn danh đã duyệt), paper/, slides/
@@ -42,7 +43,7 @@ docs/            project/ (proposal, tài liệu môn), adr/, plans/, devlog/
 scripts/         script tiện ích của repo (không phải mã sản phẩm)
 ```
 
-`app/` là GitHub App (máy chủ webhook, hàng đợi, xử lý sự kiện), xem docs/github-app.md.
+`app/` là GitHub App (máy chủ webhook, hàng đợi, xử lý sự kiện), xem docs/github-app.md. `triggers/` là đường Jenkins và lớp trừu tượng `Trigger`; `core/delivery.py` giữ `ScanRequest`, danh sách repo cho phép và định tuyến (ADR 0018: mỗi repo một đường, cấu hình `PR_TRIAGE_ROUTES`).
 Ranh giới mã: mọi gói phụ thuộc `core`, `core` không phụ thuộc gói nào; `context`, `llm`, `evaluation` không import `bot`; chỉ `pipeline` và `cli` nối các gói với nhau. Mỗi thư mục con trong `src/` có một người phụ trách (xem `.github/CODEOWNERS`).
 
 ## Lệnh thường dùng
@@ -56,7 +57,7 @@ Quyết định, kế hoạch hay ràng buộc không nằm trong repo thì coi 
 
 | Bề mặt | Chứa | Không chứa |
 |---|---|---|
-| `docs/project/` | Proposal đã chốt (nguồn sự thật về phạm vi), tài liệu môn học, link bài báo | Tiến độ, nhật ký, PDF |
+| `docs/project/` | Proposal hiện hành, tài liệu môn học, khảo sát, hồ sơ đề xuất ban đầu | Tiến độ triển khai, nhật ký kỹ thuật, PDF |
 | `docs/adr/` | Mỗi file một quyết định đáng tranh luận: Bối cảnh / Quyết định / Phương án khác / Hệ quả | Cập nhật tiến độ |
 | `docs/plans/` | Việc nhiều bước (từ 3 task), vòng đời `queued → active → done \| failed` | Quyết định (thuộc ADR) |
 | `docs/devlog/` | Điều bất ngờ gặp khi làm, mỗi mục một file có ngày | Báo cáo "đã xong" (thuộc `plans/done/`) |

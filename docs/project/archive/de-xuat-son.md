@@ -9,8 +9,8 @@ Tên tiếng Anh dự kiến: *Does LLM Triage Pay Off in Practice? A Case Study
 | Người đề xuất | Sơn, nhánh `son-dev` |
 | Ngày | 07/11/2026 |
 | Trạng thái | Đề xuất để nhóm chọn ý tưởng, **chưa chốt** |
-| Căn cứ | [docs/khao-sat/tong-quan-tai-lieu.md](khao-sat/tong-quan-tai-lieu.md) (61 tài liệu 2023–2026), 4 bài báo được giao, hướng dẫn tiểu luận của thầy |
-| Quan hệ với bản nháp | Dùng lại gần hết `docs/proposal-3TT.md` (nhánh `docs/proposal-3tt`), chỉ đổi trọng tâm. Xem mục 7 |
+| Căn cứ | [bản tổng hợp khảo sát](../khao-sat/tong-quan-tai-lieu.md) (61 tài liệu 2023–2026), 4 bài báo được giao, hướng dẫn tiểu luận của thầy |
+| Quan hệ với bản nháp | Dùng lại gần hết [đề tài 3TT](proposal-3TT.md) (nhánh `docs/proposal-3tt`), chỉ đổi trọng tâm. Xem mục 7 |
 
 ## 1. Tóm tắt
 
@@ -81,7 +81,7 @@ Chạy ngầm trên cùng PR, không đăng lên PR: A (chỉ công cụ), B v�
 và D (agent đọc PR kèm cảnh báo) nếu đủ ngân sách                            ← dữ liệu RQ1, RQ2
 ```
 
-Định dạng `finding`, `report`, `run.json` và các lệnh `python -m core.*` dùng nguyên theo `docs/quy-uoc-chung.md` của bản nháp.
+Định dạng `finding`, `report`, `run.json` và các lệnh `python -m core.*` dùng nguyên theo [quy ước chung](quy-uoc-chung.md) của bản nháp.
 
 ### 4.2. Liên hệ với 4 bài báo được giao
 
@@ -207,7 +207,7 @@ Cả nhóm cùng gán nhãn, trừ người trực tiếp viết prompt.
 - **Phương án trung gian:** chạy P1 trên công ty nơi một thành viên đang làm, hoặc trên một công cụ nội bộ nhỏ ít nhạy cảm của Z. Đây là mức 1 và mức 3 trong bảng các mức hợp tác của bản nháp.
 - **Không coi là thay thế được công ty:** lấy repo mã nguồn mở rồi gọi đó là "công ty Z". Cách này không đo được hành động thật, và hướng dẫn chấm của thầy yêu cầu xác nhận của công ty.
 
-## 7. Góp ý cho bản nháp `docs/proposal-3TT.md`
+## 7. Góp ý cho bản nháp [đề tài 3TT](proposal-3TT.md)
 
 Bản nháp đã kỹ, nhất là các phần quy tắc an toàn, định dạng dữ liệu và quy tắc chấm. Nên **giữ gần như toàn bộ**, chỉ sửa 6 điểm sau:
 
@@ -251,7 +251,7 @@ Bản nháp đã kỹ, nhất là các phần quy tắc an toàn, định dạng
 
 ## Tài liệu tham khảo
 
-Danh sách đầy đủ 61 tài liệu, kèm đánh dấu các nguồn chưa xác minh, nằm trong [khao-sat/tong-quan-tai-lieu.md](khao-sat/tong-quan-tai-lieu.md).
+Danh sách đầy đủ 61 tài liệu, kèm đánh dấu các nguồn chưa xác minh, nằm trong [bản tổng hợp khảo sát](../khao-sat/tong-quan-tai-lieu.md).
 
 [1] Y. Xiong and T. Zhang, "Sifting the noise: A comparative study of LLM agents in vulnerability false positive filtering," in *Proc. ISSTA*, 2026, arXiv:2601.22952.
 

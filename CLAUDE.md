@@ -34,7 +34,8 @@ Nguồn sự thật: [docs/project/proposal-llm-loc-canh-bao-pr.md](docs/project
 src/pr_triage/   package Python, mỗi thư mục con ứng với một phần việc
   core/ store/ pipeline/ scan/ normalize/ context/ llm/ bot/ evaluation/ app/   cli.py
 tests/           phản chiếu src/, dữ liệu giả ở tests/fixtures/  (test tự động; hồ sơ test thủ công ở docs/test-records/)
-deploy/ demo/    manifest GitHub App, ứng dụng mẫu và kịch bản demo
+deploy/          cấu hình Docker Compose, manifest GitHub App và cấu hình Jenkins
+demo/            ứng dụng mẫu và kịch bản demo
 configs/         semgrep/ prompts/ schemas/ eval/ (cấu hình có phiên bản, khóa bằng tag)
 data/            dữ liệu chạy, KHÔNG commit (chỉ README)
 reports/         results/ (số liệu ẩn danh đã duyệt), paper/, slides/
@@ -56,7 +57,7 @@ Quyết định, kế hoạch hay ràng buộc không nằm trong repo thì coi 
 
 | Bề mặt | Chứa | Không chứa |
 |---|---|---|
-| `docs/project/` | Proposal đã chốt (nguồn sự thật về phạm vi), tài liệu môn học, link bài báo | Tiến độ, nhật ký, PDF |
+| `docs/project/` | Proposal hiện hành, tài liệu môn học, khảo sát, hồ sơ đề xuất ban đầu | Tiến độ triển khai, nhật ký kỹ thuật, PDF |
 | `docs/adr/` | Mỗi file một quyết định đáng tranh luận: Bối cảnh / Quyết định / Phương án khác / Hệ quả | Cập nhật tiến độ |
 | `docs/plans/` | Việc nhiều bước (từ 3 task), vòng đời `queued → active → done \| failed` | Quyết định (thuộc ADR) |
 | `docs/devlog/` | Điều bất ngờ gặp khi làm, mỗi mục một file có ngày | Báo cáo "đã xong" (thuộc `plans/done/`) |

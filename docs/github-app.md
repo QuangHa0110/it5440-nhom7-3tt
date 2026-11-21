@@ -36,12 +36,14 @@ python scripts/github_app_manifest.py exchange CODE --out secrets/
 
 Lệnh này ghi `secrets/<tên>.env` (ID, đường dẫn khóa riêng, secret webhook) và tệp `.pem` với quyền `0600`, không in bí mật ra màn hình. Chép ba giá trị đó vào `.env`. **Không commit thư mục `secrets/`.**
 
-**4. Chạy máy chủ.**
+**4. Chạy máy chủ từ gốc repo.**
 
 ```bash
-docker compose up --build        # hoặc: uv run pr-triage serve --port 8080
+docker compose -f deploy/docker-compose.yml up --build
 curl http://localhost:8080/healthz
 ```
+
+Chạy trực tiếp bằng Python với `uv run pr-triage serve --port 8080`. Nếu container từ cấu hình Compose ở gốc repo còn chạy, dùng `docker compose ls` để tìm tên project cũ và thay `TEN_PROJECT_CU` trong lệnh `docker compose -p TEN_PROJECT_CU -f deploy/docker-compose.yml down` trước khi khởi động lại. Dữ liệu vẫn nằm trong `data/app/`.
 
 **5. Cài App lên repo thử.** Trên trang của App chọn *Install App*, chọn đúng repo. Mở một PR (xem [demo.md](demo.md)) và đợi khoảng 15 đến 60 giây: comment và check **PR Triage** xuất hiện.
 

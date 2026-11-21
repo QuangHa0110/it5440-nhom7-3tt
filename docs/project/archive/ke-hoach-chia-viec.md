@@ -6,7 +6,7 @@
 |---|---|
 | Phiên bản | 0.1, bản nháp để cả nhóm góp ý |
 | Phạm vi | RQ1–RQ3 và demo trên bản fork. Phần công ty Z đang tạm gác |
-| Tài liệu liên quan | `docs/proposal-3TT.md`, `docs/quy-uoc-chung.md` |
+| Tài liệu liên quan | [Bản nháp đề tài 3TT](proposal-3TT.md), [quy ước chung](quy-uoc-chung.md) |
 
 ## 1. Cách chia
 

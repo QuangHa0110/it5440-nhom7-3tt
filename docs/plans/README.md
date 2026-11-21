@@ -15,33 +15,12 @@ Kế hoạch là một đơn vị công việc có thể commit, với điều k
 - Công cụ Claude Code ghi kế hoạch mới vào `queued/` (xem `.claude/settings.json`), người làm chuyển tay sang `active/`.
 - Cần kế hoạch khi việc có từ 3 task trở lên.
 
-## Thứ tự trong `queued/`
+## Các đợt đã hoàn thành
 
-Mục tiêu: **hệ thống chạy được đầu cuối** (`make e2e`) trên một repo Java thử, với cổng LLM thật.
-
-| # | Kế hoạch | Phụ thuộc | Mốc kiểm chứng |
-|---|---|---|---|
-| P01 | [Mô hình miền, cổng và kho](queued/2026-11-13-p01-core-va-store.md) | — | `make check` |
-| P02 | [Quét và chuẩn hóa](queued/2026-11-13-p02-scan-va-normalize.md) | P01 | Cách A chạy được |
-| P03 | [LLM và cách B](queued/2026-11-13-p03-llm-va-cach-b.md) | P01, P02 T4 | Cách B trên cổng thật |
-| P04 | [Ngữ cảnh luồng dữ liệu](queued/2026-11-13-p04-ngu-canh-luong-du-lieu.md) | P02 | Cách C và số đo `missing` |
-| P05 | [Pipeline và CLI](queued/2026-11-13-p05-pipeline-va-cli-chay-duoc.md) | P01 đến P04 | `make e2e` **(hệ thống chạy được)** |
-| P06 | [Bot và phản hồi](queued/2026-11-13-p06-bot-va-phan-hoi.md) | P05 | Comment một lần, phản hồi theo cảnh báo |
-| P07 | [Đánh giá ngoại tuyến](queued/2026-11-13-p07-evaluation.md) | P05 | Số đo trên BenchmarkJava |
-
-P02 và P03 có thể làm song song sau P01. P04 và P03 độc lập nhau.
-
-## Đợt GitHub App (P08 đến P12)
-
-Mục tiêu: **cài được lên repo GitHub và thử ngay**. Thứ tự: P08, P09, P10, rồi P11 (cần cả ba), rồi P12.
-
-| # | Kế hoạch | Phụ thuộc |
-|---|---|---|
-| P08 | [Quét secret](queued/2026-11-13-p08-quet-secret.md) | — |
-| P09 | [Cấu hình theo repo và chính sách](queued/2026-11-13-p09-cau-hinh-va-chinh-sach.md) | — |
-| P10 | [Vai trò, CC, check run, làm sạch](queued/2026-11-13-p10-vai-tro-cc-checks.md) | P09 T4 |
-| P11 | [GitHub App](queued/2026-11-13-p11-github-app.md) | P08 đến P10 |
-| P12 | [Đóng gói và demo](queued/2026-11-13-p12-trien-khai-va-demo.md) | P11 |
+- [P01–P07](done/) đặt nền tảng cho luồng quét, phân loại, phản hồi và đánh giá ngoại tuyến.
+- [P08–P12](done/) bổ sung quét secret, cấu hình theo repo, GitHub App và bộ demo.
+- [P13](done/2026-11-17-p13-jenkins-job-trung-tam-nhieu-repo.md) bổ sung job Jenkins trung tâm.
+- [P14](done/2026-11-20-p14-hai-duong-kich-hoat-huong-doi-tuong.md) dùng chung lõi cho GitHub App và Jenkins.
 
 ## Quy tắc chạy xuyên đêm
 

@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | Công cụ | Claude Code (Claude Opus 5.5), chế độ deep research với 4 agent tìm kiếm chạy song song, cộng 1 agent tổng hợp |
-| Sản phẩm | `docs/khao-sat/`, `docs/de-xuat-son.md` |
+| Sản phẩm | [Khảo sát tài liệu](../khao-sat/README.md), [đề xuất của Sơn](../archive/de-xuat-son.md) |
 | Dữ liệu đưa vào AI | Hướng dẫn tiểu luận và đề cương của thầy, 4 bài báo đề tài 3, các tài liệu đang có trên repo. Không có dữ liệu công ty, không có secret |
 
 ## Yêu cầu chính
@@ -20,7 +20,7 @@
 ## Người kiểm tra lại những gì
 
 - Đối chiếu với PDF gốc: 22,2% cảnh báo sai (KTC 95%: 17,6–27,6%) trong bài vệ tinh; kết quả 41 so với 8 lỗ hổng của GONDAR so với Jazzer.
-- Mở trang arXiv của SEVRA-BENCH, SecPRBench và "Sifting the Noise" để kiểm tra phạm vi thật của từng bài. Đã ghi kết quả ở đầu `docs/khao-sat/tong-quan-tai-lieu.md`.
+- Mở trang arXiv của SEVRA-BENCH, SecPRBench và "Sifting the Noise" để kiểm tra phạm vi thật của từng bài. Đã ghi kết quả ở đầu [bản tổng hợp khảo sát](../khao-sat/tong-quan-tai-lieu.md).
 - **Chưa kiểm tra:** các tài liệu có đánh dấu "Ghi chú: …" trong file khảo sát. Phải đọc bản gốc trước khi đưa vào báo cáo.
 
 ## Phần do người quyết định

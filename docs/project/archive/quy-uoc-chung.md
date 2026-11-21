@@ -371,7 +371,7 @@ Trách nhiệm của người dùng AI:
 
 - Đọc và hiểu mọi thứ mình merge. Khi bảo vệ, mỗi người phải giải thích được phần của mình.
 - Tự kiểm tra trích dẫn, số liệu và tên bài báo, vì AI có thể tạo ra thông tin không có thật.
-- Lưu prompt chính trong `docs/ai-log/`, để nhóm trình bày được cách đã dùng AI.
+- Lưu prompt chính trong [thư mục nhật ký dùng AI](../ai-log/), để nhóm trình bày được cách đã dùng AI.
 - Không đưa secret hay dữ liệu nhạy cảm vào công cụ AI.
 
 Công cụ AI dùng để viết code không phải là đối tượng thí nghiệm. Chỉ cấu hình trong `experiment.yaml` mới được tính là kết quả.

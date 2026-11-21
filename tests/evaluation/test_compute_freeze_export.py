@@ -98,3 +98,15 @@ def test_export_suppresses_small_cells_and_has_no_identifiers() -> None:
     assert_clean(s, {"src/s0.java", "tên-công-ty"})
     with pytest.raises(LeakError):
         assert_clean(s, {"suppressed"})
+
+
+def test_report_only_labeled_by() -> None:
+    from pr_triage.core.models import Label
+
+    s = db()
+    for fid in ("s0", "s1", "t0", "t1"):
+        s.save_label(Label(fid, "human-1", HumanLabel.FALSE, "lý do"))
+    s.save_label(Label("s2", "ai-claude", HumanLabel.FALSE, "lý do"))
+    sub = compute_report(s, "eval", 10, only_labeled_by="human-1")
+    assert sub["n_labeled"] == 4 and sub["n_true"] == 2 and sub["n_false"] == 2
+    assert compute_report(s, "eval", 10)["n_labeled"] == 20

@@ -19,7 +19,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'github-token',
                                                       usernameVariable: 'GH_USER', passwordVariable: 'GITHUB_TOKEN')]) {
                         out = sh(returnStdout: true,
-                                 script: 'python "$PR_TRIAGE_JENKINS/ci_helper.py" poll --state "$POLL_STATE"').trim()
+                                 script: 'pr-triage ci poll --state "$POLL_STATE"').trim()
                     }
                     def rows = out ? out.split('\n') : []
                     for (row in rows) {

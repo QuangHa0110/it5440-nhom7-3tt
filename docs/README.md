@@ -12,6 +12,7 @@
 | [project/](project/) | Tài liệu dự án và môn học (kèm `papers/`, `course/`, PDF không vào git) |
 | [adr/](adr/) | Quyết định kiến trúc, chỉ thêm không sửa |
 | [plans/](plans/) | Kế hoạch theo vòng đời `queued → active → done \| failed` |
+| [test-records/](test-records/) | Hồ sơ kiểm thử thủ công theo ngày (kịch bản, kết quả, người test). Mã test tự động ở `tests/` |
 | [devlog/](devlog/) | Phát hiện bất ngờ khi làm, và [sổ nợ](devlog/debt-ledger.md) |
 
 **Quy tắc chọn nơi ghi:** quyết định đáng tranh luận → `adr/`; việc nhiều bước → `plans/`; điều bất ngờ → `devlog/`; nợ còn tồn → sổ nợ. Quy tắc chi tiết: mục "Tài liệu như mã" trong [../CLAUDE.md](../CLAUDE.md).

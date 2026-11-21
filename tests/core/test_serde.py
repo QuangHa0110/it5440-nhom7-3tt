@@ -17,3 +17,12 @@ def test_enums_and_tuples_restored() -> None:
     assert from_json(PrRun, to_json(make_run())).mode.value == "shadow"
     assert isinstance(from_json(Finding, to_json(f)).tools, tuple)
     assert isinstance(from_json(ContextBundle, to_json(make_bundle(f))).slices, tuple)
+
+
+def test_old_run_without_commit_time_loads() -> None:
+    import json
+
+    data = json.loads(to_json(make_run()))
+    data.pop("head_committed_at", None)
+    got = from_json(PrRun, json.dumps(data))
+    assert got.head_committed_at == ""

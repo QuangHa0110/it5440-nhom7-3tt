@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from pr_triage import __version__
-from pr_triage.bot import FeedbackCollector, Publisher, render, resolve_states
+from pr_triage.bot import FeedbackCollector, choose_sink, resolve_states
 from pr_triage.bot.github import GitHubScm
 from pr_triage.core.alias import Aliaser
 from pr_triage.core.errors import ScanError
@@ -20,7 +20,7 @@ from pr_triage.core.models import HumanLabel, PrRef, RunMode, TriageResult, Vari
 from pr_triage.core.ports import StorePort
 from pr_triage.pipeline import result_io
 from pr_triage.pipeline.build import BuildOptions, build_pipeline
-from pr_triage.pipeline.gitrepo import first_parent_commits, parents
+from pr_triage.pipeline.replay import plan_replay
 
 
 def load_dotenv(path: Path = Path(".env")) -> None:
@@ -52,6 +52,18 @@ def _common(p: argparse.ArgumentParser) -> None:
         "--snippet-radius", type=int, default=10, help="số dòng quanh vị trí báo của cách B"
     )
     p.add_argument("--out", type=Path, default=Path("out"))
+    p.add_argument(
+        "--budget-pr-tokens",
+        type=int,
+        default=200_000,
+        help="trần token LLM mỗi lượt chạy; hết trần thì nhận định là unknown (error=budget)",
+    )
+    p.add_argument(
+        "--variants",
+        choices=["B,C", "B", "C", "none"],
+        default="B,C",
+        help="cách gọi LLM; none = chỉ quét (cách A)",
+    )
 
 
 def parser() -> argparse.ArgumentParser:
@@ -89,6 +101,16 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--labelers", required=True, help="tên cách nhau bằng dấu phẩy, ít nhất hai")
     p.add_argument("--out", type=Path, default=Path("data/dev/labels"))
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument(
+        "--single", action="store_true", help="một người gán toàn bộ; kiểm định bằng audit-sample"
+    )
+    p = es.add_parser("audit-sample", help="phiếu kiểm định mẫu phân tầng cho người thứ hai")
+    p.add_argument("--split", choices=["dev", "eval"], required=True)
+    p.add_argument("--primary", required=True, help="người gán chính, đã nhập nhãn")
+    p.add_argument("--auditor", required=True)
+    p.add_argument("--n", type=int, default=50)
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--out", type=Path, default=Path("data/dev/labels"))
     p = es.add_parser("label-import", help="nhập phiếu đã điền")
     p.add_argument("--labeler", required=True)
     p.add_argument("--file", type=Path, required=True)
@@ -105,11 +127,21 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--split", choices=["dev", "eval"], required=True)
     p.add_argument("--manifest", type=Path, default=Path("configs/eval/manifest.json"))
     p.add_argument("--rounds", type=int, default=1000)
+    p.add_argument("--only-labeled-by", default=None, help="chỉ tính ca người này đã gán nhãn")
     p.add_argument("--markdown", action="store_true")
     p = es.add_parser("export", help="xuất số liệu tổng hợp ẩn danh")
     p.add_argument("--split", choices=["dev", "eval"], required=True)
     p.add_argument("--out", type=Path, default=Path("reports/results/summary.json"))
     p.add_argument("--k", type=int, default=5)
+    ci = sub.add_parser("ci", help="đường Jenkins: kiểm tra repo cho phép, hỏi PR đang mở")
+    cs = ci.add_subparsers(dest="ci_cmd")
+    p = cs.add_parser("allowed", help="thoát 0 nếu repo được quét qua Jenkins (1: từ chối, 2: sai)")
+    p.add_argument("--repo", required=True)
+    p.add_argument("--pr", required=True)
+    p.add_argument("--base-ref", default="")
+    p.add_argument("--head-sha", default="")
+    p = cs.add_parser("poll", help="in PR đang mở có đầu nhánh mới (TSV), ghi FILE.next")
+    p.add_argument("--state", type=Path, required=True)
     srv = sub.add_parser("serve", help="chạy GitHub App (máy chủ webhook)")
     srv.add_argument("--host", default="0.0.0.0")
     srv.add_argument("--port", type=int, default=8080)
@@ -117,6 +149,12 @@ def parser() -> argparse.ArgumentParser:
     _common(rep)
     rep.add_argument("--ref", default="HEAD")
     rep.add_argument("--count", type=int, default=10)
+    rep.add_argument(
+        "--side",
+        choices=["merged", "first"],
+        default="merged",
+        help="head là đỉnh nhánh PR (merged) hay commit đầu của PR (first, mốc RQ3)",
+    )
     return ap
 
 
@@ -132,6 +170,10 @@ def _opts(args: argparse.Namespace, mode: RunMode) -> BuildOptions:
         "workers": args.workers,
         "snippet_radius": args.snippet_radius,
         "secrets": not args.no_secrets,
+        "budget_pr_tokens": args.budget_pr_tokens,
+        "variants": ()
+        if args.variants == "none"
+        else tuple(Variant(v) for v in args.variants.split(",")),
     }
     if args.rules:
         kw["rules"] = args.rules
@@ -152,16 +194,49 @@ def summarize(result: TriageResult) -> dict[str, object]:
     }
 
 
+RUN_CONFIG = Path("configs/eval/run.yml")
+
+
 def _manifest_roots() -> list[Path]:
     return [Path("configs/semgrep"), Path("configs/context"), Path("configs/schemas"),
-            Path("configs/eval/thresholds.yml")]  # fmt: skip
+            Path("configs/eval/thresholds.yml"), RUN_CONFIG]  # fmt: skip
+
+
+def _external_rules() -> dict[str, str]:
+    """Băm các file luật nằm ngoài repo được liệt kê trong `configs/eval/run.yml`.
+
+    Bộ luật registry không được đưa vào repo public (giấy phép), nên manifest khóa nội dung
+    của chúng bằng băm thay vì bằng file trong `configs/`.
+    """
+    import hashlib
+
+    import yaml
+
+    from pr_triage.evaluation import FreezeMismatch
+
+    if not RUN_CONFIG.is_file():
+        return {}
+    cfg = yaml.safe_load(RUN_CONFIG.read_text("utf-8")) or {}
+    out: dict[str, str] = {}
+    for raw in cfg.get("external_rules") or []:
+        path = Path(str(raw)).expanduser()
+        if not path.is_file():
+            raise FreezeMismatch(f"không tìm thấy file luật ngoài repo: {raw}")
+        out[str(raw)] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return out
 
 
 def _current_manifest() -> dict[str, object]:
     from pr_triage.evaluation import compute_manifest
     from pr_triage.llm.prompt import PROMPT_VERSION
 
-    extra = {"prompt_version": PROMPT_VERSION, "model": os.environ.get("PR_TRIAGE_LLM_MODEL", "")}
+    extra: dict[str, object] = {
+        "prompt_version": PROMPT_VERSION,
+        "model": os.environ.get("PR_TRIAGE_LLM_MODEL", ""),
+    }
+    external = _external_rules()
+    if external:
+        extra["external_rules"] = external
     return compute_manifest([r for r in _manifest_roots() if r.exists()], extra)
 
 
@@ -202,9 +277,14 @@ def _eval(args: argparse.Namespace) -> int:
                               "eval": sum(e.split == "eval" for e in entries)}))  # fmt: skip
         elif cmd == "label-export":
             paths = blind.export_sheets(
-                store, args.split, args.labelers.split(","), args.out, args.seed
+                store, args.split, args.labelers.split(","), args.out, args.seed, args.single
             )
             print(json.dumps({k: str(v) for k, v in paths.items()}, ensure_ascii=False))
+        elif cmd == "audit-sample":
+            sheet = blind.export_audit_sheet(
+                store, args.split, args.primary, args.auditor, args.n, args.out, args.seed
+            )
+            print(json.dumps({"sheet": str(sheet)}, ensure_ascii=False))
         elif cmd == "label-import":
             print(json.dumps({"imported": blind.import_sheet(store, args.labeler, args.file)}))
         elif cmd == "kappa":
@@ -222,7 +302,7 @@ def _eval(args: argparse.Namespace) -> int:
         elif cmd == "metrics":
             if args.split == "eval":
                 check_manifest(args.manifest, _current_manifest())
-            report = compute_report(store, args.split, args.rounds)
+            report = compute_report(store, args.split, args.rounds, args.only_labeled_by)
             print(
                 to_markdown(report)
                 if args.markdown
@@ -236,7 +316,7 @@ def _eval(args: argparse.Namespace) -> int:
             print(f"đã ghi {args.out}")
         else:
             print(
-                "dùng: pr-triage eval {pool|label-export|label-import|kappa|finalize|"
+                "dùng: pr-triage eval {pool|label-export|audit-sample|label-import|kappa|finalize|"
                 "adjudicate|freeze|metrics|export}"
             )
             return 0
@@ -266,19 +346,70 @@ def _serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def _ci(args: argparse.Namespace) -> int:
+    from pr_triage.core.delivery import DeliveryConfigError, RepoAllowList, RepoGate, RoutePolicy
+    from pr_triage.triggers import (
+        GitHubPullLister,
+        JenkinsParamsTrigger,
+        JenkinsPoller,
+        PollState,
+        TriggerError,
+    )
+
+    try:
+        gate = RepoGate(
+            RepoAllowList.from_csv(os.environ.get("PR_TRIAGE_ALLOWED_REPOS", ""), False),
+            RoutePolicy.parse(os.environ.get("PR_TRIAGE_ROUTES", "")),
+        )
+    except DeliveryConfigError as exc:
+        print(f"PR_TRIAGE_ROUTES: {exc}", file=sys.stderr)
+        return 2
+    if args.ci_cmd == "allowed":
+        params = {"REPO": args.repo, "PR": args.pr, "BASE_REF": args.base_ref,
+                  "HEAD_SHA": args.head_sha}  # fmt: skip
+        try:
+            admitted = JenkinsParamsTrigger().collect(params, gate)
+        except TriggerError as exc:
+            print(f"Tham số không hợp lệ: {exc}", file=sys.stderr)
+            return 2
+        if not admitted:
+            print(f"{args.repo} không được quét qua Jenkins (danh sách cho phép hoặc định tuyến).",
+                  file=sys.stderr)  # fmt: skip
+            return 1
+        return 0
+    if args.ci_cmd == "poll":
+        token = os.environ.get("GITHUB_TOKEN", "")
+        if not token:
+            print("Thiếu GITHUB_TOKEN.", file=sys.stderr)
+            return 2
+        if not gate.allow.patterns:
+            print("PR_TRIAGE_ALLOWED_REPOS trống: không có repo nào để hỏi.", file=sys.stderr)
+        lister = GitHubPullLister(token, os.environ.get("GITHUB_API_URL", "https://api.github.com"))
+        poller = JenkinsPoller(lister, gate)
+        outcome = poller.poll(PollState.load(args.state))
+        outcome.next_state.save(args.state.with_name(args.state.name + ".next"))
+        for line in poller.errors:
+            print(line, file=sys.stderr)
+        for r in outcome.requests:
+            print(f"{r.repo}\t{r.pr_number}\t{r.base_ref}\t{r.head_sha}")
+        print(f"{outcome.asked} repo, {len(outcome.requests)} PR cần quét.", file=sys.stderr)
+        return 0
+    return 2
+
+
 def _publish(args: argparse.Namespace) -> int:
     from pr_triage.store import SqlStore
 
     result = result_io.read(args.result)
     store = SqlStore(args.db)
     pr = PrRef(args.slug, args.pr, result.run.head_sha, result.run.base_sha)
-    if not args.post:
-        print(render(result))
-        return 0
-    scm = GitHubScm(os.environ["GITHUB_TOKEN"])
-    ref = Publisher(scm, store).publish(result, pr, post=True)
-    print(json.dumps({"comment_ref": ref, "mode": result.run.mode.value}))
-    store.close()
+    try:
+        sink = choose_sink(args.post, lambda: GitHubScm(os.environ["GITHUB_TOKEN"]), store)
+        ref = sink.deliver(result, pr)
+        if args.post:
+            print(json.dumps({"comment_ref": ref, "mode": result.run.mode.value}))
+    finally:
+        store.close()
     return 0
 
 
@@ -305,7 +436,8 @@ def _feedback(args: argparse.Namespace) -> int:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    load_dotenv()
+    if os.environ.get("PR_TRIAGE_NO_DOTENV") != "1":
+        load_dotenv()
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s: %(message)s")
     args = parser().parse_args(argv)
     try:
@@ -329,19 +461,22 @@ def _dispatch(args: argparse.Namespace) -> int:
         return _eval(args)
     if args.cmd == "publish":
         return _publish(args)
+    if args.cmd == "ci":
+        return _ci(args)
     if args.cmd == "feedback":
         return _feedback(args)
     if args.cmd == "replay":
         pipeline, store = build_pipeline(_opts(args, RunMode.REPLAY))
         failed = 0
-        for i, sha in enumerate(first_parent_commits(args.repo, args.ref, args.count), 1):
-            ps = parents(args.repo, sha)
-            if not ps:
+        for item in plan_replay(args.repo, args.ref, args.count, args.side):
+            if item.skip_reason:
+                print(json.dumps({"commit": item.sha[:8], "bỏ qua": item.skip_reason},
+                                 ensure_ascii=False))  # fmt: skip
                 continue
-            base, head = (ps[0], ps[1]) if len(ps) > 1 else (ps[0], sha)
-            result = pipeline.run(args.repo, base, head, i)
-            result_io.write(result, args.out / f"replay-{sha[:8]}.json")
-            print(json.dumps({"commit": sha[:8], **summarize(result)}, ensure_ascii=False))
+            result = pipeline.run(args.repo, item.base, item.head, item.pr_number)
+            result_io.write(result, args.out / f"replay-{item.sha[:8]}-{args.side}.json")
+            print(json.dumps({"commit": item.sha[:8], "pr": item.pr_number, **summarize(result)},
+                             ensure_ascii=False))  # fmt: skip
             failed += result.run.status.value == "failed"
         store.close()
         return 1 if failed else 0

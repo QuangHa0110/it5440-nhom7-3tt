@@ -25,7 +25,7 @@ Cả hai đường đều kích cùng một job `pr-triage` với cùng tham s�
 | `casc.yaml` | Cấu hình Jenkins dạng mã: tài khoản admin, credential, hai job, tham số và webhook |
 | `triage.Jenkinsfile` | Pipeline của job `pr-triage`: kiểm tra danh sách cho phép, fetch, `run`, `publish` |
 | `poll.Jenkinsfile` | Pipeline của job `pr-triage-poll`: tìm PR mới hoặc có commit mới, kích `pr-triage` |
-| `ci_helper.py` | Kiểm tra danh sách cho phép, hỏi PR đang mở qua GitHub API. Chỉ dùng thư viện chuẩn |
+| (lệnh `pr-triage ci`) | `ci allowed` kiểm tra danh sách cho phép và định tuyến, `ci poll` hỏi PR đang mở qua GitHub API. Mã ở `src/pr_triage/triggers/`, có test |
 | `docker-compose.yml` | Chạy Jenkins ở cổng 8081, dữ liệu bot lưu ở volume `triage_data` |
 | `.env.example` | Mẫu biến môi trường, sao chép thành `.env` |
 
@@ -83,6 +83,7 @@ Mở `deploy/jenkins/.env` và điền:
 | Biến | Giá trị |
 |---|---|
 | `JENKINS_ADMIN_PASSWORD` | Mật khẩu đăng nhập `admin` |
+| `PR_TRIAGE_ROUTES` | Tuỳ chọn. `jenkins:owner/repo-*,github-app:owner/web-*`: mỗi repo chỉ một đường. **Bắt buộc đặt khi GitHub App cùng chạy trên tổ chức này** (ADR 0018) |
 | `PR_TRIAGE_ALLOWED_REPOS` | `owner/repo1,owner/repo2`. **Để trống thì bot không quét gì** |
 | `GITHUB_TOKEN` | Token ở bước 2 |
 | `PR_TRIAGE_WEBHOOK_TOKEN` | Chuỗi ngẫu nhiên, ví dụ `openssl rand -hex 16`. Bắt buộc có, kể cả khi chưa dùng webhook |

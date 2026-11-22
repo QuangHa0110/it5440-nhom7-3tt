@@ -68,6 +68,7 @@ class GitRemote:
     url: str
     username: str
     pr_ref_templates: tuple[str, ...]
+    bearer: bool = False  # True: gửi `Authorization: Bearer` thay vì Basic
 
     def pr_refs(self, number: int) -> list[str]:
         return [t.format(n=number) for t in self.pr_ref_templates]

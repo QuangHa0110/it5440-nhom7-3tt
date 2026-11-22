@@ -19,7 +19,7 @@ from pr_triage.bot import (
     render,
     resolve_states,
 )
-from pr_triage.bot.github import GitHubApi, GitHubScm, PrInfo
+from pr_triage.bot.github import GitHubApi, GitHubScm
 from pr_triage.core.alias import Aliaser
 from pr_triage.core.models import (
     Job,
@@ -33,6 +33,7 @@ from pr_triage.core.models import (
     Variant,
 )
 from pr_triage.core.ports import LlmPort
+from pr_triage.core.scm import PrInfo
 from pr_triage.pipeline import codeowners
 from pr_triage.pipeline.build import BuildOptions, build_pipeline
 from pr_triage.pipeline.repoconfig import ConfigError, RepoConfig, parse_config

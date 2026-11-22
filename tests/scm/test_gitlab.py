@@ -15,7 +15,8 @@ BASE = "https://gl.example.internal"
 API = "/api/v4/projects/grp%2Fsub%2Fproj"
 REPO = "gitlab:grp/sub/proj"
 MR: dict[str, Any] = {
-    "iid": 5, "state": "opened", "draft": False, "title": "t", "author": {"username": "alice", "id": 1},
+    "iid": 5, "state": "opened", "draft": False, "title": "t",
+    "author": {"username": "alice", "id": 1},
     "source_branch": "f", "target_branch": "main", "sha": "h" * 40, "changes_count": "3",
 }  # fmt: skip
 

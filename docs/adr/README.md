@@ -24,3 +24,4 @@ Mỗi file là một quyết định đáng tranh luận. Tên file: `NNNN-tieu-
 | [0018](0018-hai-duong-kich-hoat-mot-loi-moi-repo-mot-duong.md) | Hai đường kích hoạt (GitHub App, Jenkins) dùng chung một lõi, mỗi repo chỉ một đường | accepted |
 | [0019](0019-bo-luat-semgrep-p-default-khoa-bang-ma-bam.md) | Bộ luật Semgrep `p/default`, tải trong hạ tầng chạy bot, khóa bằng mã băm, không commit luật | accepted |
 | [0020](0020-gui-ma-cua-z-len-llm-cloud.md) | Dùng LLM cloud cho mã của Z, cần văn bản, che secret, gửi tối thiểu, có trần chi phí | accepted |
+| [0021](0021-ho-tro-bon-may-chu-git-mot-lop-nha-cung-cap.md) | Hỗ trợ GitHub, GitLab, Gitea, Bitbucket Server qua một lớp nhà cung cấp SCM | accepted |

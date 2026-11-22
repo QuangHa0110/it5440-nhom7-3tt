@@ -1,11 +1,11 @@
 # P16. Nhà cung cấp SCM: GitHub, GitLab, Gitea, Bitbucket Server
 
-- **Status:** active
+- **Status:** done
 - **Người làm:** trinq (với Claude Code)
 - **Đóng:** [ADR 0021](../../adr/0021-ho-tro-bon-may-chu-git-mot-lop-nha-cung-cap.md)
 - **Quyết định cho phép:** ADR 0021
 - **Nhánh:** `trinq/scm/providers`
-- **Bắt đầu / Kết thúc:** 2026-11-22 / —
+- **Bắt đầu / Kết thúc:** 2026-11-22 / 2026-11-22
 
 ---
 
@@ -51,3 +51,13 @@ make check
 | API thật khác tài liệu hoặc khác phiên bản | Lỗi 404 hoặc thiếu trường khi chạy thật | Ghi vào devlog, sửa bộ chuyển đổi; test giả lập khóa hành vi đã biết |
 | Máy chủ không cho lấy theo SHA | `git fetch` lỗi ở bước lấy mã | `GitFetcher` đã có dự phòng theo ref của PR |
 | Tiền tố làm hỏng khớp mẫu cũ | Test `tests/core/test_delivery.py` đỏ | Giữ GitHub không tiền tố |
+
+---
+
+## Kết quả
+
+*Điền khi đóng kế hoạch. Không sửa phần thân phía trên.*
+
+- **Kết quả (2026-11-22):** `make check` qua. Thêm lớp `ScmProvider` (4 cài đặt), mã định danh repo có tiền tố, `/webhook/<loại>`, `pr-triage ci fetch`, `ci poll` dùng nhà cung cấp, `publish` và `feedback` chọn máy chủ theo mã repo. Test: `tests/scm/` (bốn nhà cung cấp), `tests/app/test_hosts_flow.py` (luồng đầu cuối qua webhook cho ba máy chủ mới, kho git cục bộ), `tests/pipeline/test_cli_ci.py`, `tests/triggers/`.
+- **Khác kế hoạch ở đâu:** thêm kênh `webhook` cho `PR_TRIAGE_ROUTES`; `GitHubProvider` nằm ở `app/` (vì dùng `AppAuth`); không chạy được với máy chủ thật, nên Bitbucket Server (REST) và hành vi thật của ba máy chủ còn là nợ TD-8.
+- **Ghi ở:** ADR 0021, [docs/scm-hosts.md](../../scm-hosts.md), TD-8

@@ -21,6 +21,7 @@ Kế hoạch là một đơn vị công việc có thể commit, với điều k
 - [P08–P12](done/) bổ sung quét secret, cấu hình theo repo, GitHub App và bộ demo.
 - [P13](done/2026-11-17-p13-jenkins-job-trung-tam-nhieu-repo.md) bổ sung job Jenkins trung tâm.
 - [P14](done/2026-11-20-p14-hai-duong-kich-hoat-huong-doi-tuong.md) dùng chung lõi cho GitHub App và Jenkins.
+- [P16](done/2026-11-22-p16-nha-cung-cap-scm.md) thêm GitLab, Gitea, Bitbucket Server qua lớp nhà cung cấp SCM.
 - [P15](done/2026-11-19-p15-semgrep-bo-luat-co-san.md) thay luật tự viết bằng bộ luật Semgrep `p/default` khóa bằng mã băm.
 
 ## Quy tắc chạy xuyên đêm

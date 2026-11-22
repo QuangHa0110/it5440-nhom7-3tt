@@ -11,6 +11,7 @@ class Channel(StrEnum):
     """Đường kích hoạt. Thêm đường mới = thêm một giá trị và một lớp con của `Trigger`."""
 
     GITHUB_APP = "github-app"
+    WEBHOOK = "webhook"  # webhook của máy chủ pr-triage cho GitLab, Gitea, Bitbucket (ADR 0021)
     JENKINS = "jenkins"
 
 

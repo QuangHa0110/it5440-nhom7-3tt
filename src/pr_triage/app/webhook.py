@@ -5,10 +5,10 @@ from __future__ import annotations
 import hashlib
 import hmac
 import re
-from dataclasses import dataclass
 from typing import Any
 
 from pr_triage.core.models import JobKind
+from pr_triage.core.scm import Event
 
 _COMMAND = re.compile(r"(?im)^\s*(fp|tp)\s+[0-9a-f]{6,12}\b")
 _TRIAGE_ACTIONS = {"opened", "reopened", "synchronize", "ready_for_review"}
@@ -19,17 +19,6 @@ def verify_signature(secret: str, body: bytes, header: str | None) -> bool:
         return False
     expected = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, header)
-
-
-@dataclass(frozen=True)
-class Event:
-    kind: JobKind
-    repo: str
-    pr_number: int
-    installation_id: int
-    key: str
-    draft: bool = False
-    sender: str = ""
 
 
 def parse_event(name: str, payload: dict[str, Any], bot_login: str = "") -> Event | None:

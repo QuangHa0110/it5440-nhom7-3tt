@@ -14,9 +14,11 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 from pr_triage.app.handlers import Services
 from pr_triage.app.queue import JobQueue
-from pr_triage.app.webhook import parse_event, verify_signature
 from pr_triage.core.delivery import Channel
+from pr_triage.core.errors import ScmError
 from pr_triage.core.models import Job
+from pr_triage.core.scm import ScmKind
+from pr_triage.scm.provider import ScmProvider, lower_headers
 
 log = logging.getLogger("pr_triage.app")
 
@@ -56,13 +58,15 @@ def create_app(sv: Services, queue: JobQueue | None = None) -> FastAPI:
             return JSONResponse({"status": "database lỗi"}, status_code=503)
         return JSONResponse({"status": "ready"})
 
-    @app.post("/webhook")
-    async def webhook(
-        request: Request,
-        x_hub_signature_256: Annotated[str | None, Header()] = None,
-        x_github_event: Annotated[str | None, Header()] = None,
-        x_github_delivery: Annotated[str | None, Header()] = None,
-    ) -> JSONResponse:
+    def lookup(kind: ScmKind) -> ScmProvider:
+        if kind is ScmKind.GITHUB and not sv.settings.github_enabled:
+            raise HTTPException(status_code=404)
+        try:
+            return sv.provider(kind)
+        except ScmError:
+            raise HTTPException(status_code=404) from None
+
+    async def receive(provider: ScmProvider, request: Request) -> JSONResponse:
         counters["webhooks"] += 1
         length = request.headers.get("content-length")
         if length and length.isdigit() and int(length) > sv.settings.max_body_bytes:
@@ -72,22 +76,27 @@ def create_app(sv: Services, queue: JobQueue | None = None) -> FastAPI:
         if len(body) > sv.settings.max_body_bytes:
             counters["rejected"] += 1
             raise HTTPException(status_code=413)
-        if not verify_signature(sv.settings.webhook_secret, body, x_hub_signature_256):
+        headers = lower_headers(request.headers)
+        if not provider.verify_webhook(headers, body):
             counters["rejected"] += 1
             raise HTTPException(status_code=401, detail="chữ ký không hợp lệ")
-        if x_github_event == "ping":
+        if headers.get("x-github-event") == "ping" and provider.kind is ScmKind.GITHUB:
             return JSONResponse({"pong": True})
         try:
             payload: dict[str, Any] = json.loads(body)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail="thân không phải JSON") from exc
-        event = parse_event(x_github_event or "", payload, sv.auth.bot_login())
-        if event is None or not gate.admits(Channel.GITHUB_APP, event.repo):
+        event = provider.parse_webhook(headers, payload)
+        channel = Channel.GITHUB_APP if provider.kind is ScmKind.GITHUB else Channel.WEBHOOK
+        if event is None or not gate.admits(channel, event.repo):
             counters["ignored"] += 1
             return JSONResponse({"ignored": True}, status_code=200)
         if event.draft and event.kind.value == "triage":
             counters["ignored"] += 1
             return JSONResponse({"ignored": "PR nháp"}, status_code=200)
+        delivery = headers.get(provider.delivery_header, "")
+        if delivery and provider.kind is not ScmKind.GITHUB:
+            delivery = f"{provider.kind.value}-{delivery}"
         saved = jobs.submit(
             Job(
                 kind=event.kind,
@@ -95,8 +104,7 @@ def create_app(sv: Services, queue: JobQueue | None = None) -> FastAPI:
                 pr_number=event.pr_number,
                 installation_id=event.installation_id,
                 key=event.key,
-                delivery_id=x_github_delivery
-                or f"nodelivery-{event.repo}-{event.pr_number}-{event.key}",
+                delivery_id=delivery or f"nodelivery-{event.repo}-{event.pr_number}-{event.key}",
             )  # fmt: skip
         )
         if saved is None:
@@ -104,6 +112,20 @@ def create_app(sv: Services, queue: JobQueue | None = None) -> FastAPI:
             return JSONResponse({"duplicate": True}, status_code=200)
         counters["queued"] += 1
         return JSONResponse({"queued": saved.job_id}, status_code=202)
+
+    @app.post("/webhook")
+    async def webhook(request: Request) -> JSONResponse:
+        return await receive(lookup(ScmKind.GITHUB), request)
+
+    @app.post("/webhook/{kind}")
+    async def webhook_host(kind: str, request: Request) -> JSONResponse:
+        try:
+            scm_kind = ScmKind(kind)
+        except ValueError:
+            raise HTTPException(status_code=404) from None
+        if scm_kind is ScmKind.GITHUB:
+            raise HTTPException(status_code=404)
+        return await receive(lookup(scm_kind), request)
 
     @app.get("/stats")
     def stats(x_admin_token: Annotated[str | None, Header()] = None) -> dict[str, Any]:
@@ -135,6 +157,7 @@ def build_services(settings_env: dict[str, str] | None = None) -> Services:
     """Lắp dịch vụ thật từ biến môi trường (dùng cho `pr-triage serve`)."""
     from pr_triage.app.auth import AppAuth
     from pr_triage.app.fetcher import GitFetcher
+    from pr_triage.app.providers import build_host_provider
     from pr_triage.app.settings import Settings
     from pr_triage.llm.budget import BudgetGuard
     from pr_triage.llm.client import OpenAICompatClient
@@ -151,10 +174,13 @@ def build_services(settings_env: dict[str, str] | None = None) -> Services:
     )
     engine_cls = TriageEngine if st.engine == "graph" else PlainTriageEngine
     llm = engine_cls(client, budget=budget)
+    auth = AppAuth(st.app_id, st.private_key, st.api_url) if st.github_enabled else None
+    providers = {cfg.kind: build_host_provider(cfg) for cfg in st.hosts}
     return Services(
         settings=st,
-        auth=AppAuth(st.app_id, st.private_key, st.api_url),
+        auth=auth,
         store=SqlStore(st.db),
         fetcher=GitFetcher(st.git_url_template),
         llm=llm,
+        providers=providers,
     )

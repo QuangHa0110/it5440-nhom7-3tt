@@ -6,6 +6,8 @@
 
 > Số 0018 bỏ qua 0015 đến 0017: ba ADR đó của đợt đánh giá nguồn mở đang nằm ngoài repo (xem hồ sơ kiểm thử 2026-11-18), để khi đưa vào không trùng số.
 
+> **Ghi chú 2026-11-22:** tiền đề "Z dùng cả GitHub lẫn Jenkins" trộn hai lớp (nơi chứa mã và nơi chạy). [ADR 0021](0021-ho-tro-bon-may-chu-git-mot-lop-nha-cung-cap.md) bổ sung lớp SCM; các quyết định D1 đến D6 ở đây vẫn đúng.
+
 ## Bối cảnh
 
 Hai đường kích hoạt cùng tồn tại: GitHub App (`pr-triage serve`, ADR 0012) và Jenkins (job trung tâm, P13). Trước thay đổi này:

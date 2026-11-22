@@ -17,7 +17,8 @@ RUN useradd --create-home --uid 10001 triage && mkdir -p /data && chown triage /
 USER triage
 
 ENV PR_TRIAGE_DB=/data/store.sqlite \
-    PR_TRIAGE_RULES=/app/data/rules/semgrep-default.yml     PR_TRIAGE_RULES_LOCK=/app/configs/semgrep/rulesets.lock \
+    PR_TRIAGE_RULES=/app/data/rules/semgrep-default.yml \
+    PR_TRIAGE_RULES_LOCK=/app/configs/semgrep/rulesets.lock \
     PR_TRIAGE_CATALOG=/app/configs/context/java.yml \
     PATH="/app/.venv/bin:${PATH}"
 

@@ -70,3 +70,12 @@ def test_scan_request_is_immutable() -> None:
     r = ScanRequest("a/b", 1, "abc", Channel.JENKINS)
     with pytest.raises(AttributeError):
         r.repo = "x/y"  # type: ignore[misc]
+
+
+def test_routes_accept_prefixed_repo_patterns_and_webhook_channel() -> None:
+    p = RoutePolicy.parse("webhook:gitlab:acme/*, jenkins:gitlab:legacy/*, github-app:acme/*")
+    assert p.permits(Channel.WEBHOOK, "gitlab:acme/web")
+    assert not p.permits(Channel.JENKINS, "gitlab:acme/web")
+    assert p.permits(Channel.JENKINS, "gitlab:legacy/x")
+    assert p.permits(Channel.GITHUB_APP, "acme/web")  # cùng tên trên GitHub là repo khác
+    assert not p.permits(Channel.WEBHOOK, "acme/web")

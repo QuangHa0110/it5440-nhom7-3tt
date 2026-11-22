@@ -33,23 +33,12 @@ pipeline {
             steps {
                 sh 'rm -rf out'
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    // Mỗi repo một bản clone riêng trong workspace, giữ lại giữa các build cho nhanh.
-                    dir("repos/${params.REPO.replace('/', '__')}") {
-                        withCredentials([gitUsernamePassword(credentialsId: 'github-token')]) {
-                            sh '''
-                                set -eu
-                                [ -d .git ] || git init -q
-                                git remote set-url origin "https://github.com/$REPO.git" 2>/dev/null \
-                                  || git remote add origin "https://github.com/$REPO.git"
-                                BASE="${BASE_REF:-}"
-                                if [ -z "$BASE" ]; then
-                                    BASE=$(git ls-remote --symref origin HEAD | awk '/^ref:/ { sub("refs/heads/", "", $2); print $2 }')
-                                    echo "BASE_REF trống, dùng nhánh mặc định: $BASE"
-                                fi
-                                git fetch --no-tags --force origin \
-                                  "+refs/heads/$BASE:refs/remotes/origin/base" \
-                                  "+refs/pull/$PR/head:refs/remotes/origin/pr"
-                            '''
+                    dir("repos/${params.REPO.replace('/', '__').replace(':', '__')}") {
+                        // Lấy mã qua nhà cung cấp SCM (GitHub, GitLab, Gitea, Bitbucket Server; ADR 0021).
+                        // GitHub dùng credential github-token; máy chủ khác lấy token từ PR_TRIAGE_<LOẠI>_TOKEN.
+                        withCredentials([usernamePassword(credentialsId: 'github-token',
+                                                          usernameVariable: 'GH_USER', passwordVariable: 'GITHUB_TOKEN')]) {
+                            sh 'pr-triage ci fetch --repo "$REPO" --pr "$PR" --base-ref "${BASE_REF:-}" --dest .'
                         }
                         withCredentials([string(credentialsId: 'llm-api-key', variable: 'PR_TRIAGE_LLM_API_KEY')]) {
                             sh '''
@@ -60,7 +49,8 @@ pipeline {
                                 pr-triage run --repo . \
                                   --base origin/base --head "$HEAD" --pr "$PR" --repo-alias "$REPO" \
                                   --mode "${PR_TRIAGE_MODE:-shadow}" --display "${PR_TRIAGE_DISPLAY:-B}" \
-                                  --rules "$PR_TRIAGE_HOME/data/rules/semgrep-default.yml"                                   --rules-lock "$PR_TRIAGE_HOME/configs/semgrep/rulesets.lock" \
+                                  --rules "$PR_TRIAGE_HOME/data/rules/semgrep-default.yml" \
+                                  --rules-lock "$PR_TRIAGE_HOME/configs/semgrep/rulesets.lock" \
                                   --catalog "$PR_TRIAGE_HOME/configs/context/java.yml" \
                                   --db "$TRIAGE_DB" --out "$WORKSPACE/out"
                             '''

@@ -210,3 +210,18 @@ def test_build_services_uses_budget_setting(
     budget = sv.llm.steps.budget  # type: ignore[attr-defined]
     budget.record(2_500_000)
     assert budget.allowed()
+
+
+def test_github_is_optional_once_another_host_is_enabled() -> None:
+    env = {
+        "PR_TRIAGE_ALIAS_SALT": "s", "PR_TRIAGE_GITLAB_URL": "https://gl.example/",
+        "PR_TRIAGE_GITLAB_TOKEN": "s3cr3t-tok", "PR_TRIAGE_GITLAB_WEBHOOK_SECRET": "w",
+    }  # fmt: skip
+    st = Settings.from_env(env)
+    assert not st.github_enabled and [h.kind.value for h in st.hosts] == ["gitlab"]
+    assert st.hosts[0].url == "https://gl.example"
+    assert "s3cr3t-tok" not in repr(st) and "'w'" not in repr(st)
+    with pytest.raises(SettingsError, match="GITHUB_APP_ID"):  # có GitHub dở dang thì vẫn báo thiếu
+        Settings.from_env({**env, "GITHUB_WEBHOOK_SECRET": "x"})
+    with pytest.raises(SettingsError, match="GITHUB_APP_ID"):
+        Settings.from_env({"PR_TRIAGE_ALIAS_SALT": "s"})

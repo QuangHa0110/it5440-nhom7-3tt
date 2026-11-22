@@ -8,10 +8,14 @@ from pr_triage.scm.provider import hmac_hex
 from tests.scm.helpers import FakeHost
 
 
-def provider(host: FakeHost | None = None, **kw: str) -> GitHubProvider:
+def provider(host: FakeHost | None = None, static_token: str = "", bot: str = "") -> GitHubProvider:
     h = host or FakeHost()
     return GitHubProvider(
-        api_url="https://gh.test", webhook_secret="sek", transport=h.transport, **kw
+        api_url="https://gh.test",
+        webhook_secret="sek",
+        static_token=static_token,
+        bot=bot,
+        transport=h.transport,
     )
 
 

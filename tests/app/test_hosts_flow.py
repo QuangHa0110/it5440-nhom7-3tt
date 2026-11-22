@@ -171,7 +171,7 @@ class HostEnv:
         self.setup.install(self.host, self.remote, self.bodies)
         cfg = HostConfig(self.setup.kind, BASE, "TOK", SECRET, "bot")
         self.provider = build_host_provider(cfg, self.host.transport)
-        self.provider.remote = local_remote(self.provider, self.remote)  # type: ignore[method-assign]
+        self.provider.remote = local_remote(self.provider, self.remote)  # type: ignore[method-assign,assignment]
         settings = Settings(
             app_id="", private_key="", webhook_secret="", alias_salt="salt", hosts=(cfg,),
             db=str(tmp / "store.sqlite"),
@@ -181,7 +181,7 @@ class HostEnv:
         )  # fmt: skip
         self.store = SqlStore(settings.db)
         self.services = Services(
-            settings, None, self.store, GitFetcher(), FakeLlm(),  # type: ignore[arg-type]
+            settings, None, self.store, GitFetcher(), FakeLlm(),
             providers={self.setup.kind: self.provider},
         )  # fmt: skip
         self.queue = JobQueue(self.services, 1)

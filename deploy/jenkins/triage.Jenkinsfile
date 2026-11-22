@@ -60,7 +60,7 @@ pipeline {
                                 pr-triage run --repo . \
                                   --base origin/base --head "$HEAD" --pr "$PR" --repo-alias "$REPO" \
                                   --mode "${PR_TRIAGE_MODE:-shadow}" --display "${PR_TRIAGE_DISPLAY:-B}" \
-                                  --rules "$PR_TRIAGE_HOME/configs/semgrep/java-injection.yml" \
+                                  --rules "$PR_TRIAGE_HOME/data/rules/semgrep-default.yml"                                   --rules-lock "$PR_TRIAGE_HOME/configs/semgrep/rulesets.lock" \
                                   --catalog "$PR_TRIAGE_HOME/configs/context/java.yml" \
                                   --db "$TRIAGE_DB" --out "$WORKSPACE/out"
                             '''

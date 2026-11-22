@@ -36,7 +36,7 @@ python scripts/github_app_manifest.py exchange CODE --out secrets/
 
 Lệnh này ghi `secrets/<tên>.env` (ID, đường dẫn khóa riêng, secret webhook) và tệp `.pem` với quyền `0600`, không in bí mật ra màn hình. Chép ba giá trị đó vào `.env`. **Không commit thư mục `secrets/`.**
 
-**4. Chạy máy chủ từ gốc repo.**
+**4. Chạy máy chủ từ gốc repo.** Tải bộ luật Semgrep trước (không nằm trong repo vì giấy phép, ADR 0019): `uv run python scripts/fetch_semgrep_rules.py --frozen`.
 
 ```bash
 docker compose -f deploy/docker-compose.yml up --build
@@ -129,7 +129,8 @@ Sự kiện đăng ký: `pull_request`, `issue_comment`. App không xin quyền 
 | 401 ở webhook | Secret webhook trong `.env` khác secret của App |
 | Comment "cấu hình `.pr-triage.yml` sai" | Sửa tệp ở nhánh đích theo danh sách lỗi trong comment |
 | Comment "chưa quét xong" | Lỗi khi lấy mã hoặc quét. Xem `GET /stats`, trường `error` của việc gần nhất |
-| Comment chỉ có "không có cảnh báo mới" dù có lỗ hổng | Luật quét không phủ loại lỗi đó (hiện luật tùy chỉnh phủ SQL injection, cùng bộ quét secret) |
+| Comment chỉ có "không có cảnh báo mới" dù có lỗ hổng | Bộ luật `p/default` không phủ loại lỗi đó. Bộ luật và bộ quét secret là hai nguồn cảnh báo duy nhất |
+| Máy chủ không khởi động, báo "lệch mã băm" hoặc "thiếu bộ luật" | Chạy `uv run python scripts/fetch_semgrep_rules.py --frozen` (ADR 0019) |
 | Không đăng được check run | App thiếu quyền Checks: write. Cấp quyền rồi chấp nhận trên trang cài đặt |
 
 ## Giới hạn hiện tại

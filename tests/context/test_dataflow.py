@@ -119,3 +119,43 @@ def test_servlet_entry_point_has_no_caller_noise_and_receiver_is_traced(tmp_path
     b = provider().extract(f, tmp_path)
     assert b.source is not None and "request-header" in b.source
     assert not any("nơi gọi" in m for m in b.missing)
+
+
+def test_weak_crypto_is_marked_not_applicable_without_guessing(tmp_path: Path) -> None:
+    """ADR 0019 D6: CWE không có luồng dữ liệu thì C ghi rõ không áp dụng, không đoán sink."""
+    (tmp_path / "K.java").write_text(
+        "class K {\n"
+        "  byte[] enc(byte[] data, java.security.Key key) throws Exception {\n"
+        '    javax.crypto.Cipher c = javax.crypto.Cipher.getInstance("DES");\n'
+        "    c.init(1, key);\n"
+        "    return c.doFinal(data);\n"
+        "  }\n}\n"
+    )
+    f = replace(make_finding(path="K.java", line=3, symbol="K.enc"), cwe="CWE-327")
+    b = provider().extract(f, tmp_path)
+    assert b.sink is None and b.source is None
+    assert any("không áp dụng luồng dữ liệu" in m and "CWE-327" in m for m in b.missing)
+    assert [s.role for s in b.slices] == ["sink-function"]
+
+
+def test_catalog_covers_flow_cwes_of_registry_ruleset() -> None:
+    for cwe in ("CWE-611", "CWE-502", "CWE-94", "CWE-918", "CWE-601", "CWE-23"):
+        assert CATALOG.sink_for(cwe) is not None, cwe
+    assert CATALOG.no_dataflow("CWE-319") and CATALOG.no_dataflow("CWE-327")
+    assert not CATALOG.no_dataflow("CWE-89") and not CATALOG.no_dataflow(None)
+
+
+def test_deserialization_sink_traces_back_to_request_body(tmp_path: Path) -> None:
+    (tmp_path / "D.java").write_text(
+        "class D {\n"
+        "  public void doPost(javax.servlet.http.HttpServletRequest request,\n"
+        "      javax.servlet.http.HttpServletResponse response) throws Exception {\n"
+        "    java.io.ObjectInputStream in =\n"
+        "        new java.io.ObjectInputStream(request.getInputStream());\n"
+        "    Object o = in.readObject();\n"
+        "  }\n}\n"
+    )
+    f = replace(make_finding(path="D.java", line=6, symbol="D.doPost"), cwe="CWE-502")
+    b = provider().extract(f, tmp_path)
+    assert b.sink is not None and b.sink.startswith("deserialization: D.java:6 readObject")
+    assert b.source is not None and "request-body" in b.source

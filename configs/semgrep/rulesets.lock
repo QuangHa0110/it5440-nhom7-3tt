@@ -1,0 +1,12 @@
+# Khóa bộ luật Semgrep (ADR 0019). Chỉ chứa mã băm, KHÔNG chứa luật.
+# Sửa bằng scripts/fetch_semgrep_rules.py, không sửa tay.
+version: 1
+rulesets:
+  default:
+    url: https://semgrep.dev/c/p/default
+    file: data/rules/semgrep-default.yml
+    fetched: '2026-11-19'
+    sha256: 760fa4379205c00f41b56a8b803ed9459ffaed91afe2e6f54c696b416dab72b1
+    rules: 1074
+    languages: []
+    semgrep: 1.185.0

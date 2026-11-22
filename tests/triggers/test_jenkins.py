@@ -1,13 +1,11 @@
 import json
-import urllib.error
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from pr_triage.core.delivery import Channel, RepoAllowList, RepoGate, RoutePolicy
+from pr_triage.core.scm import OpenPr
 from pr_triage.triggers import (
-    GitHubPullLister,
     JenkinsParamsTrigger,
     JenkinsPoller,
     PollState,
@@ -22,8 +20,8 @@ def gate(allow: str = "a/b, a/c", routes: str = "") -> RepoGate:
     )
 
 
-def pr(n: int, sha: str, base: str = "main", draft: bool = False) -> dict[str, Any]:
-    return {"number": n, "head": {"sha": sha}, "base": {"ref": base}, "draft": draft}
+def pr(n: int, sha: str, base: str = "main", draft: bool = False) -> OpenPr:
+    return OpenPr(n, sha, base, draft)
 
 
 def test_params_parse_valid() -> None:
@@ -94,24 +92,9 @@ def test_state_roundtrip_and_missing_file(tmp_path: Path) -> None:
     assert PollState.load(p).has_seen("a/b", 1, "x")
 
 
-def test_lister_paginates_and_never_leaks_token() -> None:
-    calls: list[tuple[str, str]] = []
-
-    def fetch(url: str, token: str) -> list[dict[str, Any]]:
-        calls.append((url, token))
-        return [pr(i, "s") for i in range(100)] if url.endswith("page=1") else [pr(500, "s")]
-
-    out = GitHubPullLister("TOKEN", "https://x/", fetch).open_prs("a/b")
-    assert len(out) == 101 and len(calls) == 2
-    assert all("TOKEN" not in url for url, _ in calls)
-
-
 def test_poller_end_to_end_second_run_is_quiet() -> None:
     data = {"a/b": [pr(1, "s1"), pr(2, "s2")], "a/c": [pr(4, "s4", draft=True)]}
-    lister = GitHubPullLister(
-        "t", fetch=lambda url, _t: data[url.split("/repos/")[1].split("/pulls")[0]]
-    )
-    poller = JenkinsPoller(lister, gate())
+    poller = JenkinsPoller(lambda repo: data[repo], gate())
     first = poller.poll(PollState())
     assert sorted(r.pr_number for r in first.requests) == [1, 2] and first.asked == 2
     second = poller.poll(first.next_state)
@@ -122,12 +105,15 @@ def test_poller_end_to_end_second_run_is_quiet() -> None:
 
 
 def test_poller_one_failing_repo_keeps_old_state_and_continues() -> None:
-    def fetch(url: str, _t: str) -> list[dict[str, Any]]:
-        if "/a/b/" in url:
-            raise urllib.error.HTTPError(url, 502, "bad", {}, None)  # type: ignore[arg-type]
+    class Boom(Exception):
+        code = 502
+
+    def lister(repo: str) -> list[OpenPr]:
+        if repo == "a/b":
+            raise Boom
         return [pr(4, "s4")]
 
-    poller = JenkinsPoller(GitHubPullLister("t", fetch=fetch), gate())
+    poller = JenkinsPoller(lister, gate())
     out = poller.poll(PollState({"a/b#1": "old"}))
     assert out.failed == frozenset({"a/b"})
     assert [r.pr_number for r in out.requests] == [4]
@@ -138,10 +124,34 @@ def test_poller_one_failing_repo_keeps_old_state_and_continues() -> None:
 def test_poller_ignores_wildcards_and_repos_routed_elsewhere() -> None:
     asked: list[str] = []
 
-    def fetch(url: str, _t: str) -> list[dict[str, Any]]:
-        asked.append(url)
+    def lister(repo: str) -> list[OpenPr]:
+        asked.append(repo)
         return []
 
     g = gate(allow="a/*, a/b, a/c", routes="github-app:a/c, jenkins:a/b")
-    JenkinsPoller(GitHubPullLister("t", fetch=fetch), g).poll(PollState())
-    assert len(asked) == 1 and "/a/b/" in asked[0]
+    JenkinsPoller(lister, g).poll(PollState())
+    assert asked == ["a/b"]
+
+
+def test_poller_handles_prefixed_hosts_without_clashing_with_github() -> None:
+    data = {"a/b": [pr(1, "gh")], "gitlab:a/b": [pr(1, "gl")]}
+    g = gate(allow="a/b, gitlab:a/b")
+    out = JenkinsPoller(lambda repo: data[repo], g).poll(PollState())
+    assert sorted((r.repo, r.head_sha) for r in out.requests) == [
+        ("a/b", "gh"),
+        ("gitlab:a/b", "gl"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "repo", ["gitlab:grp/sub/proj", "gitea:org/r", "bitbucket:PROJ/repo", "a/b"]
+)
+def test_params_accept_prefixed_and_nested_repos(repo: str) -> None:
+    [req] = JenkinsParamsTrigger().parse({"REPO": repo, "PR": "2"})
+    assert req.repo == repo
+
+
+@pytest.mark.parametrize("repo", ["svn:a/b", "github:a/b", "gitlab:", "gitlab:solo", "a/b:c"])
+def test_params_reject_unknown_prefix_or_shape(repo: str) -> None:
+    with pytest.raises(TriggerError):
+        JenkinsParamsTrigger().parse({"REPO": repo, "PR": "2"})

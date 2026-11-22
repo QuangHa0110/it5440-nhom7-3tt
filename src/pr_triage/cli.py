@@ -13,11 +13,10 @@ from pathlib import Path
 
 from pr_triage import __version__
 from pr_triage.bot import FeedbackCollector, choose_sink, resolve_states
-from pr_triage.bot.github import GitHubScm
 from pr_triage.core.alias import Aliaser
-from pr_triage.core.errors import ScanError
+from pr_triage.core.errors import ScanError, ScmError
 from pr_triage.core.models import HumanLabel, PrRef, RunMode, TriageResult, Variant
-from pr_triage.core.ports import StorePort
+from pr_triage.core.ports import ScmPort, StorePort
 from pr_triage.pipeline import result_io
 from pr_triage.pipeline.build import BuildOptions, build_pipeline
 from pr_triage.pipeline.replay import plan_replay
@@ -142,6 +141,11 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--head-sha", default="")
     p = cs.add_parser("poll", help="in PR đang mở có đầu nhánh mới (TSV), ghi FILE.next")
     p.add_argument("--state", type=Path, required=True)
+    p = cs.add_parser("fetch", help="lấy nhánh đích (origin/base) và đầu PR (origin/pr) vào --dest")
+    p.add_argument("--repo", required=True)
+    p.add_argument("--pr", required=True)
+    p.add_argument("--base-ref", default="")
+    p.add_argument("--dest", type=Path, default=Path("."))
     srv = sub.add_parser("serve", help="chạy GitHub App (máy chủ webhook)")
     srv.add_argument("--host", default="0.0.0.0")
     srv.add_argument("--port", type=int, default=8080)
@@ -347,9 +351,11 @@ def _serve(args: argparse.Namespace) -> int:
 
 
 def _ci(args: argparse.Namespace) -> int:
+    from pr_triage.app.fetcher import GitFetcher
+    from pr_triage.app.providers import provider_for_repo
     from pr_triage.core.delivery import DeliveryConfigError, RepoAllowList, RepoGate, RoutePolicy
+    from pr_triage.core.scm import OpenPr
     from pr_triage.triggers import (
-        GitHubPullLister,
         JenkinsParamsTrigger,
         JenkinsPoller,
         PollState,
@@ -377,14 +383,25 @@ def _ci(args: argparse.Namespace) -> int:
                   file=sys.stderr)  # fmt: skip
             return 1
         return 0
-    if args.ci_cmd == "poll":
-        token = os.environ.get("GITHUB_TOKEN", "")
-        if not token:
-            print("Thiếu GITHUB_TOKEN.", file=sys.stderr)
+    if args.ci_cmd == "fetch":
+        try:
+            provider = provider_for_repo(args.repo)
+            base = GitFetcher().sync(
+                args.dest, provider.remote(args.repo), provider.token(), int(args.pr), args.base_ref
+            )
+        except ScmError as exc:
+            print(f"không lấy được mã: {exc}", file=sys.stderr)
             return 2
+        print(json.dumps({"base": base}))
+        return 0
+    if args.ci_cmd == "poll":
         if not gate.allow.patterns:
             print("PR_TRIAGE_ALLOWED_REPOS trống: không có repo nào để hỏi.", file=sys.stderr)
-        lister = GitHubPullLister(token, os.environ.get("GITHUB_API_URL", "https://api.github.com"))
+
+        def lister(repo: str) -> list[OpenPr]:
+            provider = provider_for_repo(repo)
+            return provider.open_prs(provider.token(), repo)
+
         poller = JenkinsPoller(lister, gate)
         outcome = poller.poll(PollState.load(args.state))
         outcome.next_state.save(args.state.with_name(args.state.name + ".next"))
@@ -393,8 +410,16 @@ def _ci(args: argparse.Namespace) -> int:
         for r in outcome.requests:
             print(f"{r.repo}\t{r.pr_number}\t{r.base_ref}\t{r.head_sha}")
         print(f"{outcome.asked} repo, {len(outcome.requests)} PR cần quét.", file=sys.stderr)
-        return 0
+        return 2 if outcome.failed and not outcome.asked else 0
     return 2
+
+
+def _scm_for(repo: str) -> ScmPort:
+    """ScmPort cho một mã định danh repo (GitHub không tiền tố), token tĩnh từ môi trường."""
+    from pr_triage.app.providers import provider_for_repo
+
+    provider = provider_for_repo(repo)
+    return provider.scm(provider.token())
 
 
 def _publish(args: argparse.Namespace) -> int:
@@ -404,7 +429,7 @@ def _publish(args: argparse.Namespace) -> int:
     store = SqlStore(args.db)
     pr = PrRef(args.slug, args.pr, result.run.head_sha, result.run.base_sha)
     try:
-        sink = choose_sink(args.post, lambda: GitHubScm(os.environ["GITHUB_TOKEN"]), store)
+        sink = choose_sink(args.post, lambda: _scm_for(args.slug), store)
         ref = sink.deliver(result, pr)
         if args.post:
             print(json.dumps({"comment_ref": ref, "mode": result.run.mode.value}))
@@ -423,7 +448,7 @@ def _feedback(args: argparse.Namespace) -> int:
     if not salt:
         print("thiếu PR_TRIAGE_ALIAS_SALT (muối bí danh, giữ trong Z)", file=sys.stderr)
         return 2
-    scm = GitHubScm(os.environ["GITHUB_TOKEN"])
+    scm = _scm_for(args.slug)
     events = FeedbackCollector(scm, store, Aliaser(salt)).collect(result, pr, args.comment_ref)
     closed = scm.pr_state(pr) != "open"
     for alert in resolve_states(
@@ -442,7 +467,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
         return _dispatch(args)
-    except ScanError as exc:
+    except (ScanError, ScmError) as exc:
         print(f"LỖI: {exc}", file=sys.stderr)
         return 2
 

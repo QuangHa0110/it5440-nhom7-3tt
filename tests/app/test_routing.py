@@ -1,7 +1,6 @@
 """Hai đường kích hoạt không quét đôi một repo (ADR 0018)."""
 
 import json
-import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -59,11 +58,11 @@ def test_settings_default_keeps_old_behaviour() -> None:
 
 
 @pytest.fixture
-def routed() -> Iterator[Env]:
-    with tempfile.TemporaryDirectory() as d:
-        e = Env(Path(d), routes="jenkins:o/*, github-app:x/*")
-        yield e
-        e.queue.shutdown()
+def routed(tmp_path: Path) -> Iterator[Env]:
+    e = Env(tmp_path, routes="jenkins:o/*, github-app:x/*")
+    yield e
+    e.queue.shutdown()
+    e.store.close()  # Windows không xóa được thư mục tạm khi SQLite còn mở
 
 
 def test_repo_routed_to_jenkins_is_ignored_by_app(routed: Env) -> None:

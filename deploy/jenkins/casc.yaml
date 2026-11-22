@@ -43,7 +43,7 @@ jobs:
       pipelineJob('pr-triage') {
         description('Job trung tâm: quét PR của mọi repo trong PR_TRIAGE_ALLOWED_REPOS. Repo được quét không cần Jenkinsfile.')
         parameters {
-          stringParam('REPO', '', 'owner/ten-repo trên GitHub')
+          stringParam('REPO', '', 'owner/ten-repo trên GitHub; máy chủ khác: gitlab:nhom/du-an, gitea:org/repo, bitbucket:KHOA/repo')
           stringParam('PR', '', 'Số PR')
           stringParam('BASE_REF', '', 'Nhánh đích. Để trống thì dùng nhánh mặc định của repo')
           stringParam('HEAD_SHA', '', 'Commit cần quét. Để trống thì dùng đầu nhánh PR hiện tại')

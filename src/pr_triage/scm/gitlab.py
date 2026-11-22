@@ -180,6 +180,7 @@ class GitLabScm(_GitLab):
 
 class GitLabProvider(ScmProvider):
     kind = ScmKind.GITLAB
+    delivery_header = "x-gitlab-event-uuid"
 
     def __init__(
         self,

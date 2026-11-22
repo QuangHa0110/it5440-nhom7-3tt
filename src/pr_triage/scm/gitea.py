@@ -187,6 +187,7 @@ class GiteaScm(_Gitea):
 
 class GiteaProvider(ScmProvider):
     kind = ScmKind.GITEA
+    delivery_header = "x-gitea-delivery"
 
     def __init__(
         self,

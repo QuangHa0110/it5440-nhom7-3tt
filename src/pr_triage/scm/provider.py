@@ -35,6 +35,7 @@ class ScmProvider(ABC):
     """Mỗi loại máy chủ cài đặt đủ các phương thức dưới đây. Lõi không biết loại nào đang chạy."""
 
     kind: ScmKind
+    delivery_header: str = ""  # header chứa mã giao hàng duy nhất của webhook
 
     @property
     def webhook_path(self) -> str:

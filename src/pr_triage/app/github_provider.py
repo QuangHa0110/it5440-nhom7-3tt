@@ -17,6 +17,7 @@ from pr_triage.scm.provider import Headers, ScmProvider
 
 class GitHubProvider(ScmProvider):
     kind = ScmKind.GITHUB
+    delivery_header = "x-github-delivery"
 
     def __init__(
         self,

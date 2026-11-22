@@ -201,6 +201,7 @@ class BitbucketScm(_Bitbucket):
 
 class BitbucketServerProvider(ScmProvider):
     kind = ScmKind.BITBUCKET
+    delivery_header = "x-request-id"
 
     def __init__(
         self,

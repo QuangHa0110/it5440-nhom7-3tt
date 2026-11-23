@@ -5,8 +5,8 @@ rulesets:
   default:
     url: https://semgrep.dev/c/p/default
     file: data/rules/semgrep-default.yml
-    fetched: '2026-11-19'
-    sha256: 760fa4379205c00f41b56a8b803ed9459ffaed91afe2e6f54c696b416dab72b1
+    fetched: '2026-11-23'
+    sha256: 9c76333af7c9555a45560d8398cf5fa03432d8f86ca4e458eac3686599fd8f1b
     rules: 1074
     languages: []
     semgrep: 1.185.0

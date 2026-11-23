@@ -126,6 +126,17 @@ def test_reactions_and_commits() -> None:
     assert scm.list_commits(pr) == ["a", "b"]
 
 
+def test_empty_reactions_accepts_json_null() -> None:
+    host = FakeHost()
+    host.on(
+        "GET",
+        rf"{R}/issues/comments/9/reactions\?.*",
+        lambda *_: httpx.Response(200, content=b"null"),
+    )
+    scm = provider(host).scm("T")
+    assert scm.list_reactions(PrRef(REPO, 4), "9") == []
+
+
 def test_check_is_noop_and_remote() -> None:
     host = FakeHost()
     p = provider(host)

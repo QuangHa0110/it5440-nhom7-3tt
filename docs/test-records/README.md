@@ -12,3 +12,4 @@ Dùng ngày theo múi giờ `Asia/Ho_Chi_Minh`, ví dụ `2026-11-18/`. Không l
 
 - [2026-11-17 — Kiểm thử end-to-end qua GitHub App](2026-11-17/README.md)
 - [2026-11-18 — Webhook, bộ test và xác minh khởi động](2026-11-18/README.md)
+- [2026-11-23 — E2E trên Gitea, GitLab CE và Jenkins](2026-11-23/README.md)

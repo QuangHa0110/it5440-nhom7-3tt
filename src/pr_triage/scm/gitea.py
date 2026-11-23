@@ -58,6 +58,8 @@ class _Gitea:
         sep = "&" if "?" in path else "?"
         for page in range(1, MAX_PAGES):
             chunk = self._c.json("GET", f"{path}{sep}page={page}&limit={LIMIT}")
+            if chunk is None:
+                break
             out.extend(chunk)
             if len(chunk) < LIMIT:
                 break

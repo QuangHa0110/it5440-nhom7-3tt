@@ -11,7 +11,8 @@ WORKDIR /app
 COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
 COPY configs ./configs
-RUN uv sync --no-dev --frozen
+RUN uv sync --no-dev --frozen \
+    && uv pip install --python /app/.venv/bin/python "semgrep==1.185.0"
 
 RUN useradd --create-home --uid 10001 triage && mkdir -p /data && chown triage /data
 USER triage

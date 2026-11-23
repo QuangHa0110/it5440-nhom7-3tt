@@ -53,6 +53,7 @@ select = ["E", "F", "I", "UP", "B"]
 "src/pr_triage/evaluation/compute.py" = ["E501"]
 "src/pr_triage/store/sql.py" = ["E501"]
 "scripts/*.py" = ["E501"]
+"analysis/seeded_bugs.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -67,7 +68,7 @@ markers = [
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["src", "tests"]
+files = ["src", "tests", "analysis"]
 mypy_path = ["scripts"]
 
 [[tool.mypy.overrides]]

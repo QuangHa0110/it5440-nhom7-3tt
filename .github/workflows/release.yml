@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Tag khớp phiên bản trong pyproject.toml
         run: |
           tag="${GITHUB_REF_NAME#v}"

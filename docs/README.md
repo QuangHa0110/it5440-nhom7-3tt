@@ -8,6 +8,7 @@
 | [Jenkins](../deploy/jenkins/README.md) | Cài đặt và vận hành job quét PR nhiều repo |
 | [scm-hosts.md](scm-hosts.md) | GitHub, GitLab, Gitea, Bitbucket Server: mã định danh repo, biến cấu hình, webhook, khác biệt |
 | [demo.md](demo.md) | Kịch bản demo sáu PR |
+| [huong-dan-chon-repo-va-pr.md](huong-dan-chon-repo-va-pr.md) | Tiêu chí và quy trình để thành viên chọn repo, PR và chạy ba cách A, B, C |
 | [git-workflow.md](git-workflow.md) | Quy trình nhánh, PR, release, tag khóa cấu hình |
 | [adr/](adr/) | Quyết định kiến trúc, chỉ thêm không sửa |
 | [plans/](plans/) | Kế hoạch theo vòng đời `queued → active → done \| failed` |

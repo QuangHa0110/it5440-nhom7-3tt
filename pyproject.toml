@@ -1,0 +1,99 @@
+[project]
+name = "it5440-nhom7-3tt"
+version = "0.1.0"
+description = "IT5440 Nhóm 7, đề tài 3TT: LLM lọc cảnh báo bảo mật trên pull request"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.141.1",
+    "httpx>=0.28.1",
+    "langgraph>=1.2.21",
+    "pyjwt[crypto]>=2.15.1",
+    "pyyaml>=6.0.3",
+    "scipy>=1.18.1",
+    "statsmodels>=0.15.0",
+    "tree-sitter>=0.26.1",
+    "tree-sitter-java>=0.23.5",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+pr-triage = "pr_triage.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pr_triage"]
+
+[dependency-groups]
+dev = [
+    "bump-my-version>=0.26",
+    "mypy>=1.11",
+    "pre-commit>=3.5",
+    "pytest>=8",
+    "ruff>=0.6",
+    "semgrep>=1.185.0",
+    "types-pyyaml>=6.0.12.20261113",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+extend-exclude = ["reports", "data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+".claude/hooks/*" = ["E501"]
+"src/pr_triage/llm/prompt.py" = ["E501"]
+"src/pr_triage/evaluation/compute.py" = ["E501"]
+"src/pr_triage/store/sql.py" = ["E501"]
+"scripts/*.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+pythonpath = ["."]
+markers = [
+    "unit: kiểm thử đơn vị, chạy nhanh, không mạng",
+    "integration: cần công cụ quét hoặc dịch vụ ngoài",
+    "slow: chạy lâu, không chạy trong CI mặc định",
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "tests"]
+mypy_path = ["scripts"]
+
+[[tool.mypy.overrides]]
+module = ["scipy.*", "statsmodels.*"]
+ignore_missing_imports = true
+
+# Phiên bản chỉ đổi bằng `make bump PART=patch|minor|major` (xem docs/git-workflow.md, ADR 0001).
+[tool.bumpversion]
+current_version = "0.1.0"
+parse = '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'
+serialize = ["{major}.{minor}.{patch}"]
+commit = true
+tag = true
+sign_tags = false
+tag_name = "v{new_version}"
+tag_message = "Release {new_version}"
+message = "chore(release): nâng phiên bản {current_version} -> {new_version}"
+allow_dirty = false
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+regex = false
+
+[[tool.bumpversion.files]]
+filename = "src/pr_triage/__init__.py"
+search = '__version__ = "{current_version}"'
+replace = '__version__ = "{new_version}"'

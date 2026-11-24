@@ -1,0 +1,35 @@
+' Thành phần tham gia dùng chung cho các sơ đồ tuần tự, để tên và thứ tự nhất quán.
+' Mỗi thủ tục khai báo một nhóm. Sơ đồ chỉ gọi nhóm nó cần.
+!include zones.iuml
+
+!procedure $lane_people()
+actor "Lập trình viên" as dev
+!endprocedure
+
+!procedure $lane_scm()
+participant "SCM\n(máy chủ mã nguồn)" as scm $C_EXTERNAL
+!endprocedure
+
+!procedure $lane_pipeline()
+box "Job triage (không có quyền ghi)" $C_ZONE_Z
+  participant "Pipeline\n(pipeline)" as pipe $C_OURS
+  participant "Scanner\n(scan)" as scan $C_REUSED
+  participant "Normalizer\n(normalize)" as norm $C_OURS
+  participant "ContextExtractor\n(context)" as ctx $C_OURS
+  participant "TriageEngine\n(llm)" as llm $C_OURS
+end box
+!endprocedure
+
+!procedure $lane_model()
+participant "Mô hình\n(tại chỗ hoặc cloud)" as model $C_EXTERNAL
+!endprocedure
+
+!procedure $lane_store()
+database "Store\n(SQLite + blob)" as store $C_OURS
+!endprocedure
+
+!procedure $lane_publish()
+box "Job publish (chỉ quyền comment)" $C_ZONE_Z
+  participant "Publisher\n(bot)" as pub $C_OURS
+end box
+!endprocedure

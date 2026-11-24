@@ -1,0 +1,69 @@
+@startuml 04-seq-pr-flow
+!include include/style.iuml
+!include include/participants.iuml
+title Sơ đồ 4. Luồng xử lý một pull request (chế độ comment)
+autonumber "<b>0"
+
+$lane_people()
+$lane_scm()
+participant "CI" as ci $C_EXTERNAL
+$lane_pipeline()
+$lane_model()
+$lane_store()
+$lane_publish()
+
+dev -> scm : mở hoặc cập nhật PR
+scm -> ci : sự kiện PR (head, base)
+ci -> pipe : pr-triage run --pr N
+
+== Quét và chuẩn hóa ==
+pipe -> scm : lấy head và merge-base (chỉ đọc)
+pipe -> scan : quét bản head
+scan --> pipe : SARIF (head)
+pipe -> scan : quét bản base
+scan --> pipe : SARIF (base)
+pipe -> norm : chuẩn hóa, tính dấu vân tay, gộp trùng
+norm --> pipe : cảnh báo mới = head trừ base
+pipe -> store : lưu lượt chạy và cảnh báo (cách A)
+
+== Trích ngữ cảnh và nhận định ==
+loop mỗi cảnh báo mới
+  pipe -> ctx : trích ngữ cảnh cho cách B và C
+  ctx --> pipe : SnippetContext, DataflowContext
+  pipe -> llm : nhận định theo cách B
+  llm -> model : một yêu cầu, không có công cụ
+  model --> llm : JSON
+  llm --> pipe : Verdict(B)
+  pipe -> llm : nhận định theo cách C
+  llm -> model : một yêu cầu, không có công cụ
+  model --> llm : JSON
+  llm --> pipe : Verdict(C)
+  pipe -> store : lưu ngữ cảnh, nhận định, token, thời gian
+end
+
+== Chọn cách hiển thị ==
+pipe -> pipe : DisplayPolicy: lấy nhận định của\ncách đã chọn trên tập dev
+pipe -> store : lưu kết quả hiển thị dự kiến
+pipe --> ci : artifact triage-result.json
+
+== Đăng comment ==
+ci -> pub : pr-triage publish --pr N
+pub -> store : đọc kết quả của lượt chạy
+alt chế độ comment
+  pub -> scm : tạo hoặc cập nhật MỘT comment\n(tìm theo dấu ẩn)
+  scm --> dev : thông báo
+else chế độ chạy ngầm hoặc chạy lại lịch sử
+  pub -> store : chỉ ghi log, không gọi SCM
+end
+pub -> store : lưu mã comment và nội dung đã đăng
+
+== Khi có lỗi ==
+alt quét lỗi, hết ngân sách, hoặc LLM không trả lời
+  pipe -> store : ghi lỗi, đánh dấu lượt chạy suy giảm
+  pub -> scm : đăng trạng thái "chưa quét xong"\nhoặc cảnh báo gốc chưa lọc
+  note over pub, scm
+    Bot không bao giờ kết luận PR an toàn
+    và không bao giờ chặn merge.
+  end note
+end
+@enduml

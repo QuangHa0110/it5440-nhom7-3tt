@@ -8,32 +8,48 @@ Hướng TT: áp dụng các kỹ thuật phân tích chương trình hướng b
 
 ## Tài liệu
 
-| File | Nội dung |
+| Tài liệu | Nội dung |
 |---|---|
-| [docs/huong-dan-tieu-luan.md](docs/huong-dan-tieu-luan.md) | Tóm tắt yêu cầu, cách chấm điểm, lịch báo cáo và quy cách trình bày |
-| [docs/tom-tat-bai-bao.md](docs/tom-tat-bai-bao.md) | Tóm tắt 4 bài báo giảng viên giao và cách dùng trong đề tài |
-| [docs/papers/README.md](docs/papers/README.md) | Link tải 4 bài báo (PDF không lưu trên repo) |
+| [Mục lục tài liệu](docs/README.md) | Thiết kế, quy trình phát triển và hồ sơ kiểm thử |
+| [Tài liệu đề tài](docs/project/README.md) | Proposal hiện hành, yêu cầu môn học, khảo sát và bản nháp |
+| [GitHub App](docs/github-app.md), [Jenkins](deploy/jenkins/README.md), [demo](docs/demo.md) | Cài đặt, vận hành và chạy thử |
+
+## Chạy thử
+
+```bash
+make setup                      # môi trường uv và pre-commit
+cp .env.example .env            # điền PR_TRIAGE_LLM_API_KEY và PR_TRIAGE_LLM_MODEL, không commit
+make check                      # lint, mypy, test
+make e2e                        # đầu cuối trên repo Java thử với cổng LLM thật
+uv run pr-triage --help         # run, replay, publish, feedback, eval, serve
+uv run pr-triage serve          # GitHub App, xem docs/github-app.md
+docker compose -f deploy/docker-compose.yml up --build   # GitHub App qua Docker
+python scripts/demo_repo.py --workdir /tmp/demo --dry-run   # bộ demo, xem docs/demo.md
+```
+
+Với dữ liệu của công ty Z, chỉ dùng mô hình tại chỗ hoặc khi Z đồng ý bằng văn bản (`PR_TRIAGE_LLM_ALLOW_EXTERNAL`). Xem [docs/architecture.md](docs/architecture.md) và [docs/adr/](docs/adr/).
 
 ## Cấu trúc thư mục
 
 ```
-docs/        Tài liệu, kế hoạch, tóm tắt bài báo
-pipeline/    Script và cấu hình chạy các công cụ quét, file CI
-rules/       Luật Semgrep/CodeQL tùy biến (kể cả luật do LLM sinh)
-analysis/    Script hợp nhất, khử trùng lặp, gán nhãn, thống kê
-results/     Số liệu tổng hợp ĐÃ ẨN DANH (kết quả thô nằm ngoài git)
-paper/       Bài báo (LaTeX) và báo cáo đầy đủ
-slides/      Slide các lần báo cáo
+src/pr_triage/   mã: scan, normalize, context, llm, bot, evaluation, cli
+tests/           kiểm thử, dữ liệu giả ở tests/fixtures/
+configs/         luật Semgrep, prompt, schema, manifest khóa cho eval
+deploy/          cấu hình triển khai GitHub App và Jenkins
+data/            dữ liệu chạy, không commit
+reports/         số liệu ẩn danh, bài báo (LaTeX), slide
+docs/            proposal và tài liệu môn học, ADR, kế hoạch, nhật ký kỹ thuật
 ```
 
 ## Quy tắc của repo
 
 Repo đang ở chế độ **public**:
 
-- **Không commit** tên công ty Z, tên dự án nội bộ, đoạn mã nguồn, đường dẫn nội bộ hay kết quả quét thô. Kết quả thô để trong `results/raw/` hoặc `results/company/`, hai thư mục này đã nằm trong `.gitignore`.
+- **Không commit** tên công ty Z, tên dự án nội bộ, đoạn mã nguồn, đường dẫn nội bộ hay kết quả quét thô. Kết quả thô để trong `data/raw/` hoặc `data/company/`, hai thư mục này đã nằm trong `.gitignore`.
 - **Không bao giờ commit secret.** Secret tìm thấy khi quét chỉ báo riêng cho công ty để thu hồi.
 - Không commit PDF bài báo, tài liệu của giảng viên hay danh sách học viên.
-- Mỗi người làm trên nhánh riêng (ví dụ `sast-rules`, `ci-pipeline`), rồi mở Pull Request vào `main`.
+- Nhánh: `main` (release candidate, tag `vX.Y.Z`), `dev` (phát triển chung), nhánh cá nhân `{tên dev}/{slug}/{nội dung}` mở PR vào `dev`. Chi tiết: [docs/git-workflow.md](docs/git-workflow.md).
+- Sau khi clone: `make setup` (môi trường uv và pre-commit). Trước khi mở PR: `make check`.
 
 ## Mốc thời gian
 

@@ -1,0 +1,62 @@
+@startuml 10-seq-evaluation
+!include include/style.iuml
+!include include/zones.iuml
+title Sơ đồ 10. Luồng đánh giá ngoại tuyến: từ tập cảnh báo đến số liệu công bố
+autonumber "<b>0"
+
+actor "Người tổ chức\ngán nhãn" as org
+actor "Người gán nhãn\n1 và 2" as lab
+actor "Người phân xử,\nkỹ sư Z" as adj
+box "evaluation (chạy trong Z)" $C_ZONE_Z
+  participant "PoolBuilder" as pool $C_OURS
+  participant "FreezeGuard" as freeze $C_OURS
+  participant "BlindLabeling" as blind $C_OURS
+  participant "Metrics" as metrics $C_OURS
+  participant "Exporter" as exporter $C_OURS
+end box
+database "Store" as store $C_OURS
+actor "Người duyệt của Z" as approver
+participant "Repo public" as pubrepo $C_ZONE_PUBLIC
+
+== Dựng tập cảnh báo ==
+org -> pool : eval pool --cutoff <ngày>
+pool -> store : lấy cảnh báo duy nhất từ replay và PR mới
+pool -> store : gán split: PR cũ → dev, PR mới và repo giữ riêng → eval
+
+== Chỉnh trên dev, rồi khóa ==
+org -> freeze : freeze (sau khi chốt prompt, ngưỡng, cách hiển thị)
+freeze -> freeze : băm prompt, schema, luật, phiên bản công cụ, mô hình
+freeze --> org : configs/eval/manifest.json + tag eval-freeze-n
+note over freeze
+  Chạy trên eval bị từ chối nếu băm cấu hình
+  hiện tại khác manifest đã gắn tag.
+end note
+
+== Gán nhãn mù ==
+org -> blind : label export --split eval
+blind -> store : đọc cảnh báo và vị trí mã (KHÔNG đọc Verdict)
+blind --> lab : phiếu riêng từng người, thứ tự ngẫu nhiên
+lab -> blind : label import (nhãn, một câu lý do, vị trí mã)
+blind -> store : lưu Label
+blind -> metrics : tính Cohen's kappa
+alt kappa < 0,6
+  metrics --> org : dừng, sửa tiêu chí rồi gán tiếp
+else kappa ≥ 0,6
+  blind --> adj : hàng đợi ca bất đồng và ca Không xác định
+  adj -> blind : nhãn cuối
+  blind -> store : lưu Adjudication
+end
+
+== Tính số đo ==
+org -> metrics : eval metrics --split eval
+metrics -> freeze : kiểm tra băm cấu hình
+metrics -> store : nối Adjudication với Verdict của A, B, C
+metrics --> org : tỉ lệ kèm mẫu số và khoảng Wilson,\nMcNemar, bootstrap theo PR,\nlượt đọc tiết kiệm trên mỗi lỗi thật bị mất
+
+== Xuất số liệu ==
+org -> exporter : eval export
+exporter -> exporter : chỉ bảng tổng hợp, gộp nhóm nhỏ hơn k,\nbỏ tên file, tên luật nội bộ, loại lỗi chưa sửa
+exporter --> approver : gói xuất + danh sách kiểm tra
+approver --> exporter : duyệt
+exporter -> pubrepo : reports/results/ (qua PR vào dev)
+@enduml

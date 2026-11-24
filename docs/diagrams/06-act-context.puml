@@ -1,0 +1,66 @@
+@startuml 06-act-context
+!include include/style.iuml
+title Sơ đồ 6. Thuật toán trích ngữ cảnh luồng dữ liệu (cách C)
+
+start
+:Nhận cảnh báo: luật, CWE, file, dòng,
+vết luồng dữ liệu của công cụ (nếu có);
+:Phân tích cú pháp file bằng tree-sitter,
+tìm hàm bao quanh vị trí báo (sink);
+if (Tìm được hàm bao quanh?) then (không)
+  :Ghi "không xác định được hàm" vào missing;
+  :Trả về ngữ cảnh kiểu cách B;
+  stop
+else (có)
+endif
+:Xác định đối số đi vào thao tác nhạy cảm
+theo danh mục sink của CWE;
+if (Công cụ có vết luồng dữ liệu?) then (có)
+  :Dùng vết làm hạt giống:
+  nguồn, biến trung gian, sink;
+else (không)
+  :Cắt lùi trong hàm: tìm các phép gán
+  và lời gọi tạo ra giá trị đối số;
+endif
+
+partition "Mở rộng xuyên hàm, tối đa 2 bước gọi" {
+  repeat
+    if (Giá trị đến từ tham số của hàm?) then (có)
+      :Tra SymbolIndex tìm nơi gọi hàm này;
+      if (Nhiều ứng viên trùng tên?) then (có)
+        :Lấy tối đa k ứng viên,
+        ghi "mơ hồ" vào missing;
+      else (không)
+      endif
+      :Thêm đoạn mã nơi gọi;
+    elseif (Giá trị đến từ kết quả một lời gọi?) then (có)
+      :Thêm thân hàm được gọi;
+      if (Hàm thuộc danh mục làm sạch?) then (có)
+        :Đánh dấu vai trò sanitizer;
+      else (không)
+        :Đánh dấu "ứng viên làm sạch chưa rõ";
+      endif
+    elseif (Khớp danh mục nguồn?) then (có)
+      :Ghi nguồn: tham số request,
+      header, file, cơ sở dữ liệu;
+    else (không rõ)
+      :Ghi "nguồn chưa xác định" vào missing;
+    endif
+  repeat while (Còn giá trị chưa lần ra, chưa quá 2 bước,
+chưa quá trần dung lượng và thời gian?) is (còn)
+  ->hết;
+}
+
+if (Vượt trần dung lượng hoặc thời gian?) then (có)
+  :Cắt bớt theo thứ tự ưu tiên:
+  sink, hàm làm sạch, nguồn, mã liên quan.
+  Ghi phần bị cắt vào missing;
+else (không)
+endif
+:Đóng gói ContextBundle:
+source, sink, sanitizers,
+slices[file, dòng đầu, dòng cuối, vai trò],
+missing[];
+:Tính băm của bundle (dùng cho cache và tái lập);
+stop
+@enduml

@@ -1,0 +1,13 @@
+# Từ gốc repo: `docker compose -f deploy/docker-compose.yml up --build`.
+# Trước đó tải bộ luật Semgrep (ADR 0019): `uv run python scripts/fetch_semgrep_rules.py --frozen`.
+services:
+  pr-triage:
+    build: ..
+    env_file: ../.env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../data/app:/data
+      # Bộ luật không nằm trong image (giấy phép không cho phân phối lại), gắn từ máy chủ.
+      - ../data/rules:/app/data/rules:ro
+    restart: unless-stopped

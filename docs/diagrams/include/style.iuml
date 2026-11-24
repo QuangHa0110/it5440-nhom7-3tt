@@ -1,0 +1,74 @@
+' Kiểu trình bày dùng chung cho mọi sơ đồ. Nạp bằng: !include include/style.iuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam ArrowColor #44546A
+skinparam ArrowFontSize 11
+skinparam ArrowFontColor #333333
+skinparam TitleFontSize 16
+skinparam TitleFontStyle bold
+skinparam LegendBackgroundColor #FFFFFF
+skinparam LegendBorderColor #B0B7C3
+skinparam LegendFontSize 11
+skinparam NoteBackgroundColor #FFF8DC
+skinparam NoteBorderColor #C9B458
+skinparam NoteFontSize 11
+skinparam wrapWidth 220
+skinparam maxMessageSize 180
+
+skinparam rectangle {
+  BorderColor #44546A
+  BackgroundColor #FFFFFF
+}
+skinparam component {
+  BorderColor #44546A
+  BackgroundColor #FFFFFF
+  ArrowColor #44546A
+}
+skinparam interface {
+  BorderColor #44546A
+  BackgroundColor #FFFFFF
+}
+skinparam node {
+  BorderColor #44546A
+  BackgroundColor #FFFFFF
+}
+skinparam database {
+  BorderColor #44546A
+  BackgroundColor #FFFFFF
+}
+skinparam package {
+  BorderColor #8497B0
+  FontStyle bold
+}
+skinparam class {
+  BorderColor #44546A
+  BackgroundColor #FFFFFF
+  ArrowColor #44546A
+  AttributeFontSize 11
+}
+skinparam state {
+  BorderColor #44546A
+  BackgroundColor #FFFFFF
+  ArrowColor #44546A
+}
+skinparam activity {
+  BorderColor #44546A
+  BackgroundColor #FFFFFF
+  DiamondBorderColor #44546A
+  DiamondBackgroundColor #F2F2F2
+}
+skinparam sequence {
+  LifeLineBorderColor #8497B0
+  ParticipantBorderColor #44546A
+  ParticipantBackgroundColor #FFFFFF
+  ActorBorderColor #44546A
+  GroupBorderColor #8497B0
+  GroupBackgroundColor #F2F2F2
+  BoxBorderColor #B0B7C3
+  DividerBackgroundColor #F2F2F2
+}
+hide empty members
+hide circle

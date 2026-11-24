@@ -1,0 +1,102 @@
+# Cấu hình Jenkins dạng mã (JCasC). Giá trị ${...} lấy từ deploy/jenkins/.env.
+jenkins:
+  systemMessage: "Jenkins thử nghiệm pr-triage (chỉ chạy cục bộ)"
+  numExecutors: 2
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: admin
+          password: ${JENKINS_ADMIN_PASSWORD}
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+unclassified:
+  location:
+    url: http://localhost:8081/
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: github-token
+              username: pr-triage-bot
+              password: ${GITHUB_TOKEN}
+              description: "Token GitHub: đọc mã và comment PR trên các repo cho phép"
+          - string:
+              scope: GLOBAL
+              id: llm-api-key
+              secret: ${PR_TRIAGE_LLM_API_KEY:-none}
+              description: "Khóa LLM"
+          - string:
+              scope: GLOBAL
+              id: webhook-token
+              secret: ${PR_TRIAGE_WEBHOOK_TOKEN}
+              description: "Token trong URL webhook cấp tổ chức"
+
+# Hai job, script đọc từ /usr/share/jenkins/pr-triage (chép vào lúc build image).
+jobs:
+  - script: |
+      pipelineJob('pr-triage') {
+        description('Job trung tâm: quét PR của mọi repo trong PR_TRIAGE_ALLOWED_REPOS. Repo được quét không cần Jenkinsfile.')
+        parameters {
+          stringParam('REPO', '', 'owner/ten-repo trên GitHub; máy chủ khác: gitlab:nhom/du-an, gitea:org/repo, bitbucket:KHOA/repo')
+          stringParam('PR', '', 'Số PR')
+          stringParam('BASE_REF', '', 'Nhánh đích. Để trống thì dùng nhánh mặc định của repo')
+          stringParam('HEAD_SHA', '', 'Commit cần quét. Để trống thì dùng đầu nhánh PR hiện tại')
+        }
+        properties {
+          // Khai báo ở đây chứ không chỉ trong Jenkinsfile: Jenkins chỉ đọc options của Jenkinsfile
+          // sau build đầu tiên, nên các build kích cùng lúc lần đầu vẫn chạy song song.
+          disableConcurrentBuilds { abortPrevious(false) }
+          pipelineTriggers {
+            triggers {
+              // Webhook cấp tổ chức, sự kiện pull_request:
+              //   POST <jenkins>/generic-webhook-trigger/invoke?token=<PR_TRIAGE_WEBHOOK_TOKEN>
+              genericTrigger {
+                genericVariables {
+                  genericVariable { key('REPO'); value('$.repository.full_name') }
+                  genericVariable { key('PR'); value('$.pull_request.number') }
+                  genericVariable { key('BASE_REF'); value('$.pull_request.base.ref') }
+                  genericVariable { key('HEAD_SHA'); value('$.pull_request.head.sha') }
+                  genericVariable { key('ACTION'); value('$.action') }
+                  genericVariable { key('DRAFT'); value('$.pull_request.draft') }
+                }
+                tokenCredentialId('webhook-token')
+                causeString('Webhook: $REPO#$PR ($ACTION)')
+                regexpFilterText('$ACTION $DRAFT')
+                regexpFilterExpression('^(opened|synchronize|reopened|ready_for_review) false$')
+                printContributedVariables(false)
+                printPostContent(false)
+              }
+            }
+          }
+        }
+        definition {
+          cps {
+            script(new File('/usr/share/jenkins/pr-triage/triage.Jenkinsfile').text)
+            sandbox(true)
+          }
+        }
+      }
+      pipelineJob('pr-triage-poll') {
+        description('Thay webhook khi chạy cục bộ: hỏi GitHub mỗi 2 phút, kích pr-triage cho PR mới hoặc có commit mới.')
+        disabled('${PR_TRIAGE_POLL:-1}' != '1')
+        properties {
+          disableConcurrentBuilds { abortPrevious(false) }
+          pipelineTriggers {
+            triggers {
+              cron { spec('H/2 * * * *') }
+            }
+          }
+        }
+        definition {
+          cps {
+            script(new File('/usr/share/jenkins/pr-triage/poll.Jenkinsfile').text)
+            sandbox(true)
+          }
+        }
+      }

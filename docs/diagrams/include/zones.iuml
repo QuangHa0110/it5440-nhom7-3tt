@@ -1,0 +1,21 @@
+' Vùng tin cậy và màu vai trò dùng chung. Nạp bằng: !include include/zones.iuml
+' Màu nền cho biết DỮ LIỆU ở đó nhạy cảm đến mức nào, không phải tầm quan trọng.
+
+!$C_ZONE_Z      = "#EAF2FB"
+!$C_ZONE_PUBLIC = "#EAF7EA"
+!$C_ZONE_CLOUD  = "#FDECEA"
+!$C_OURS        = "#FFF2CC"
+!$C_REUSED      = "#E2D9F3"
+!$C_EXTERNAL    = "#F2F2F2"
+
+!procedure $legend_zones()
+legend right
+  |= Màu |= Ý nghĩa |
+  |<$C_ZONE_Z> | Hạ tầng công ty Z: mã nguồn và dữ liệu thô ở lại đây |
+  |<$C_ZONE_CLOUD> | Bên ngoài, chỉ dùng khi Z đồng ý bằng văn bản |
+  |<$C_ZONE_PUBLIC> | Công khai: chỉ mã công cụ và số liệu tổng hợp đã duyệt |
+  |<$C_OURS> | Nhóm tự viết |
+  |<$C_REUSED> | Mã nguồn mở dùng lại |
+  |<$C_EXTERNAL> | Hệ thống sẵn có của Z |
+endlegend
+!endprocedure

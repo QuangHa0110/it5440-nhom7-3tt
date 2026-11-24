@@ -1,0 +1,46 @@
+@startuml 09-seq-feedback
+!include include/style.iuml
+!include include/participants.iuml
+title Sơ đồ 9. Thu phản hồi và phát hiện cảnh báo được sửa
+autonumber "<b>0"
+
+$lane_people()
+$lane_scm()
+participant "CI\n(lịch định kỳ)" as ci $C_EXTERNAL
+box "Job feedback (chỉ đọc)" $C_ZONE_Z
+  participant "FeedbackCollector\n(bot)" as fb $C_OURS
+end box
+$lane_store()
+
+dev -> scm : đọc comment, bấm +1 hoặc -1,\ntrả lời "fp <mã>" hoặc "tp <mã>"
+dev -> scm : đẩy commit sửa (tùy chọn)
+
+ci -> fb : pr-triage feedback
+fb -> store : lấy các PR còn mở có comment của bot
+loop mỗi PR
+  fb -> scm : đọc phản ứng và trả lời của comment
+  scm --> fb : sự kiện kèm thời điểm
+  fb -> fb : ẩn danh người thao tác\n(băm có muối giữ trong Z)
+  fb -> store : thêm FeedbackEvent (chỉ thêm, không sửa)
+  fb -> scm : đọc danh sách commit sau lần đăng
+  alt có commit mới
+    note over fb, store
+      Lượt quét của commit mới đã do job triage tạo ra.
+      Collector chỉ đối chiếu, không quét lại.
+    end note
+    fb -> store : so dấu vân tay giữa lượt cũ và lượt mới
+    alt dấu vân tay biến mất và hàm chứa cảnh báo có trong diff
+      fb -> store : trạng thái = fixed (chờ người đọc lại)
+    else file bị xóa hoặc đổi tên
+      fb -> store : ghi "biến mất không do sửa"
+    end
+  end
+  alt PR đã merge hoặc đóng
+    fb -> store : chốt trạng thái cuối:\nfixed | responded | marked_false | ignored
+  end
+end
+
+== Mốc so sánh khi chưa có bot (chạy lại lịch sử) ==
+ci -> fb : pr-triage replay --baseline
+fb -> store : với mỗi PR đã merge: so cảnh báo ở commit đầu\nvới bản merge, tính tỉ lệ tự biến mất
+@enduml

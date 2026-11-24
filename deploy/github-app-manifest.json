@@ -1,0 +1,14 @@
+{
+  "name": "PR Triage (thay tên này bằng một tên chưa ai dùng)",
+  "url": "https://github.com/YOUR-ORG/YOUR-REPO",
+  "hook_attributes": {"url": "https://YOUR-PUBLIC-HOST/webhook", "active": true},
+  "redirect_url": "http://localhost:3000/",
+  "public": false,
+  "default_permissions": {
+    "metadata": "read",
+    "contents": "read",
+    "pull_requests": "write",
+    "checks": "write"
+  },
+  "default_events": ["pull_request", "issue_comment"]
+}

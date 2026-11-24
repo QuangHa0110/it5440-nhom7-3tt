@@ -1,0 +1,104 @@
+@startuml 02-component
+!include include/style.iuml
+!include include/zones.iuml
+title Sơ đồ 2. Thành phần của package pr_triage (cổng và bộ chuyển đổi)
+left to right direction
+
+package "cli" as pkgCli {
+  component "pr-triage\nrun | publish | feedback |\nreplay | eval | freeze" as cli $C_OURS
+}
+
+package "pipeline (điều phối)" as pkgPipe {
+  component "PrPipeline\nchạy các bước, ghi lỗi,\nrơi về cảnh báo gốc" as pipe $C_OURS
+  component "DisplayPolicy\nchọn cách hiển thị,\ntính mức độ bằng luật" as policy $C_OURS
+}
+
+package "scan" as pkgScan {
+  component "SemgrepAdapter" as semgrep $C_REUSED
+  component "SpotBugsAdapter\n(FindSecBugs)" as spotbugs $C_REUSED
+  component "SarifReader" as sarif $C_OURS
+}
+
+package "normalize" as pkgNorm {
+  component "Fingerprinter" as fp $C_OURS
+  component "Deduplicator" as dedup $C_OURS
+  component "BaselineDiff\n(head trừ base)" as bdiff $C_OURS
+}
+
+package "context" as pkgCtx {
+  component "SnippetProvider\n(cách B)" as snip $C_OURS
+  component "DataflowProvider\n(cách C)" as flow $C_OURS
+  component "SymbolIndex\n(tree-sitter)" as symidx $C_REUSED
+  component "Catalog: nguồn,\nsink, hàm làm sạch" as catalog $C_OURS
+}
+
+package "llm" as pkgLlm {
+  component "TriageEngine" as engine $C_OURS
+  component "Redactor\n(che secret)" as redact $C_REUSED
+  component "PromptBuilder" as prompt $C_OURS
+  component "VerdictValidator\n(schema + bằng chứng)" as validator $C_OURS
+  component "BudgetGuard,\nVerdictCache" as budget $C_OURS
+  component "OpenAICompatClient" as oai $C_OURS
+}
+
+package "bot" as pkgBot {
+  component "CommentRenderer" as render $C_OURS
+  component "Publisher\n(một comment,\ncập nhật tại chỗ)" as publisher $C_OURS
+  component "FeedbackCollector" as feedback $C_OURS
+  component "ScmAdapter: GitHub |\nGitLab | Bitbucket" as scmadp $C_OURS
+}
+
+package "evaluation (ngoại tuyến)" as pkgEval {
+  component "PoolBuilder\n(tách dev và eval)" as pool $C_OURS
+  component "BlindLabeling" as labeling $C_OURS
+  component "Metrics" as metrics $C_OURS
+  component "Exporter\n(tổng hợp, ẩn danh)" as exporter $C_OURS
+  component "FreezeGuard\n(manifest cấu hình)" as freeze $C_OURS
+}
+
+package "store" as pkgStore {
+  component "SqlStore" as sql $C_OURS
+  component "BlobStore" as blob $C_OURS
+}
+
+package "core (miền và cổng, không phụ thuộc gói nào)" as pkgCore {
+  component "Mô hình miền: Finding, ContextBundle,\nVerdict, DisplayedAlert, Label" as domain $C_OURS
+  component "Cổng: ScannerPort, ContextPort,\nLlmPort, ScmPort, StorePort" as ports $C_OURS
+}
+
+rectangle "Công cụ quét\nSemgrep CE, SpotBugs" as extScan $C_REUSED
+rectangle "Máy chủ mô hình\ntại chỗ hoặc cloud" as extModel $C_EXTERNAL
+rectangle "SCM của Z" as extScm $C_EXTERNAL
+
+pkgCli --> pkgPipe : run, replay
+pkgCli --> pkgBot : publish, feedback
+pkgCli --> pkgEval : eval, freeze
+
+pkgPipe --> pkgScan : ScannerPort
+pkgPipe --> pkgNorm
+pkgPipe --> pkgCtx : ContextPort
+pkgPipe --> pkgLlm : LlmPort
+pkgPipe --> pkgStore : StorePort
+
+pkgBot --> pkgStore : StorePort
+pkgEval --> pkgStore : StorePort
+pkgEval ..> pkgPipe : FreezeGuard chặn chạy eval\nkhi cấu hình lệch manifest
+
+pkgScan ..> extScan : tiến trình con, đọc SARIF
+pkgLlm ..> extModel : HTTP kiểu OpenAI
+pkgBot ..> extScm : ScmPort (API)
+
+pkgStore -[hidden]-> pkgCore
+pkgNorm -[hidden]-> pkgCore
+
+note right of pkgCore
+  Mọi gói phụ thuộc core.
+  context, llm, evaluation
+  không phụ thuộc bot.
+  Bộ chuyển đổi hiện thực cổng,
+  nên đổi CI, SCM, công cụ quét
+  hay mô hình không đụng pipeline.
+end note
+
+$legend_zones()
+@enduml

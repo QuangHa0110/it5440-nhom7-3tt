@@ -1,0 +1,51 @@
+rules:
+  - id: java-sqli-taint
+    mode: taint
+    languages: [java]
+    severity: ERROR
+    message: Dữ liệu từ request đi tới câu truy vấn SQL mà không được làm sạch
+    metadata:
+      cwe: "CWE-89"
+      origin: viết tay cho dự án (không lấy từ registry)
+    pattern-sources:
+      - pattern: $REQ.getParameter(...)
+      - pattern: $REQ.getParameterValues(...)
+      - pattern: $REQ.getHeader(...)
+      - pattern: $REQ.getQueryString()
+      - pattern: $REQ.getCookies()
+    pattern-sinks:
+      - pattern: $STMT.executeQuery(...)
+      - pattern: $STMT.executeUpdate(...)
+      - pattern: $STMT.execute(...)
+      - pattern: $CONN.prepareStatement(...)
+      - pattern: $CONN.prepareCall(...)
+    pattern-sanitizers:
+      - pattern: Integer.parseInt(...)
+  - id: java-sql-string-concat
+    languages: [java]
+    severity: WARNING
+    message: Câu truy vấn SQL được nối chuỗi
+    metadata:
+      cwe: "CWE-89"
+      origin: viết tay cho dự án (không lấy từ registry)
+    patterns:
+      - pattern: $STMT.executeQuery($A + $B)
+      - pattern-not: $STMT.executeQuery("..." + "...")
+  - id: java-sql-concat-flow
+    mode: taint
+    languages: [java]
+    severity: WARNING
+    message: Chuỗi SQL được dựng bằng nối chuỗi rồi đưa vào câu truy vấn
+    metadata:
+      cwe: "CWE-89"
+      origin: viết tay cho dự án (không lấy từ registry)
+    pattern-sources:
+      - patterns:
+          - pattern: '"..." + $X'
+          - pattern-not: '"..." + "..."'
+    pattern-sinks:
+      - pattern: $STMT.executeQuery(...)
+      - pattern: $STMT.executeUpdate(...)
+      - pattern: $STMT.execute(...)
+    pattern-sanitizers:
+      - pattern: Integer.parseInt(...)

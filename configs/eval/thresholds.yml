@@ -1,0 +1,5 @@
+# Ngưỡng "đáng dùng" của proposal mục 7.9. Điểm xuất phát, chưa có căn cứ thực nghiệm.
+# Phải được nhóm và công ty Z chốt trước khi chạy tập eval, rồi bị khóa bằng manifest.
+min_false_positive_removed: 0.50
+max_true_positive_lost: 0.10
+max_median_ci_minutes: 15

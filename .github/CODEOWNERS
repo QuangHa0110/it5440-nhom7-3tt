@@ -1,0 +1,8 @@
+# Người phụ trách theo proposal mục 13. Đổi khi nhóm chốt phân công.
+*                          @Trinq2003
+/src/pr_triage/scan/       @QuangHa0110
+/src/pr_triage/normalize/  @QuangHa0110
+/src/pr_triage/context/    @Trinq2003
+/src/pr_triage/bot/        @KienTranDSAI
+/src/pr_triage/evaluation/ @hotamago
+/docs/                     @hotamago @Trinq2003

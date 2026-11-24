@@ -1,0 +1,140 @@
+@startuml 07-domain-model
+!include include/style.iuml
+!include include/zones.iuml
+title Sơ đồ 7. Mô hình dữ liệu miền
+
+class ConfigManifest {
+  manifest_hash : str
+  prompt_versions : map
+  schema_hash : str
+  scanner_versions : map
+  ruleset_hash : str
+  model_ids : list
+  thresholds : map
+  git_tag : str
+}
+
+class PrRun {
+  run_id : str
+  repo_alias : str
+  pr_number : int
+  head_sha : str
+  base_sha : str
+  mode : replay | shadow | comment
+  status : ok | degraded | failed
+  started_at, duration_s
+}
+
+class Finding {
+  finding_id : str  <<dấu vân tay, 12 hex>>
+  rule_ids : list
+  cwe : str
+  severity : str  <<do luật tính>>
+  file_alias : str
+  symbol : str
+  first_seen_run : str
+}
+
+class Occurrence {
+  run_id : str
+  finding_id : str
+  side : head | base
+  line_start, line_end : int
+  tool : str
+  is_new : bool
+}
+
+class ContextBundle {
+  bundle_hash : str
+  variant : B | C
+  source, sink, sanitizers
+  slices : list
+  missing : list
+  bytes, extract_ms : int
+  blob_ref : str
+}
+
+class Verdict {
+  verdict_id : str
+  variant : A | B | C
+  model_id : str
+  prompt_version : str
+  label : likely_true | likely_false | unknown | invalid
+  explanation : str
+  evidence : list
+  tokens_in, tokens_out : int
+  cost_usd, latency_ms
+  cached : bool
+  raw_blob_ref : str
+}
+
+class DisplayedAlert {
+  run_id, finding_id
+  shown_as : expanded | collapsed
+  displayed_variant : A | B | C
+  state : shown | fixed | responded | marked_false | ignored
+}
+
+class Comment {
+  comment_ref : str
+  body_hash : str
+  posted_at, updated_at
+}
+
+class FeedbackEvent {
+  kind : reaction | reply | commit | merge | close
+  value : str
+  actor_alias : str  <<ẩn danh>>
+  at : datetime
+}
+
+class LabelAssignment {
+  finding_id
+  labeler_alias : str
+  split : dev | eval
+  order_seed : int
+}
+
+class Label {
+  value : true | false | undetermined
+  reason : str
+  code_ref : str
+  is_test_code : bool
+  minutes : int
+}
+
+class Adjudication {
+  final_value : true | false | undetermined
+  adjudicator_alias : str
+  verified_by_z : bool
+}
+
+ConfigManifest "1" <-- "*" PrRun : chạy với
+PrRun "1" *-- "*" Occurrence
+Finding "1" <-- "*" Occurrence
+Finding "1" <-- "*" ContextBundle
+ContextBundle "1" <-- "*" Verdict : dựa trên
+PrRun "1" <-- "*" Verdict
+PrRun "1" *-- "0..1" Comment
+Comment "1" *-- "*" DisplayedAlert
+DisplayedAlert "*" --> "1" Finding
+DisplayedAlert "1" *-- "*" FeedbackEvent
+Finding "1" <-- "*" LabelAssignment
+LabelAssignment "1" *-- "0..1" Label
+Finding "1" <-- "0..1" Adjudication
+
+note right of Finding
+  Đơn vị phân tích của RQ1, RQ2:
+  cảnh báo duy nhất theo dấu vân tay.
+  Dấu vân tay KHÔNG dùng số dòng.
+end note
+
+note right of DisplayedAlert
+  Đơn vị phân tích của RQ3.
+end note
+
+note bottom of Label
+  Bảng Label và Adjudication tách khỏi Verdict.
+  Phiếu gán nhãn không chứa nhận định của LLM.
+end note
+@enduml

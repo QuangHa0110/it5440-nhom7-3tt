@@ -1,0 +1,43 @@
+@startuml 08-state-alert
+!include include/style.iuml
+title Sơ đồ 8. Vòng đời một cảnh báo đã hiển thị (số đo của RQ3)
+
+[*] --> Shown : bot đăng comment
+
+state "Đang hiển thị" as Shown {
+  [*] --> Expanded : likely_true, unknown, invalid
+  [*] --> Collapsed : likely_false
+  Expanded : nằm trong phần chính của comment
+  Collapsed : nằm trong phần thu gọn, vẫn mở ra xem được
+}
+
+state "Có phản hồi, chưa sửa" as Responded
+state "Đã sửa" as Fixed
+state "Bị đánh dấu sai" as MarkedFalse
+state "Bị bỏ qua" as Ignored
+
+Shown --> Responded : có trả lời hoặc phản ứng +1
+Shown --> MarkedFalse : phản ứng -1 hoặc lệnh fp
+Responded --> MarkedFalse : lệnh fp
+Shown --> Fixed : lượt quét sau không còn dấu vân tay\nVÀ hàm chứa cảnh báo có thay đổi
+Responded --> Fixed : như trên
+Shown --> Ignored : PR được merge hoặc đóng\nmà không có sự kiện nào
+Responded --> [*] : PR đóng (chốt trạng thái)
+Fixed --> Shown : cảnh báo xuất hiện lại\nở commit sau
+Fixed --> [*] : PR đóng
+MarkedFalse --> [*] : PR đóng
+Ignored --> [*]
+
+note right of Fixed
+  Biến mất vì file bị xóa hoặc đổi tên
+  KHÔNG tính là đã sửa.
+  Hai người đọc lại mọi ca Đã sửa
+  và Bị bỏ qua trước khi tính số.
+end note
+
+note right of Ignored
+  Bị bỏ qua không có nghĩa là
+  cảnh báo sai về mặt kỹ thuật.
+  Nhãn kỹ thuật nằm ở bảng Label.
+end note
+@enduml

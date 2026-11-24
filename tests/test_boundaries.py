@@ -7,6 +7,8 @@ SRC = Path(__file__).resolve().parents[1] / "src" / "pr_triage"
 
 ALLOWED_PREFIX = {
     "core": {"core"},
+    "triggers": {"core", "triggers"},
+    "scm": {"core", "scm"},
     "store": {"core", "store"},
     "scan": {"core", "scan"},
     "normalize": {"core", "normalize"},

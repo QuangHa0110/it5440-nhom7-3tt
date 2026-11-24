@@ -185,3 +185,43 @@ def test_fetcher_real_local_remote_and_pull_ref_fallback(tmp_path: Path) -> None
         assert (repo / ".git").is_dir()
     with pytest.raises(ScmError), f.checkout("o/r", "t", ["1" * 40], 7):
         pass
+
+
+def test_settings_snippet_radius_and_budget() -> None:
+    base = {"GITHUB_APP_ID": "1", "GITHUB_APP_PRIVATE_KEY": "k", "GITHUB_WEBHOOK_SECRET": "w",
+            "PR_TRIAGE_ALIAS_SALT": "s"}  # fmt: skip
+    st = Settings.from_env(base)
+    assert st.snippet_radius == 10 and st.budget_pr_tokens == 200_000
+    st = Settings.from_env(
+        {**base, "PR_TRIAGE_SNIPPET_RADIUS": "40", "PR_TRIAGE_BUDGET_PR_TOKENS": "3000000"}
+    )
+    assert st.snippet_radius == 40 and st.budget_pr_tokens == 3_000_000
+
+
+def test_build_services_uses_budget_setting(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from pr_triage.app.server import build_services
+
+    env = {"GITHUB_APP_ID": "1", "GITHUB_APP_PRIVATE_KEY": "k", "GITHUB_WEBHOOK_SECRET": "w",
+           "PR_TRIAGE_ALIAS_SALT": "s", "PR_TRIAGE_BUDGET_PR_TOKENS": "3000000",
+           "PR_TRIAGE_DB": str(tmp_path / "s.sqlite")}  # fmt: skip
+    sv = build_services(env)
+    budget = sv.llm.steps.budget  # type: ignore[attr-defined]
+    budget.record(2_500_000)
+    assert budget.allowed()
+
+
+def test_github_is_optional_once_another_host_is_enabled() -> None:
+    env = {
+        "PR_TRIAGE_ALIAS_SALT": "s", "PR_TRIAGE_GITLAB_URL": "https://gl.example/",
+        "PR_TRIAGE_GITLAB_TOKEN": "s3cr3t-tok", "PR_TRIAGE_GITLAB_WEBHOOK_SECRET": "w",
+    }  # fmt: skip
+    st = Settings.from_env(env)
+    assert not st.github_enabled and [h.kind.value for h in st.hosts] == ["gitlab"]
+    assert st.hosts[0].url == "https://gl.example"
+    assert "s3cr3t-tok" not in repr(st) and "'w'" not in repr(st)
+    with pytest.raises(SettingsError, match="GITHUB_APP_ID"):  # có GitHub dở dang thì vẫn báo thiếu
+        Settings.from_env({**env, "GITHUB_WEBHOOK_SECRET": "x"})
+    with pytest.raises(SettingsError, match="GITHUB_APP_ID"):
+        Settings.from_env({"PR_TRIAGE_ALIAS_SALT": "s"})

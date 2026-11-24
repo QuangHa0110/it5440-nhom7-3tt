@@ -11,13 +11,15 @@ WORKDIR /app
 COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
 COPY configs ./configs
-RUN uv sync --no-dev --frozen
+RUN uv sync --no-dev --frozen \
+    && uv pip install --python /app/.venv/bin/python "semgrep==1.185.0"
 
 RUN useradd --create-home --uid 10001 triage && mkdir -p /data && chown triage /data
 USER triage
 
 ENV PR_TRIAGE_DB=/data/store.sqlite \
-    PR_TRIAGE_RULES=/app/configs/semgrep/java-injection.yml \
+    PR_TRIAGE_RULES=/app/data/rules/semgrep-default.yml \
+    PR_TRIAGE_RULES_LOCK=/app/configs/semgrep/rulesets.lock \
     PR_TRIAGE_CATALOG=/app/configs/context/java.yml \
     PATH="/app/.venv/bin:${PATH}"
 

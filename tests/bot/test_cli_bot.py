@@ -50,7 +50,7 @@ def test_publish_post_uses_scm(
 ) -> None:
     scm = FakeScm()
     monkeypatch.setenv("GITHUB_TOKEN", "t")
-    monkeypatch.setattr("pr_triage.cli.GitHubScm", lambda token: scm)
+    monkeypatch.setattr("pr_triage.cli._scm_for", lambda repo: scm)
     code = cli.main(
         [
             "publish",
@@ -82,7 +82,7 @@ def test_feedback_collects_and_updates_states(
     scm.state = "closed"
     monkeypatch.setenv("GITHUB_TOKEN", "t")
     monkeypatch.setenv("PR_TRIAGE_ALIAS_SALT", "muoi")
-    monkeypatch.setattr("pr_triage.cli.GitHubScm", lambda token: scm)
+    monkeypatch.setattr("pr_triage.cli._scm_for", lambda repo: scm)
     db = tmp_path / "s.sqlite"
     store = SqlStore(db)
     for d in r.displayed:

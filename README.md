@@ -8,15 +8,11 @@ Hướng TT: áp dụng các kỹ thuật phân tích chương trình hướng b
 
 ## Tài liệu
 
-| File | Nội dung |
+| Tài liệu | Nội dung |
 |---|---|
-| [docs/project/huong-dan-tieu-luan.md](docs/project/huong-dan-tieu-luan.md) | Tóm tắt yêu cầu, cách chấm điểm, lịch báo cáo và quy cách trình bày |
-| [docs/project/tom-tat-bai-bao.md](docs/project/tom-tat-bai-bao.md) | Tóm tắt 4 bài báo giảng viên giao và cách dùng trong đề tài |
-| [docs/project/papers/README.md](docs/project/papers/README.md) | Link tải 4 bài báo (PDF không lưu trên repo) |
-| [docs/project/proposal-llm-loc-canh-bao-pr.md](docs/project/proposal-llm-loc-canh-bao-pr.md) | Proposal đề tài: LLM lọc cảnh báo bảo mật trên PR |
-| [docs/git-workflow.md](docs/git-workflow.md) | Quy trình nhánh, PR, release |
-| [docs/adr/](docs/adr/), [docs/plans/](docs/plans/), [docs/devlog/](docs/devlog/) | Quyết định, kế hoạch, nhật ký kỹ thuật |
-| [CLAUDE.md](CLAUDE.md) | Ngữ cảnh cho Claude Code |
+| [Mục lục tài liệu](docs/README.md) | Thiết kế, quy trình phát triển và hồ sơ kiểm thử |
+| [Tài liệu đề tài](docs/project/README.md) | Proposal hiện hành, yêu cầu môn học, khảo sát và bản nháp |
+| [GitHub App](docs/github-app.md), [Jenkins](deploy/jenkins/README.md), [demo](docs/demo.md) | Cài đặt, vận hành và chạy thử |
 
 ## Chạy thử
 
@@ -27,6 +23,7 @@ make check                      # lint, mypy, test
 make e2e                        # đầu cuối trên repo Java thử với cổng LLM thật
 uv run pr-triage --help         # run, replay, publish, feedback, eval, serve
 uv run pr-triage serve          # GitHub App, xem docs/github-app.md
+docker compose -f deploy/docker-compose.yml up --build   # GitHub App qua Docker
 python scripts/demo_repo.py --workdir /tmp/demo --dry-run   # bộ demo, xem docs/demo.md
 ```
 
@@ -38,6 +35,7 @@ Với dữ liệu của công ty Z, chỉ dùng mô hình tại chỗ hoặc khi
 src/pr_triage/   mã: scan, normalize, context, llm, bot, evaluation, cli
 tests/           kiểm thử, dữ liệu giả ở tests/fixtures/
 configs/         luật Semgrep, prompt, schema, manifest khóa cho eval
+deploy/          cấu hình triển khai GitHub App và Jenkins
 data/            dữ liệu chạy, không commit
 reports/         số liệu ẩn danh, bài báo (LaTeX), slide
 docs/            proposal và tài liệu môn học, ADR, kế hoạch, nhật ký kỹ thuật

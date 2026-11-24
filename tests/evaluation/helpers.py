@@ -31,6 +31,8 @@ def add_run(
         f = replace(make_finding(path=f"src/{name}.java", ordinal=ordinal), finding_id=name)
         store.upsert_finding(f)
         store.add_occurrence(Occurrence(run_id, name, Side.HEAD, 1, 1, "t", True))
+        # Như pipeline thật: mọi cảnh báo đã xử lý (sau gộp trùng) có nhận định hình thức của A.
+        labels = {Variant.A: VerdictLabel.LIKELY_TRUE, **labels}
         for variant, label in labels.items():
             store.save_verdict(
                 run_id, Verdict(f"{name}-{variant.value}", name, variant, "m", "p", label)

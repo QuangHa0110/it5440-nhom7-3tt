@@ -3,6 +3,7 @@
 - **Status:** accepted (2026-11-13)
 - **Người quyết định:** trinq
 - **Liên quan:** [architecture.md](../architecture.md) mục 4
+- **Ghi chú 2026-11-19:** D1 phần SpotBugs với FindSecBugs được hoãn, bộ luật Semgrep chốt là `p/default`: xem [ADR 0019](0019-bo-luat-semgrep-p-default-khoa-bang-ma-bam.md)
 
 ## Bối cảnh
 

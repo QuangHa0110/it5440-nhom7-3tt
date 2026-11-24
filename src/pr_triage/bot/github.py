@@ -8,33 +8,17 @@ from __future__ import annotations
 import base64
 import time
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
 from typing import Any
 
 import httpx
 
 from pr_triage.core.errors import ScmError
 from pr_triage.core.models import CheckAnnotation, PrRef, Reaction, Reply
+from pr_triage.core.scm import OpenPr, PrInfo
 
 TokenSource = str | Callable[[], str]
 _REVIEWER_ASSOCIATIONS = {"OWNER", "MEMBER", "COLLABORATOR"}
 _RETRY = {429, 500, 502, 503, 504}
-
-
-@dataclass(frozen=True)
-class PrInfo:
-    repo: str
-    number: int
-    state: str
-    merged: bool
-    draft: bool
-    author: str
-    title: str
-    base_ref: str
-    base_sha: str
-    head_sha: str
-    head_repo: str
-    changed_files: int
 
 
 def role_of(login: str, association: str, pr_author: str) -> str:
@@ -114,6 +98,13 @@ class GitHubApi(_Http):
     def merge_base(self, repo: str, base: str, head: str) -> str:
         d = self._req("GET", f"/repos/{repo}/compare/{base}...{head}")
         return str(d["merge_base_commit"]["sha"])
+
+    def open_prs(self, repo: str) -> list[OpenPr]:
+        items = self._paged(f"/repos/{repo}/pulls?state=open")
+        return [
+            OpenPr(int(d["number"]), d["head"]["sha"], d["base"]["ref"], bool(d.get("draft")))
+            for d in items
+        ]
 
     def get_file(self, repo: str, path: str, ref: str) -> str | None:
         try:

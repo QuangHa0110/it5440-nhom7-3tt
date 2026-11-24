@@ -296,3 +296,24 @@ def test_failure_is_recorded_and_reported_without_claiming_safe(tmp_path: Path) 
         assert "chưa quét xong" in body and "không có nghĩa là mã an toàn" in body
     finally:
         e.queue.shutdown()
+
+
+def test_app_passes_snippet_radius_to_pipeline(tmp_path: Path, monkeypatch: object) -> None:
+    import pr_triage.app.handlers as handlers
+    from tests.app.conftest import Env
+
+    seen: list[int] = []
+    real = handlers.build_pipeline  # type: ignore[attr-defined]
+
+    def spy(opts, **kw):  # type: ignore[no-untyped-def]
+        seen.append(opts.snippet_radius)
+        return real(opts, **kw)
+
+    monkeypatch.setattr(handlers, "build_pipeline", spy)  # type: ignore[attr-defined]
+    e = Env(tmp_path, snippet_radius=40)
+    try:
+        e.post("pull_request", webhook_body("pull_request", e.remote))
+        e.drain()
+    finally:
+        e.queue.shutdown()
+    assert seen == [40]

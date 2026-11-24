@@ -29,7 +29,7 @@ from pr_triage.core.models import (
 )
 from pr_triage.core.ports import ContextPort, LlmPort, ScannerPort, StorePort
 from pr_triage.normalize import deduplicate, new_findings, to_findings
-from pr_triage.pipeline.gitrepo import Checkouts, checkouts
+from pr_triage.pipeline.gitrepo import Checkouts, checkouts, commit_time
 from pr_triage.pipeline.policy import DisplayPolicy
 
 log = logging.getLogger("pr_triage.pipeline")
@@ -129,6 +129,7 @@ class PrPipeline:
                 RunStatus.OK,
                 _now(),
                 manifest_hash=self.manifest_hash,
+                head_committed_at=commit_time(repo, co.head_sha),
             )
             try:
                 result = self._run(run, co)

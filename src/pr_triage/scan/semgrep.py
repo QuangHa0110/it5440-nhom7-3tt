@@ -10,6 +10,8 @@ import tempfile
 from collections.abc import Sequence
 from pathlib import Path
 
+import yaml
+
 from pr_triage.core.errors import ScanError
 from pr_triage.core.models import RawFinding
 from pr_triage.scan.sarif import parse_sarif
@@ -27,12 +29,27 @@ def _find_semgrep() -> str:
     return found
 
 
+_Loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
+
+def _rule_ids_in(text: str) -> list[str]:
+    """Id luật trong file. Bộ tải từ registry là JSON một dòng nên phải parse, không dùng regex."""
+    try:
+        data = yaml.load(text, Loader=_Loader)  # noqa: S506 - SafeLoader/CSafeLoader
+    except yaml.YAMLError:
+        return _RULE_ID.findall(text)
+    rules = data.get("rules") if isinstance(data, dict) else None
+    if not isinstance(rules, list):
+        return _RULE_ID.findall(text)
+    return [str(r["id"]) for r in rules if isinstance(r, dict) and "id" in r]
+
+
 def _local_rule_ids(configs: Sequence[str]) -> tuple[str, ...]:
     ids: list[str] = []
     for c in configs:
         p = Path(c)
         if p.is_file():
-            ids.extend(_RULE_ID.findall(p.read_text("utf-8")))
+            ids.extend(_rule_ids_in(p.read_text("utf-8")))
     return tuple(ids)
 
 

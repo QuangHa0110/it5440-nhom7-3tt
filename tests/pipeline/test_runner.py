@@ -195,3 +195,15 @@ def test_empty_base_treats_every_finding_as_new(repo: Path) -> None:
     add_vuln(repo)
     res = pipeline(SqlStore(":memory:")).run(repo, "none", "feature", 1)
     assert res.run.base_sha == "" and len(res.findings) == 1
+
+
+def test_run_records_head_commit_time(repo: Path) -> None:
+    from datetime import UTC, datetime
+
+    add_vuln(repo)
+    store = SqlStore(":memory:")
+    res = pipeline(store).run(repo, "main", "feature", 7)
+    ts = int(git(repo, "show", "-s", "--format=%ct", "feature"))
+    expected = datetime.fromtimestamp(ts, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    assert res.run.head_committed_at == expected
+    assert store.get_run(res.run.run_id).head_committed_at == expected  # type: ignore[union-attr]

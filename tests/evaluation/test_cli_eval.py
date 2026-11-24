@@ -79,3 +79,72 @@ def test_full_flow_with_freeze_gate(
     assert run("export", "--split", "eval", "--out", str(out), "--k", "5") == 0
     text = out.read_text()
     assert "src/" not in text and "f01" not in text
+
+
+def test_cli_single_labeler_then_audit_sample(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    db = tmp_path / "s.sqlite"
+    s = SqlStore(db)
+    add_run(s, "r", "repoA", "2026-11-10T00:00:00Z", [(f"f{i:02d}", {}) for i in range(12)])
+    s.close()
+    base = ["eval", "--db", str(db)]
+    assert cli.main([*base, "pool", "--cutoff", "2026-11-05T00:00:00Z"]) == 0
+    out = tmp_path / "sheets"
+    assert cli.main([*base, "label-export", "--split", "eval",
+                     "--labelers", "ai-claude", "--single", "--out", str(out)]) == 0  # fmt: skip
+    sheet = out / "labels-eval-ai-claude.csv"
+    fill(sheet, {f"f{i:02d}": "false" for i in range(12)})
+    assert cli.main([*base, "label-import", "--labeler", "ai-claude",
+                     "--file", str(sheet)]) == 0  # fmt: skip
+    capsys.readouterr()
+    assert cli.main([*base, "audit-sample", "--split", "eval",
+                     "--primary", "ai-claude", "--auditor", "human-1", "--n", "5",
+                     "--seed", "1", "--out", str(out)]) == 0  # fmt: skip
+    got = json.loads(capsys.readouterr().out)
+    rows = list(csv.DictReader(Path(got["sheet"]).open()))
+    assert len(rows) == 5 and all(r["label"] == "" for r in rows)
+
+
+@pytest.mark.parametrize("change", ["run_config", "external_rules"])
+def test_freeze_covers_run_config_and_external_rules(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, change: str
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "configs/eval").mkdir(parents=True)
+    ext = tmp_path / "outside" / "registry.yml"
+    ext.parent.mkdir()
+    ext.write_text("rules: [a]")
+    run_yml = tmp_path / "configs/eval/run.yml"
+    run_yml.write_text(f"snippet_radius: 40\ndisplay: C\nexternal_rules:\n  - {ext}\n")
+    monkeypatch.setenv("PR_TRIAGE_LLM_MODEL", "m")
+    db = tmp_path / "s.sqlite"
+    SqlStore(db).close()
+
+    def run(*argv: str) -> int:
+        return cli.main(["eval", "--db", str(db), *argv])
+
+    assert run("freeze") == 0
+    manifest = json.loads((tmp_path / "configs/eval/manifest.json").read_text())
+    assert "configs/eval/run.yml" in manifest["files"]
+    assert str(ext) in manifest["extra"]["external_rules"]
+    assert run("metrics", "--split", "eval", "--rounds", "5") == 0
+    capsys.readouterr()
+    if change == "run_config":
+        run_yml.write_text(run_yml.read_text().replace("40", "10"))
+    else:
+        ext.write_text("rules: [b]")
+    assert run("metrics", "--split", "eval") == 3
+    assert "lệch manifest" in capsys.readouterr().err
+
+
+def test_freeze_rejects_missing_external_rules(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "configs/eval").mkdir(parents=True)
+    (tmp_path / "configs/eval/run.yml").write_text("external_rules:\n  - /khong/ton/tai.yml\n")
+    db = tmp_path / "s.sqlite"
+    SqlStore(db).close()
+    assert cli.main(["eval", "--db", str(db), "freeze"]) == 3
+    assert "không tìm thấy" in capsys.readouterr().err

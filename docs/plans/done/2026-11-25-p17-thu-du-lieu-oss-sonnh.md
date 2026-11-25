@@ -1,11 +1,11 @@
 # P17. Thu dữ liệu A, B, C trên repo Java mã nguồn mở — phần của sonnh
 
-- **Status:** active
+- **Status:** done
 - **Người làm:** sonnh (với Claude Code)
 - **Đóng:** phần việc của một thành viên trong [hướng dẫn chọn repo và PR](../../huong-dan-chon-repo-va-pr.md)
 - **Quyết định cho phép:** hướng dẫn chọn repo và PR (PR #21), proposal mục 8.3 (phương án dự phòng)
 - **Nhánh:** `sonnh/eval/chon-repo-pr`
-- **Bắt đầu / Kết thúc:** 2026-11-25 / —
+- **Bắt đầu / Kết thúc:** 2026-11-25 / 2026-11-25
 
 ---
 
@@ -65,6 +65,16 @@ make check
 
 *Điền khi đóng kế hoạch. Không sửa phần thân phía trên.*
 
-- **Kết quả:**
-- **Khác kế hoạch ở đâu:**
-- **Ghi ở:** devlog, mục nợ, ADR
+- **Kết quả (2026-11-25):** `make check` qua (433 passed, 1 skipped). T2: `scripts/filter_prs.py` và
+  `tests/test_filter_prs.py`; ở 25 commit có kết quả cả hai tầng, tầng 1 không thiếu cảnh báo nào so với pipeline đầy
+  đủ. T3: 13 PR, 56 cảnh báo mới (logicaldoc 10/45, mesh 3/11), bảng chốt ở commit `6b65826` trước lượt B/C đầu
+  tiên. T4: 13/13 lượt có `triage-result.json`, không lượt nào `failed` (6 `ok`, 7 `degraded`). T5: hồ sơ
+  `docs/test-records/2026-11-25/`. Tư liệu theo mục 7 của hướng dẫn (bảng theo PR, comment, ảnh, 5 ca điển hình,
+  nhật ký) đã gom thành gói nộp qua kênh riêng.
+- **Khác kế hoạch ở đâu:** B/C chạy bằng mô hình khác mô hình đã khóa ở `eval-freeze-1` (rủi ro thứ hai đã xảy ra).
+  23/112 nhãn bị cắt cụt do token suy luận tính vào `max_tokens`, 4 nhãn C bị HTTP 403 ở lớp chống bot trước cổng
+  LLM. Trần quét nâng từ 300 lên 1.200 giây cho cả lọc A và B/C vì máy chạy dùng chung. Chưa kiểm tra trùng repo
+  với thành viên khác.
+- **Ghi ở:** [devlog lọc PR](../../devlog/2026-11-25-loc-pr-oss-cho-cach-a.md),
+  [devlog mask](../../devlog/2026-11-25-mask-bo-sot-npm-auth.md), TD-9,
+  [kết quả A, B, C](../../test-records/2026-11-25/results/ket-qua-abc.md)

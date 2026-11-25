@@ -2,6 +2,8 @@
 
 - **Ngày:** 2026-11-25. Kế hoạch [P17](../plans/active/2026-11-25-p17-thu-du-lieu-oss-sonnh.md). Nợ: TD-9.
 
+> Ghi chú 2026-11-25: kế hoạch P17 đã đóng, nay ở [`plans/done/`](../plans/done/2026-11-25-p17-thu-du-lieu-oss-sonnh.md).
+
 **Phát hiện.** Ở PR `mesh -190` (gentics/mesh), Semgrep báo 3 cảnh báo `detected-npm-registry-auth-token` trong
 `js/.npmrc`, dạng `//<registry>/:_auth=<base64 của user:password>`. `triage-result.json` của lượt chạy chứa nguyên
 giá trị này trong trường `snippet` (6 lần). Comment do `publish` in ra thì không có, vì comment chỉ gồm giải thích.

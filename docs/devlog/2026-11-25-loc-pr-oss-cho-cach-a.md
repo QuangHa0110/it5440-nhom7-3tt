@@ -3,6 +3,8 @@
 - **Ngày:** 2026-11-25. Kế hoạch [P17](../plans/active/2026-11-25-p17-thu-du-lieu-oss-sonnh.md), bước 3 của
   [hướng dẫn chọn repo và PR](../huong-dan-chon-repo-va-pr.md).
 
+> Ghi chú 2026-11-25: kế hoạch P17 đã đóng, nay ở [`plans/done/`](../plans/done/2026-11-25-p17-thu-du-lieu-oss-sonnh.md).
+
 ## 1. Semgrep CE trả `"requires login"` thay cho đoạn mã 🟡
 
 **Phát hiện.** Trong JSON của `semgrep scan --json` (CE 1.185.0, không đăng nhập), trường `extra.lines` của mọi kết

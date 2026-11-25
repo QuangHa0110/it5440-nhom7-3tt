@@ -10,4 +10,15 @@
 
 ## Thực hiện và kết quả
 
-*Ghi sau khi chạy, xem [kết quả lọc A](../results/loc-a.md).*
+Xem [kết quả lọc A](../results/loc-a.md).
+
+- Tầng 1 chạy trên 600 commit first-parent của mesh và 1.500 commit của logicaldoc. Tầng 2 chạy trên các ứng viên
+  nằm trong 600 commit gần nhất. Mọi lượt tầng 2 trên ứng viên có `status: ok`.
+- Có 13 PR với 56 cảnh báo mới (logicaldoc 10 / 45, mesh 3 / 11), vượt mức "nên đạt". Danh sách được chốt ở
+  commit `6b65826` lúc 2026-11-25 13:25:57 (+07), trước lượt B, C đầu tiên lúc 13:26:32.
+- Ở mọi commit có kết quả cả hai tầng, số cảnh báo của tầng 1 không nhỏ hơn số của tầng 2. Có 22/25 commit khớp
+  đúng danh sách `finding_id`.
+- Phát sinh: bản đầu của tầng 1 bỏ sót ứng viên vì Semgrep CE trả `"requires login"` ở `extra.lines`. Đã sửa
+  trước khi chốt danh sách.
+
+**Kết luận:** Đạt.

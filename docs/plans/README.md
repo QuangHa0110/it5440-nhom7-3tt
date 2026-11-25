@@ -23,6 +23,7 @@ Kế hoạch là một đơn vị công việc có thể commit, với điều k
 - [P14](done/2026-11-20-p14-hai-duong-kich-hoat-huong-doi-tuong.md) dùng chung lõi cho GitHub App và Jenkins.
 - [P16](done/2026-11-22-p16-nha-cung-cap-scm.md) thêm GitLab, Gitea, Bitbucket Server qua lớp nhà cung cấp SCM.
 - [P15](done/2026-11-19-p15-semgrep-bo-luat-co-san.md) thay luật tự viết bằng bộ luật Semgrep `p/default` khóa bằng mã băm.
+- [P17](done/2026-11-25-p17-thu-du-lieu-oss-sonnh.md) lọc PR bằng A và chạy A, B, C trên hai repo Java mã nguồn mở (phần của sonnh).
 
 ## Quy tắc chạy xuyên đêm
 

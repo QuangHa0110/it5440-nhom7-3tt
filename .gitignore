@@ -19,6 +19,7 @@ gitleaks-report*.json
 *.pem
 *.key
 secrets/
+.token/
 
 # Python
 __pycache__/

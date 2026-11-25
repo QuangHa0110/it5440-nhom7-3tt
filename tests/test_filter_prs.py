@@ -1,5 +1,6 @@
 """Script lọc PR hai tầng: tầng 1 không bỏ sót commit mà pipeline đầy đủ thấy có cảnh báo mới."""
 
+import dataclasses
 import json
 import shutil
 import sys
@@ -7,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from pr_triage.core.models import RunMode
+from pr_triage.core.models import RawFinding, RunMode
 from pr_triage.pipeline.build import BuildOptions, build_pipeline
 from tests.helpers import REPO_ROOT, RULES, git, make_repo
 
@@ -38,20 +39,11 @@ def test_parse_name_status() -> None:
     ]
 
 
-def _hit(idx: int, side: str, path: str, rule: str, lines: str) -> dict[str, object]:
-    return {"path": f"{idx}/{side}/{path}", "check_id": f"x.y.{rule}", "extra": {"lines": lines}}
-
-
-def test_new_by_commit_so_multiset_va_bo_qua_khoang_trang() -> None:
-    results = [
-        _hit(0, "h", "A.java", "sqli", "  q = a + b;"),
-        _hit(0, "h", "A.java", "sqli", "q = a + b;"),
-        _hit(0, "b", "A.java", "sqli", "q = a + b;   "),
-        _hit(1, "b", "B.java", "xss", "w.print(x);"),
-    ]
-    new = fp.new_by_commit(results)
-    assert sum(new[0].values()) == 1  # hai lần ở head, một lần ở base: một cảnh báo mới
-    assert sum(new[1].values()) == 0  # chỉ có ở base: cảnh báo bị xóa, không phải mới
+def test_split_by_side_tach_commit_va_phia() -> None:
+    raw = RawFinding("semgrep", "r", "m", "high", "3/h/src/a b/A.java", 4, 4)
+    groups = fp.split_by_side([raw, dataclasses.replace(raw, file="3/b/src/a b/A.java")])
+    assert [g.file for g in groups[(3, "h")]] == ["src/a b/A.java"]
+    assert set(groups) == {(3, "h"), (3, "b")}
 
 
 def _history(tmp_path: Path) -> Path:
@@ -62,6 +54,13 @@ def _history(tmp_path: Path) -> Path:
     head = "public class OrderDao {"
     dao.write_text(dao.read_text().replace(head, "/** DAO */\n" + head))
     git(repo, "commit", "-qam", "chi them chu thich")  # sửa Java, không có cảnh báo mới
+    # Sửa đúng dòng bị báo, số cảnh báo giữ nguyên nhưng đoạn mã đổi: pipeline coi là cảnh báo mới.
+    dao.write_text(
+        dao.read_text().replace(
+            "SELECT * FROM orders WHERE name", "SELECT id FROM orders WHERE name"
+        )
+    )
+    git(repo, "commit", "-qam", "doi cot truy van")
     (repo / "README.md").write_text("tai lieu\n")
     git(repo, "add", "README.md")
     git(repo, "commit", "-qm", "chi sua tai lieu")  # không sửa Java: không vào kế hoạch
@@ -72,11 +71,29 @@ def test_plan_chi_lay_commit_sua_java(tmp_path: Path) -> None:
     repo = _history(tmp_path)
     cands = fp.plan(repo, "HEAD", 10, 1000)
     assert [git(repo, "log", "-1", "--format=%s", c.sha) for c in cands] == [
+        "doi cot truy van",
         "chi them chu thich",
         "them truy van noi chuoi",
     ]
-    # P4: commit sửa nhiều dòng Java hơn trần thì bỏ (chú thích: 1 dòng; truy vấn: 4 dòng)
-    assert [c.java_lines for c in fp.plan(repo, "HEAD", 10, 1)] == [1]
+    # P4: commit sửa nhiều dòng Java hơn trần thì bỏ (chú thích: 1 dòng; đổi cột: 2; truy vấn: 4)
+    assert [c.java_lines for c in fp.plan(repo, "HEAD", 10, 2)] == [2, 1]
+
+
+def test_plan_so_voi_merge_base_nhu_pipeline(tmp_path: Path) -> None:
+    repo = make_repo(tmp_path / "r")
+    fork = git(repo, "rev-parse", "HEAD")
+    git(repo, "switch", "-qc", "feature")
+    dao = repo / "src/app/OrderDao.java"
+    dao.write_text(dao.read_text().rstrip().removesuffix("}") + SQLI)
+    git(repo, "commit", "-qam", "them truy van noi chuoi")
+    git(repo, "switch", "-q", "main")
+    (repo / "src/app/Other.java").write_text("package app;\nclass Other {}\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-qm", "commit khac tren main")
+    git(repo, "merge", "-q", "--no-ff", "-m", "Merge pull request #7 from x/feature", "feature")
+    [c] = [c for c in fp.plan(repo, "HEAD", 10, 1000) if c.pr == 7]
+    assert c.base == fork  # không phải cha thứ nhất: Other.java không thuộc PR
+    assert c.java_lines == 4
 
 
 @pytest.mark.integration
@@ -111,7 +128,7 @@ def test_prefilter_khop_pipeline_day_du(tmp_path: Path) -> None:
         )
     )
     for c in fp.plan(repo, "HEAD", 10, 1000):
-        full = len(pipeline.run(repo, c.base, c.head, c.pr).findings)
-        assert (rows[c.sha]["pre_new"] > 0) == (full > 0), c
+        full = pipeline.run(repo, c.base, c.head, c.pr).findings
+        assert rows[c.sha]["finding_ids"] == [f.finding_id for f in full], c
     store.close()
-    assert len((out / "candidates.txt").read_text().split()) == 1
+    assert len((out / "candidates.txt").read_text().split()) == 2

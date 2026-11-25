@@ -4,10 +4,12 @@
 phần lớn commit không sinh cảnh báo mới. Luật Semgrep CE chỉ phân tích trong phạm vi một file, nên cảnh báo
 mới (head trừ base) chỉ có thể nằm ở file mà commit sửa. Vì vậy:
 
-1. `prefilter`: với mỗi commit first-parent có 1..N dòng `*.java` thay đổi (P3, P4), lấy nội dung base và head
-   của các file thay đổi, quét chung một lượt bằng đúng bộ luật đã khóa (kiểm mã băm như pipeline), rồi so
-   multiset (file, luật, đoạn mã) giữa head và base. Commit có chênh lệch là ứng viên. Không bỏ file nào khi
-   quét, nên tập ứng viên là tập trên của tập commit có cảnh báo mới.
+1. `prefilter`: với mỗi commit first-parent có 1..N dòng `*.java` thay đổi so với merge-base (P3, P4), lấy
+   nội dung ở merge-base và head của các file thay đổi, quét chung một lượt bằng `SemgrepAdapter` với bộ luật
+   đã khóa, rồi tính cảnh báo mới bằng đúng các bước của pipeline (`to_findings` với `SymbolIndex`,
+   `new_findings`, `deduplicate`). File không đổi cho cùng dấu vân tay ở hai phía nên không cần quét. Không
+   bỏ file nào khi quét (`.semgrepignore` rỗng), nên số đếm ở tầng này không nhỏ hơn số của pipeline.
+   Không so bằng trường `extra.lines` của Semgrep: bản CE chưa đăng nhập trả `"requires login"`.
 2. `replay`: chạy pipeline của nhóm (giống hệt `pr-triage replay`: `plan_replay`, `build_pipeline`, tên file
    `replay-<sha>-merged.json`) chỉ trên các ứng viên. Số cảnh báo mới chính thức lấy từ tầng này.
 
@@ -25,23 +27,24 @@ import argparse
 import collections
 import dataclasses
 import json
-import shutil
 import subprocess
-import sys
+import tempfile
 import time
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any
 
 from pr_triage import cli
-from pr_triage.core.models import RunMode
+from pr_triage.context import SymbolIndex
+from pr_triage.core.models import Finding, RawFinding, RunMode
+from pr_triage.normalize import deduplicate, new_findings, to_findings
 from pr_triage.pipeline import result_io
 from pr_triage.pipeline.build import BuildOptions, build_pipeline
+from pr_triage.pipeline.gitrepo import merge_base
 from pr_triage.pipeline.replay import plan_replay
 from pr_triage.scan.rulesets import verify_rules
+from pr_triage.scan.semgrep import SemgrepAdapter
 
 MAX_FILE_BYTES = 1_000_000  # bằng --max-target-bytes mặc định của Semgrep
-Key = tuple[str, str, str]  # (đường dẫn trong repo, luật, đoạn mã đã chuẩn hóa)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -81,10 +84,11 @@ def plan(repo: Path, ref: str, scan_back: int, max_java_lines: int) -> list[Cand
     for item in plan_replay(repo, ref, scan_back, "merged"):
         if item.skip_reason:
             continue
-        diff = _git(repo, "diff", "--numstat", item.base, item.head, "--", "*.java").decode()
+        base = merge_base(repo, item.base, item.head)  # như pipeline (exact_base=False)
+        diff = _git(repo, "diff", "--numstat", base, item.head, "--", "*.java").decode()
         n = numstat_lines(diff)
         if 0 < n <= max_java_lines:
-            out.append(Candidate(len(out), item.sha, item.pr_number, item.base, item.head, n))
+            out.append(Candidate(len(out), item.sha, item.pr_number, base, item.head, n))
     return out
 
 
@@ -111,34 +115,26 @@ def materialize(repo: Path, cands: Iterable[Candidate], work: Path) -> None:
                 _dump(repo, c.base, path, work / str(c.idx) / "b" / path)
 
 
-def _norm(text: str) -> str:
-    return "\n".join(s.strip() for s in text.splitlines() if s.strip())
+def split_by_side(raws: Iterable[RawFinding]) -> dict[tuple[int, str], list[RawFinding]]:
+    """Kết quả quét cây `work` (đường dẫn `<idx>/<h|b>/<file>`) thành nhóm theo commit và phía."""
+    groups: dict[tuple[int, str], list[RawFinding]] = collections.defaultdict(list)
+    for raw in raws:
+        idx, side, rel = raw.file.split("/", 2)
+        groups[(int(idx), side)].append(dataclasses.replace(raw, file=rel))
+    return groups
 
 
-def new_by_commit(results: Iterable[dict[str, Any]]) -> dict[int, collections.Counter[Key]]:
-    """Từ kết quả JSON của Semgrep trên cây `work`, trả về cảnh báo có ở head mà không có ở base."""
-    sides: dict[tuple[int, str], collections.Counter[Key]] = collections.defaultdict(
-        collections.Counter
-    )
-    for r in results:
-        idx, side, rel = str(r["path"]).split("/", 2)
-        rule = str(r["check_id"]).rsplit(".", 1)[-1]
-        sides[(int(idx), side)][(rel, rule, _norm(str(r.get("extra", {}).get("lines", ""))))] += 1
-    idxs = {i for i, _ in sides}
-    return {i: sides[(i, "h")] - sides[(i, "b")] for i in idxs}
-
-
-def semgrep(work: Path, rules: Sequence[str], jobs: int, out: Path) -> dict[str, Any]:
-    exe = Path(sys.executable).parent / "semgrep"
-    cmd = [str(exe) if exe.exists() else "semgrep", "scan", "--json", "--output", str(out)]
-    for r in rules:
-        cmd += ["--config", str(Path(r).resolve())]
-    # --no-git-ignore: thư mục tạm thường nằm trong data/ (bị .gitignore), cây tạm chỉ chứa file đã theo dõi
-    cmd += ["--metrics=off", "--quiet", "--disable-version-check", "--timeout", "30"]
-    cmd += ["--no-git-ignore", "-j", str(jobs), "."]
-    subprocess.run(cmd, cwd=work, check=False)
-    data: dict[str, Any] = json.loads(out.read_text("utf-8"))
-    return data
+def new_for_commit(
+    work: Path, idx: int, groups: dict[tuple[int, str], list[RawFinding]]
+) -> list[Finding]:
+    """Cảnh báo mới của một commit, tính như `PrPipeline._run` (không có bộ lọc đường dẫn)."""
+    found = {}
+    for side in ("h", "b"):
+        root = work / str(idx) / side
+        found[side] = to_findings(
+            groups.get((idx, side), []), root, SymbolIndex(root).enclosing_symbol
+        )
+    return deduplicate(new_findings(found["h"], found["b"]))
 
 
 def cmd_prefilter(a: argparse.Namespace) -> int:
@@ -147,25 +143,26 @@ def cmd_prefilter(a: argparse.Namespace) -> int:
     rules = a.rules or list(BuildOptions().rules)
     verify_rules(rules, Path(a.rules_lock))
     cands = plan(repo, a.ref, a.scan_back, a.max_java_lines)
-    work = out / "tree"
-    shutil.rmtree(work, ignore_errors=True)
-    work.mkdir(parents=True)
-    (work / ".semgrepignore").write_text("")  # không bỏ file nào: tập ứng viên là tập trên
-    materialize(repo, cands, work)
-    data = semgrep(work, rules, a.jobs, out / "semgrep.json")
-    new = new_by_commit(data["results"])
-    rows = []
-    for c in cands:
-        diff = new.get(c.idx, collections.Counter())
-        java = sum(n for k, n in diff.items() if k[0].endswith(".java"))
-        rows.append(
-            {
-                **dataclasses.asdict(c),
-                "pre_new": sum(diff.values()),
-                "pre_new_java": java,
-                "rules": sorted({k[1] for k in diff}),
-            }
-        )
+    out.mkdir(parents=True, exist_ok=True)
+    # Cây tạm nằm ngoài mọi repo git để Semgrep không lọc theo .gitignore của repo nhóm (data/ bị bỏ qua).
+    with tempfile.TemporaryDirectory(prefix="filter-prs-", dir=a.tmp) as tmp:
+        work = Path(tmp)
+        (work / ".semgrepignore").write_text("")  # không bỏ file nào
+        materialize(repo, cands, work)
+        groups = split_by_side(SemgrepAdapter(rules, timeout_s=a.semgrep_timeout).scan(work))
+        files = sum(1 for p in work.rglob("*") if p.is_file()) - 1
+        rows = []
+        for c in cands:
+            new = new_for_commit(work, c.idx, groups)
+            rows.append(
+                {
+                    **dataclasses.asdict(c),
+                    "pre_new": len(new),
+                    "pre_new_java": sum(f.file.endswith(".java") for f in new),
+                    "rules": sorted({f.rule_ids[0].rsplit(".", 1)[-1] for f in new}),
+                    "finding_ids": [f.finding_id for f in new],
+                }
+            )
     (out / "prefilter.json").write_text(json.dumps(rows, indent=1), "utf-8")
     hits = [r for r in rows if r["pre_new"]]
     (out / "candidates.txt").write_text("".join(f"{r['sha']}\n" for r in hits), "utf-8")
@@ -178,14 +175,12 @@ def cmd_prefilter(a: argparse.Namespace) -> int:
             )
     summary = {
         "commit_sua_java": len(rows),
-        "file_da_quet": len(data["paths"].get("scanned", [])),
+        "file_da_quet": files,
         "ung_vien": len(hits),
         "canh_bao_co_the_moi": sum(r["pre_new"] for r in hits),
-        "loi_semgrep": len(data.get("errors", [])),
         "thoi_gian_s": round(time.monotonic() - t0),
     }
     print(json.dumps(summary, ensure_ascii=False))
-    shutil.rmtree(work, ignore_errors=True)
     return 0
 
 
@@ -226,7 +221,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     pre.add_argument("--max-java-lines", type=int, default=1000, help="P4: bỏ commit sửa quá nhiều")
     pre.add_argument("--rules", action="append", help="file luật (mặc định: bộ luật trong lock)")
     pre.add_argument("--rules-lock", default="configs/semgrep/rulesets.lock")
-    pre.add_argument("--jobs", type=int, default=4)
+    pre.add_argument("--semgrep-timeout", type=int, default=7200, help="trần cả lượt quét, giây")
+    pre.add_argument(
+        "--tmp", default=None, help="thư mục chứa cây tạm (mặc định: thư mục tạm hệ thống)"
+    )
     pre.add_argument("--out", type=Path, required=True)
     rep = sub.add_parser(
         "replay", help="tầng 2: pipeline đầy đủ trên ứng viên; tham số khác như replay"

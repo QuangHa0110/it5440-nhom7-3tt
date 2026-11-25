@@ -18,6 +18,7 @@ Nơi ghi **phát hiện**, không ghi việc đã xong: xung đột, vật cản
 
 ## Mục lục (mới nhất ở trên)
 
+- [2026-11-25 `mask()` bỏ sót `_auth=` của `.npmrc`](2026-11-25-mask-bo-sot-npm-auth.md) 🟡
 - [2026-11-25 Lọc PR trên repo Java mã nguồn mở cho cách A](2026-11-25-loc-pr-oss-cho-cach-a.md) 🟡
 - [2026-11-14 Tóm tắt đợt GitHub App (P08 đến P12)](2026-11-14-github-app-va-bo-demo.md) 🟡
 - [2026-11-13 Semgrep CE không nối taint xuyên hàm](2026-11-13-semgrep-ce-khong-noi-taint-xuyen-ham.md) 🟢

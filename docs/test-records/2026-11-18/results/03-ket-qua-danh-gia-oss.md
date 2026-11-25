@@ -1,6 +1,6 @@
 # Kết quả đánh giá A/B/C trên mã Java mã nguồn mở — 2026-11-18
 
-> Bản lưu trong repo. Tài liệu gốc và các tài liệu được nhắc tới (proposal, ADR 0015–0017, runbook) nằm trong hồ sơ `.docs/` của nhóm, ngoài repo.
+> **Đợt 1** (cấu hình khóa bằng tag `eval-freeze-1`: 3 luật tự viết và 29 luật registry, trước ADR 0019). Quyết định ở ADR 0015–0017 (`docs/adr/`). Đợt 2 (luật `p/default`, dữ liệu mức PR, nhãn do người gán) theo `docs/huong-dan-chon-repo-va-pr.md`; số liệu hai đợt không gộp. Runbook từng lệnh nằm trong hồ sơ `.docs/` của nhóm, ngoài repo.
 
 Kịch bản: `docs/test-records/2026-11-18/scenarios/03-kich-ban-danh-gia-oss.md`.
 

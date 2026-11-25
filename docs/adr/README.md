@@ -21,6 +21,9 @@ Mỗi file là một quyết định đáng tranh luận. Tên file: `NNNN-tieu-
 | [0012](0012-github-app-may-chu-va-hang-doi.md) | GitHub App: máy chủ webhook, token cài đặt, hàng đợi bền, cấu hình từ nhánh đích | accepted |
 | [0013](0013-quet-secret-tich-hop.md) | Quét secret tích hợp, giá trị bị che từ lúc phát hiện | accepted |
 | [0014](0014-phan-hoi-theo-vai-tro-va-cc.md) | Phản hồi theo vai trò, chính sách CC, làm sạch nội dung do mô hình sinh | accepted |
+| [0015](0015-danh-gia-ma-nguon-mo-nhan-ai.md) | Đợt 1: đánh giá trên mã Java mã nguồn mở, nhãn tham chiếu AI (ngoại lệ của quy tắc không dùng AI gán nhãn) | accepted |
+| [0016](0016-quet-moc-lich-su-tach-tap-theo-repo.md) | Đợt 1: quét mốc lịch sử của 6 repo, tách dev/eval theo nguyên repo (thay một phần D1 của 0015) | accepted |
+| [0017](0017-kiem-dinh-bang-subagent-thay-nguoi.md) | Đợt 1: kiểm định 50 ca eval bằng subagent AI độc lập thay người (thay một phần D2 của 0015) | accepted |
 | [0018](0018-hai-duong-kich-hoat-mot-loi-moi-repo-mot-duong.md) | Hai đường kích hoạt (GitHub App, Jenkins) dùng chung một lõi, mỗi repo chỉ một đường | accepted |
 | [0019](0019-bo-luat-semgrep-p-default-khoa-bang-ma-bam.md) | Bộ luật Semgrep `p/default`, tải trong hạ tầng chạy bot, khóa bằng mã băm, không commit luật | accepted |
 | [0020](0020-gui-ma-cua-z-len-llm-cloud.md) | Dùng LLM cloud cho mã của Z, cần văn bản, che secret, gửi tối thiểu, có trần chi phí | accepted |

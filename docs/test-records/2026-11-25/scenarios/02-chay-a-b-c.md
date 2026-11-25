@@ -19,7 +19,7 @@ Chạy 13:26–14:42 (+07), hai luồng song song, sau khi bảng đăng ký đ�
 | Mỗi PR đã đăng ký có `triage-result.json` | 13/13. Ba lượt hỏng ở lần đầu (SQLite bị khóa, quét quá trần 300 giây) được chạy lại và xong | Có |
 | `status: ok`, không lỗi LLM | 6 `ok`, 7 `degraded`: 23 nhãn bị cắt cụt (`finish_reason=length`), 4 nhãn C bị HTTP 403 ở lớp chống bot trước cổng LLM | Không |
 | Mỗi cảnh báo của A có đúng một nhãn B và một nhãn C | 56 nhãn B, 56 nhãn C cho 56 cảnh báo | Có |
-| `summarize_runs.py` cho bảng theo PR | Có, nằm trong gói nộp riêng (không commit để giữ mù cho bước gán nhãn) | Có |
+| `summarize_runs.py` cho bảng theo PR | Có, nằm trong gói dữ liệu trên [Google Drive](https://drive.google.com/drive/folders/1Rm-urWEeJCj1Lv2mUXul-8_26AFWD2MV?usp=sharing) (không commit vào repo) | Có |
 
 **Kết luận: Đạt một phần.** Đủ dữ liệu để gán nhãn và tính chỉ số, nhưng 27/112 nhãn (24%) không có phán đoán của mô
 hình: 23 bị cắt cụt, 4 bị chặn ở đường truyền. Khi tính chỉ số, loại 4 nhãn 403 khỏi mẫu số của C. Nếu nhóm đổi

@@ -1,8 +1,8 @@
 # Kết quả chạy A, B, C — logicaldoc và mesh, 2026-11-25
 
 Kịch bản: [02](../scenarios/02-chay-a-b-c.md). Bảng đăng ký: [dang-ky-pr.md](dang-ky-pr.md). Số liệu dưới đây tính
-từ `triage-result.json` của 13 lượt `pr-triage run`. File thô, bảng theo PR, comment và ảnh nằm trong gói nộp riêng,
-không commit.
+từ `triage-result.json` của 13 lượt `pr-triage run`. File thô, bảng theo PR, comment và ảnh nằm trong gói dữ liệu trên
+[Google Drive](https://drive.google.com/drive/folders/1Rm-urWEeJCj1Lv2mUXul-8_26AFWD2MV?usp=sharing), không commit.
 
 **Giữ mù cho bước gán nhãn:** hồ sơ này chỉ có số tổng của cả hai repo. Không ghi nhãn B, C theo PR hay theo cảnh
 báo, và không tách `likely_true` với `likely_false`, để người gán nhãn (mục 6 của hướng dẫn) không bị ảnh hưởng.

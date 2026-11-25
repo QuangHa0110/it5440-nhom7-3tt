@@ -18,14 +18,16 @@ bằng cách A, chốt bảng đăng ký trước khi chạy B và C (P6), rồi
 - Kết quả: [bảng đăng ký PR](results/dang-ky-pr.md), [lọc A](results/loc-a.md), [chạy A, B, C](results/ket-qua-abc.md).
 - [Người thực hiện](testers/tester-record.md).
 
-## Không có trong repo
+## Gói dữ liệu (bước 7 của hướng dẫn)
 
-Bảng kết quả theo PR, comment của bot, ảnh, ca điển hình, nhật ký chạy và dữ liệu thô nằm trong gói nộp qua kênh
-riêng của nhóm. Lý do: repo public, và nhãn B, C theo từng cảnh báo phải ẩn với người gán nhãn đến khi gán xong.
+[Google Drive](https://drive.google.com/drive/folders/1Rm-urWEeJCj1Lv2mUXul-8_26AFWD2MV?usp=sharing), ai có link đều xem và tải được. Gồm SQLite, `triage-result.json` của 13 PR, tư liệu từng repo (`loc-a.tsv`,
+`ket-qua.tsv`, `thong-tin-repo.md`, `nhat-ky.md`, comment, ảnh), ca điển hình và log. Có hai bản nén (đầy đủ 7 MB,
+gọn 0,5 MB chỉ phần bắt buộc) và thư mục `giai-nen/` để xem trực tiếp. Giá trị `_auth=` của `.npmrc` (TD-9) và tên
+model của cổng LLM đã được che.
 
-## Cần nhóm làm tiếp
+Để giữ mù, người gán nhãn dùng phiếu từ `pr-triage eval label-export`, không mở `*-run/`, `comment/` hay
+`ca-dien-hinh.md` trước khi gán xong.
 
-1. Chép bảng đăng ký vào bảng chung và kiểm tra không trùng repo với thành viên khác.
-2. Gán nhãn chéo và mù cho 56 cảnh báo.
-3. Quyết định có chạy lại B, C bằng mô hình đã khóa và `max_tokens` lớn hơn không (xem giới hạn 1–2 trong
-   [kết quả](results/ket-qua-abc.md)).
+## Bước tiếp theo
+
+Gán nhãn chéo và mù cho 56 cảnh báo. Repo không trùng với thành viên khác (chưa ai khác đăng ký).

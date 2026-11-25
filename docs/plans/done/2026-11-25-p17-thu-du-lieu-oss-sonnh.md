@@ -78,3 +78,4 @@ make check
 - **Ghi ở:** [devlog lọc PR](../../devlog/2026-11-25-loc-pr-oss-cho-cach-a.md),
   [devlog mask](../../devlog/2026-11-25-mask-bo-sot-npm-auth.md), TD-9,
   [kết quả A, B, C](../../test-records/2026-11-25/results/ket-qua-abc.md)
+- **Ghi chú 2026-11-25:** gói dữ liệu nộp qua [Google Drive](https://drive.google.com/drive/folders/1Rm-urWEeJCj1Lv2mUXul-8_26AFWD2MV?usp=sharing) thay cho kênh riêng.
